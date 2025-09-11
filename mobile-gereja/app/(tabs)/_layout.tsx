@@ -24,10 +24,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="warta"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Warta',
+          tabBarIcon: ({ color, size }) => ( <Ionicons name="book" size={size} color={color} /> ),
+        }}
+      />
+      <Tabs.Screen
+        name="Riwayat"
+        options={{
+          title: 'Riwayat',
+          tabBarIcon: ({ color, size }) => ( <Ionicons name="time" size={size} color={color} /> ),
         }}
       />
     </Tabs>
