@@ -1,12 +1,61 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+
 
 export default function LoginScreen() {
     const navigation = useNavigation();
+    
+    useEffect(() => {
+        GoogleSignin.configure({
+            webClientId: '117724603836-fvv3rpskks8svt7mo33oeodtlddn328s.apps.googleusercontent.com',
+            offlineAccess: true,
+        });
+    }, []);
 
-    const handleGoogleSignIn = () => {
-        //buat login google
+    const handleGoogleSignIn = async () => {
+        try {
+
+            await GoogleSignin.hasPlayServices();
+            const userInfo = await GoogleSignin.signIn();
+            const idToken = userInfo.user.idToken;
+            await loginWithKeystone(idToken);
+
+        } catch (error:any) {
+            if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+                console.log('Login dibatalkan oleh user');
+            } else if (error.code === statusCodes.IN_PROGRESS) {
+                console.log('Login sedang berjalan');
+            } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+                console.log('Google Play Services tidak tersedia');
+            } else {
+                console.error('Terjadi kesalahan:', error);
+            }
+        }
+    };
+
+    const loginWithKeystone = async (idToken:string) => {
+        try {
+
+            const response = await fetch('http://localhost:3000/api/auth/google', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ idToken }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                console.log('Login berhasil:', data);
+
+            } else {
+                console.error('Login gagal di server:', data);
+            }
+        } catch (error) {
+            console.error('Terjadi kesalahan saat menghubungi server:', error);
+        }
     };
 
     const handleGuestLogin = () => {
