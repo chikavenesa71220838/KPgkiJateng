@@ -8,7 +8,7 @@ const data = [
 export default function jadwalIbadah() {
   return (
     <View style={styles.container}>
-      <TextInput placeholder="Cari jadwal berdasarkan" style={styles.input} />
+      <TextInput placeholder="Cari jadwal berdasarkan waktu" style={styles.input} />
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
