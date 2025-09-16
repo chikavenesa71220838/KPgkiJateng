@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "880946642165",
+    "project_id": "kp-gkijateng",
+    "storage_bucket": "kp-gkijateng.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:880946642165:android:dbf803293716942a03d9bc",
+        "android_client_info": {
+          "package_name": "com.mobilegereja3.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "880946642165-59jpp4958sp4h0em1ekklvjbikh7oo95.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mobilegereja3.app",
+            "certificate_hash": "32237a764861a4080ed9e4417acd1d06d27fc235"
+          }
+        },
+        {
+          "client_id": "880946642165-4rgkn6cpss1qtn86j8515dde5puj0guh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8CH6tmd4Y-lM204OwSQBsDNFfIMPHFHU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "880946642165-4rgkn6cpss1qtn86j8515dde5puj0guh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "880946642165-68bte7v418g7lkn35es6olgtn5cmmmrm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mobilegereja.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
