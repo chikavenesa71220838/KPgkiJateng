@@ -5,6 +5,7 @@ import * as Google from "expo-auth-session/providers/google";
 import { auth } from "../../constants/firebaseConfig";
 import { signInWithCredential, GoogleAuthProvider } from "firebase/auth";
 import { useRouter } from "expo-router";
+import * as AuthSession from "expo-auth-session";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -12,22 +13,37 @@ export default function LoginScreen() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
 
+  const redirectUri = AuthSession.makeRedirectUri({
+    scheme: "mobilegereja",
+  });
+  console.log("Redirect URI:", redirectUri);
+
   const [request, response, promptAsync] = Google.useAuthRequest({
     clientId: "117724603836-fvv3rpskks8svt7mo33oeodtlddn328s.apps.googleusercontent.com",
-    iosClientId: "117724603836-fvv3rpskks8svt7mo33oeodtlddn328s.apps.googleusercontent.com",
+    iosClientId: "117724603836-a1gi72cb69n6gvpofhvj8l08h9572b7m.apps.googleusercontent.com",
     androidClientId: "117724603836-4q3fqdo1qpga3ushmi64gngsg6u9nif9.apps.googleusercontent.com",
+    redirectUri,
+    scopes: ["openid", "profile", "email"],
   });
 
   useEffect(() => {
+    console.log("AUTH RESPONSE:", JSON.stringify(response, null, 2));
     if (response?.type === "success") {
-      const { id_token } = response.params;
-      const credential = GoogleAuthProvider.credential(id_token);
 
-      signInWithCredential(auth, credential).then((result) => {
-        setUser(result.user);
-        console.log("User:", result.user);
-        router.replace("/(tabs)/jadwalIbadah");
-      });
+      const { authentication } = response;
+      const idToken = authentication?.idToken;
+
+      if (idToken) {
+        const credential = GoogleAuthProvider.credential(idToken);
+
+        signInWithCredential(auth, credential).then((result) => {
+          setUser(result.user);
+          console.log("User:", result.user);
+          router.replace("/(tabs)/jadwalIbadah");
+        });
+      } else {
+        console.error("idToken tidak ditemukan di response:", response);
+      }
     }
   }, [response]);
 
