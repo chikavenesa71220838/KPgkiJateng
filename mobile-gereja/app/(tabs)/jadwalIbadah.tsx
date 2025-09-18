@@ -1,3 +1,5 @@
+import React from 'react';
+import { useState, useEffect } from 'react';
 import { View, Platform, StyleSheet , Text, FlatList, TextInput } from 'react-native';
 
 const data = [
@@ -6,11 +8,35 @@ const data = [
 ]
 
 export default function jadwalIbadah() {
+  const [setQuery, setSearchQuery] = useState('');
+  const [filteredData, setFilteredData] = useState(data);
+
+  useEffect(() => {
+    if (setQuery) {
+      const dataBaru = data.filter(item => {
+        const textData = setQuery.toLowerCase();
+        return (
+          item.tanggal.toLowerCase().includes(textData) ||
+          item.topik.toLowerCase().includes(textData) ||
+          item.pengkhotbah.toLowerCase().includes(textData) 
+        )
+      });
+      setFilteredData(dataBaru);
+    } else {
+      setFilteredData(data);
+    }
+  }, [setQuery]);
+
   return (
     <View style={styles.container}>
-      <TextInput placeholder="Cari jadwal berdasarkan waktu" style={styles.input} />
+      <TextInput
+        placeholder="Cari jadwal"
+        style={styles.input}
+        value={setQuery}
+        onChangeText={text => setSearchQuery(text)}
+      />
       <FlatList
-        data={data}
+        data={filteredData}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.card}>
