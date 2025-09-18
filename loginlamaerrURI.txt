@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 import { auth } from "../../constants/firebaseConfig";
 import { signInWithCredential, GoogleAuthProvider } from "firebase/auth";
 import { useRouter } from "expo-router";
+import * as AuthSession from "expo-auth-session";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -12,47 +13,42 @@ export default function LoginScreen() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
 
+  const redirectUri = AuthSession.makeRedirectUri({
+    scheme: "mobilegereja",
+  });
+  console.log("Redirect URI:", redirectUri);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     clientId: "117724603836-fvv3rpskks8svt7mo33oeodtlddn328s.apps.googleusercontent.com",
-    redirectUri: "https://auth.expo.io/@chikavenesa/mobile-gereja", 
+    iosClientId: "117724603836-a1gi72cb69n6gvpofhvj8l08h9572b7m.apps.googleusercontent.com",
+    androidClientId: "117724603836-4q3fqdo1qpga3ushmi64gngsg6u9nif9.apps.googleusercontent.com",
+    redirectUri: 'https://auth.expo.io/@chikavenesa/mobile-gereja',
+    scopes: ["openid", "profile", "email"],
   });
 
   useEffect(() => {
-    console.log("Redirect URI:", "https://auth.expo.io/@chikavenesa/mobile-gereja");
-    
+    console.log("AUTH RESPONSE:", JSON.stringify(response, null, 2));
     if (response?.type === "success") {
-      const { id_token } = response.params;
-      
-      if (id_token) {
-        const credential = GoogleAuthProvider.credential(id_token);
-        
-        signInWithCredential(auth, credential)
-          .then((result) => {
-            setUser(result.user);
-            console.log("User:", result.user);
-            router.replace("/(tabs)/jadwalIbadah");
-          })
-          .catch((error) => {
-            console.error("Error signing in with credential:", error);
-            Alert.alert("Error", "Gagal masuk dengan Google");
-          });
+
+      const { authentication } = response;
+      const idToken = authentication?.idToken;
+
+      if (idToken) {
+        const credential = GoogleAuthProvider.credential(idToken);
+
+        signInWithCredential(auth, credential).then((result) => {
+          setUser(result.user);
+          console.log("User:", result.user);
+          router.replace("/(tabs)/jadwalIbadah");
+        });
       } else {
-        console.error("id_token tidak ditemukan di response:", response);
-        Alert.alert("Error", "Token tidak ditemukan");
+        console.error("idToken tidak ditemukan di response:", response);
       }
-    } else if (response?.type === "error") {
-      console.error("Error response:", response.error);
-      Alert.alert("Error", `Autentikasi gagal: ${response.error}`);
     }
   }, [response]);
 
   const handleGoogleSignIn = () => {
-    if (request) {
-      promptAsync();
-    } else {
-      console.log("Request belum ready");
-    }
+    promptAsync();
   };
 
   const handleGuestLogin = () => {
@@ -63,11 +59,7 @@ export default function LoginScreen() {
     <View style={style.container}>
       <Text style={style.title}>Masuk</Text>
       <View style={style.buttonContainer}>
-        <TouchableOpacity 
-          style={[style.googleButton, !request && { opacity: 0.5 }]} 
-          onPress={handleGoogleSignIn}
-          disabled={!request}
-        >
+        <TouchableOpacity style={style.googleButton} onPress={handleGoogleSignIn}>
           <Text style={style.googleButtonText}>Masuk dengan Google</Text>
         </TouchableOpacity>
         <TouchableOpacity style={style.guestButton} onPress={handleGuestLogin}>
@@ -86,15 +78,8 @@ const style = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: "#FFF",
   },
-  title: { 
-    fontSize: 24, 
-    fontWeight: "bold", 
-    marginBottom: 40 
-  },
-  buttonContainer: { 
-    alignItems: "center", 
-    width: "100%" 
-  },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 40 },
+  buttonContainer: { alignItems: "center", width: "100%" },
   googleButton: {
     backgroundColor: "#6A8BFF",
     paddingVertical: 15,
@@ -102,12 +87,10 @@ const style = StyleSheet.create({
     width: "80%",
     marginBottom: 20,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
   },
-  googleButtonText: { 
-    color: "#FFF", 
-    fontWeight: "bold", 
-    fontSize: 16 
-  },
+  googleButtonText: { color: "#FFF", fontWeight: "bold", fontSize: 16 },
   guestButton: {
     backgroundColor: "#E0E0E0",
     paddingVertical: 15,
@@ -116,9 +99,5 @@ const style = StyleSheet.create({
     justifyContent: "center",
     width: "80%",
   },
-  guestButtonText: { 
-    color: "#333", 
-    fontWeight: "bold", 
-    fontSize: 16 
-  },
+  guestButtonText: { color: "#333", fontWeight: "bold", fontSize: 16 },
 });

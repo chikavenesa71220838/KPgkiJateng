@@ -1,3 +1,5 @@
+import React from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput} from "react-native";
 
 const data = [
@@ -6,11 +8,34 @@ const data = [
 ];
 
 export default function WartaScreen() {
+    const [setQuery, setSearchQuery] = useState('');
+    const [filteredData, setFilteredData] = useState(data);
+
+    useEffect(() => {
+        if (setQuery) {
+            const dataBaru = data.filter(item => {
+                const textData = setQuery.toLowerCase();
+                return (
+                    item.kategori.toLowerCase().includes(textData) ||
+                    item.judul.toLowerCase().includes(textData) ||
+                    item.tanggal.toLowerCase().includes(textData)
+                )
+            });
+            setFilteredData(dataBaru);
+        } else {
+            setFilteredData(data);
+        }
+    }, [setQuery]);
+
     return (
         <View style={styles.container}>
-            <TextInput placeholder="Cari berdasarkan judul" style={styles.input} />
+            <TextInput placeholder="Cari berdasarkan" 
+            style={styles.input}
+            value={setQuery}
+            onChangeText={text => setSearchQuery(text)}
+            />
         <FlatList
-            data={data}
+            data={filteredData}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
                 <View style={styles.card}>
