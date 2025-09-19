@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Lainnya (opsional, tapi bagus untuk dimiliki)
+.env
+npm-debug.log*
+yarn-error.log*
