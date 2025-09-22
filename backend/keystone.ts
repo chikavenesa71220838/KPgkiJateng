@@ -1,11 +1,11 @@
 import { config, list } from '@keystone-6/core';
-import { text, password, file } from '@keystone-6/core/fields';
+import { text, password, timestamp, file } from '@keystone-6/core/fields';
 import { createAuth } from '@keystone-6/auth';
 import { statelessSessions } from '@keystone-6/core/session';
 import path from 'path';
 import 'dotenv/config';
 
-const sessionSecret = process.env.SESSION_SECRET || 'secret123';
+const sessionSecret = process.env.SESSION_SECRET;
 
 const { withAuth } = createAuth({
   listKey: 'User',
@@ -18,26 +18,27 @@ const { withAuth } = createAuth({
 
 const session = statelessSessions({
   secret: sessionSecret,
-  maxAge: 60 * 60 * 24 * 30
+  maxAge: 60 * 60 * 24 * 30,
 });
 
 export default withAuth(
   config({
     db: {
       provider: 'sqlite',
-      url: process.env.DATABASE_URL || 'file:./keystone.db',
+      url: process.env.DATABASE_URL || 'file:./mobileGereja.db',
     },
-storage: {
-  local_files: {
-    kind: 'local',
-    type: 'file',
-    storagePath: path.resolve('./public/files'),
-    serverRoute: {
-      path: '/files',
+
+    storage: {
+      local_files: {
+        kind: 'local',
+        type: 'file',
+        storagePath: path.join(process.cwd(), 'public', 'files'),
+        serverRoute: {
+          path: '/files',
+        },
+        generateUrl: (filePath) => `/files/${filePath}`,
+      },
     },
-    generateUrl: (filePath) => `/files/${filePath}`,
-  },
-},
 
     lists: {
       User: list({
@@ -55,6 +56,7 @@ storage: {
           password: password(),
         },
       }),
+
       Post: list({
         access: {
           operation: {
@@ -67,10 +69,50 @@ storage: {
         fields: {
           title: text({ validation: { isRequired: true } }),
           content: text(),
-          attachment: file({ storage: 'local_files' }),
+          attachment: file({ storage: 'local_files' }), 
+        },
+      }),
+
+      JadwalIbadah: list({
+        access: {
+          operation: {
+            query: () => true,
+            create: () => true,
+            update: () => true,
+            delete: () => true,
+          },
+        },
+        fields: {
+          tanggal: timestamp({ validation: { isRequired: true } }),
+          hari: text(),
+          jam: text(),
+          pengkhotbah: text(),
+          topik: text(),
+        },
+      }),
+
+      Warta: list({
+        access: {
+          operation: {
+            query: () => true,
+            create: () => true,
+            update: () => true,
+            delete: () => true,
+          },
+        },
+        fields: {
+          kategori: text({ validation: { isRequired: true } }),
+          judul: text({ validation: { isRequired: true } }),
+          masaBerlaku: timestamp(),
+          tanggalPelaksanaan: timestamp(),
+          file: file({ storage: 'local_files' }),
+          createdAt: timestamp({
+            defaultValue: { kind: 'now' },
+          }),
         },
       }),
     },
+
     session,
   })
 );
