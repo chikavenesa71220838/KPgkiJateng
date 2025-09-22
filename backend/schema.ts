@@ -36,4 +36,36 @@ JadwalIbadah: list({
     topik: text(),
   },
 }),
+
+User: list({
+    access: allowAll,
+    fields: {
+      namaUser: text({ validation: { isRequired: true } }),
+      emailUser: text({
+        validation: { isRequired: true },
+        isIndexed: "unique",
+      }),
+      role: select({
+        options: [
+          { label: "Admin", value: "admin" },
+          { label: "Jemaat", value: "jemaat" },
+        ],
+        defaultValue: "jemaat",
+        ui: { displayMode: "segmented-control" },
+      }),
+      profile: relationship({ ref: "Profile.user", many: false }),
+    },
+}),
+
+Profile: list({
+    access: allowAll,
+    fields: {
+      alamat: text(),
+      noHp: text(),
+      user: relationship({ ref: "User.profile" }),
+    },
+  }),
+
+  
+
 };
