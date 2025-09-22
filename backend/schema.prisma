@@ -12,36 +12,36 @@ generator client {
 }
 
 model User {
-  id       String  @id @default(cuid())
-  name     String  @default("")
-  email    String  @unique @default("")
-  password String?
+  id        String   @id @default(cuid())
+  namaUser  String   @default("")
+  emailUser String   @unique @default("")
+  googleId  String   @unique @default("")
+  role      String?  @default("jemaat")
+  profile   Profile? @relation("Profile_user")
 }
 
-model Post {
-  id                  String  @id @default(cuid())
-  title               String  @default("")
-  content             String  @default("")
-  attachment_filesize Int?
-  attachment_filename String?
-}
-
-model JadwalIbadah {
-  id          String   @id @default(cuid())
-  tanggal     DateTime
-  hari        String   @default("")
-  jam         String   @default("")
-  pengkhotbah String   @default("")
-  topik       String   @default("")
+model Profile {
+  id     String  @id @default(cuid())
+  alamat String  @default("")
+  noHp   String  @default("")
+  user   User?   @relation("Profile_user", fields: [userId], references: [id])
+  userId String? @unique @map("user")
 }
 
 model Warta {
   id                 String    @id @default(cuid())
   kategori           String    @default("")
   judul              String    @default("")
-  masaBerlaku        DateTime?
-  tanggalPelaksanaan DateTime?
+  masaBerlaku        DateTime
+  tanggalPelaksanaan DateTime
   file_filesize      Int?
   file_filename      String?
   createdAt          DateTime? @default(now())
+}
+
+model JadwalIbadah {
+  id          String   @id @default(cuid())
+  tanggal     DateTime
+  pengkhotbah String   @default("")
+  topik       String   @default("")
 }

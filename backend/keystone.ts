@@ -1,118 +1,103 @@
-import { config, list } from '@keystone-6/core';
-import { text, password, timestamp, file } from '@keystone-6/core/fields';
-import { createAuth } from '@keystone-6/auth';
-import { statelessSessions } from '@keystone-6/core/session';
-import path from 'path';
-import 'dotenv/config';
+import { config, list } from "@keystone-6/core";
+import {
+  text,
+  select,
+  relationship,
+  file,
+  timestamp,
+} from "@keystone-6/core/fields";
+import { statelessSessions } from "@keystone-6/core/session";
+import path from "path";
+import "dotenv/config";
 
-const sessionSecret = process.env.SESSION_SECRET;
-
-const { withAuth } = createAuth({
-  listKey: 'User',
-  identityField: 'email',
-  secretField: 'password',
-  initFirstItem: {
-    fields: ['name', 'email', 'password'],
-  },
-});
-
+// Session config
+const sessionSecret = process.env.SESSION_SECRET || "supersecret";
 const session = statelessSessions({
   secret: sessionSecret,
   maxAge: 60 * 60 * 24 * 30,
 });
 
-export default withAuth(
-  config({
-    db: {
-      provider: 'sqlite',
-      url: process.env.DATABASE_URL || 'file:./mobileGereja.db',
-    },
+const allowAll = {
+  operation: {
+    query: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true,
+  },
+};
 
-    storage: {
-      local_files: {
-        kind: 'local',
-        type: 'file',
-        storagePath: path.join(process.cwd(), 'public', 'files'),
-        serverRoute: {
-          path: '/files',
-        },
-        generateUrl: (filePath) => `/files/${filePath}`,
+export default config({
+  db: {
+    provider: "sqlite",
+    url: process.env.DATABASE_URL || "file:./mobileGereja.db",
+  },
+
+  storage: {
+    local_files: {
+      kind: "local",
+      type: "file",
+      storagePath: path.join(process.cwd(), "public", "files"),
+      serverRoute: {
+        path: "/files",
       },
+      generateUrl: (filePath) => `/files/${filePath}`,
     },
+  },
 
-    lists: {
-      User: list({
-        access: {
-          operation: {
-            query: () => true,
-            create: () => true,
-            update: () => true,
-            delete: () => true,
-          },
-        },
-        fields: {
-          name: text({ validation: { isRequired: true } }),
-          email: text({ validation: { isRequired: true }, isIndexed: 'unique' }),
-          password: password(),
-        },
-      }),
+  lists: {
+    User: list({
+      access: allowAll,
+      fields: {
+        namaUser: text({ validation: { isRequired: true } }),
+        emailUser: text({
+          validation: { isRequired: true },
+          isIndexed: "unique",
+        }),
+        googleId: text({ isIndexed: "unique" }),
+        role: select({
+          options: [
+            { label: "Admin", value: "admin" },
+            { label: "Jemaat", value: "jemaat" },
+          ],
+          defaultValue: "jemaat",
+          ui: { displayMode: "segmented-control" },
+        }),
+        profile: relationship({ ref: "Profile.user", many: false }),
+      },
+    }),
 
-      Post: list({
-        access: {
-          operation: {
-            query: () => true,
-            create: () => true,
-            update: () => true,
-            delete: () => true,
-          },
-        },
-        fields: {
-          title: text({ validation: { isRequired: true } }),
-          content: text(),
-          attachment: file({ storage: 'local_files' }), 
-        },
-      }),
+    Profile: list({
+      access: allowAll,
+      fields: {
+        alamat: text(),
+        noHp: text(),
+        user: relationship({ ref: "User.profile" }),
+      },
+    }),
 
-      JadwalIbadah: list({
-        access: {
-          operation: {
-            query: () => true,
-            create: () => true,
-            update: () => true,
-            delete: () => true,
-          },
-        },
-        fields: {
-          tanggal: timestamp({ validation: { isRequired: true } }),
-          hari: text(),
-          jam: text(),
-          pengkhotbah: text(),
-          topik: text(),
-        },
-      }),
+    Warta: list({
+      access: allowAll,
+      fields: {
+        kategori: text({ validation: { isRequired: true } }),
+        judul: text({ validation: { isRequired: true } }),
+        masaBerlaku: timestamp({ validation: { isRequired: true } }),
+        tanggalPelaksanaan: timestamp({ validation: { isRequired: true } }),
+        file: file({ storage: "local_files" }),
+        createdAt: timestamp({
+          defaultValue: { kind: "now" },
+        }),
+      },
+    }),
 
-      Warta: list({
-        access: {
-          operation: {
-            query: () => true,
-            create: () => true,
-            update: () => true,
-            delete: () => true,
-          },
-        },
-        fields: {
-          kategori: text({ validation: { isRequired: true } }),
-          judul: text({ validation: { isRequired: true } }),
-          masaBerlaku: timestamp(),
-          tanggalPelaksanaan: timestamp(),
-          file: file({ storage: 'local_files' }),
-          createdAt: timestamp({
-            defaultValue: { kind: 'now' },
-          }),
-        },
-      }),
-    },
+    JadwalIbadah: list({
+      access: allowAll,
+      fields: {
+        tanggal: timestamp({ validation: { isRequired: true } }),
+        pengkhotbah: text(),
+        topik: text(),
+      },
+    }),
+  },
 
-    session,
-  })
-);
+  session,
+});

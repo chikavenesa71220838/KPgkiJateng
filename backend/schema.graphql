@@ -3,18 +3,18 @@
 
 type User {
   id: ID!
-  name: String
-  email: String
-  password: PasswordState
-}
-
-type PasswordState {
-  isSet: Boolean!
+  namaUser: String
+  emailUser: String
+  googleId: String
+  role: String
+  profile: Profile
 }
 
 input UserWhereUniqueInput {
   id: ID
-  email: String
+  emailUser: String
+  googleId: String
+  profile: ProfileWhereUniqueInput
 }
 
 input UserWhereInput {
@@ -22,9 +22,11 @@ input UserWhereInput {
   OR: [UserWhereInput!]
   NOT: [UserWhereInput!]
   id: IDFilter
-  name: StringFilter
-  email: StringFilter
-  password: PasswordFilter
+  namaUser: StringFilter
+  emailUser: StringFilter
+  googleId: StringFilter
+  role: StringNullableFilter
+  profile: ProfileWhereInput
 }
 
 input IDFilter {
@@ -66,14 +68,26 @@ input NestedStringFilter {
   not: NestedStringFilter
 }
 
-input PasswordFilter {
-  isSet: Boolean!
+input StringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  not: StringNullableFilter
 }
 
 input UserOrderByInput {
   id: OrderDirection
-  name: OrderDirection
-  email: OrderDirection
+  namaUser: OrderDirection
+  emailUser: OrderDirection
+  googleId: OrderDirection
+  role: OrderDirection
 }
 
 enum OrderDirection {
@@ -82,9 +96,17 @@ enum OrderDirection {
 }
 
 input UserUpdateInput {
-  name: String
-  email: String
-  password: String
+  namaUser: String
+  emailUser: String
+  googleId: String
+  role: String
+  profile: ProfileRelateToOneForUpdateInput
+}
+
+input ProfileRelateToOneForUpdateInput {
+  create: ProfileCreateInput
+  connect: ProfileWhereUniqueInput
+  disconnect: Boolean
 }
 
 input UserUpdateArgs {
@@ -93,133 +115,72 @@ input UserUpdateArgs {
 }
 
 input UserCreateInput {
-  name: String
-  email: String
-  password: String
+  namaUser: String
+  emailUser: String
+  googleId: String
+  role: String
+  profile: ProfileRelateToOneForCreateInput
 }
 
-type Post {
+input ProfileRelateToOneForCreateInput {
+  create: ProfileCreateInput
+  connect: ProfileWhereUniqueInput
+}
+
+type Profile {
   id: ID!
-  title: String
-  content: String
-  attachment: FileFieldOutput
+  alamat: String
+  noHp: String
+  user: User
 }
 
-type FileFieldOutput {
-  filename: String!
-  filesize: Int!
-  url: String!
-}
-
-input PostWhereUniqueInput {
+input ProfileWhereUniqueInput {
   id: ID
+  user: UserWhereUniqueInput
 }
 
-input PostWhereInput {
-  AND: [PostWhereInput!]
-  OR: [PostWhereInput!]
-  NOT: [PostWhereInput!]
+input ProfileWhereInput {
+  AND: [ProfileWhereInput!]
+  OR: [ProfileWhereInput!]
+  NOT: [ProfileWhereInput!]
   id: IDFilter
-  title: StringFilter
-  content: StringFilter
+  alamat: StringFilter
+  noHp: StringFilter
+  user: UserWhereInput
 }
 
-input PostOrderByInput {
+input ProfileOrderByInput {
   id: OrderDirection
-  title: OrderDirection
-  content: OrderDirection
+  alamat: OrderDirection
+  noHp: OrderDirection
 }
 
-input PostUpdateInput {
-  title: String
-  content: String
-  attachment: FileFieldInput
+input ProfileUpdateInput {
+  alamat: String
+  noHp: String
+  user: UserRelateToOneForUpdateInput
 }
 
-input FileFieldInput {
-  upload: Upload!
+input UserRelateToOneForUpdateInput {
+  create: UserCreateInput
+  connect: UserWhereUniqueInput
+  disconnect: Boolean
 }
 
-"""The `Upload` scalar type represents a file upload."""
-scalar Upload
-
-input PostUpdateArgs {
-  where: PostWhereUniqueInput!
-  data: PostUpdateInput!
+input ProfileUpdateArgs {
+  where: ProfileWhereUniqueInput!
+  data: ProfileUpdateInput!
 }
 
-input PostCreateInput {
-  title: String
-  content: String
-  attachment: FileFieldInput
+input ProfileCreateInput {
+  alamat: String
+  noHp: String
+  user: UserRelateToOneForCreateInput
 }
 
-type JadwalIbadah {
-  id: ID!
-  tanggal: DateTime
-  hari: String
-  jam: String
-  pengkhotbah: String
-  topik: String
-}
-
-scalar DateTime @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc3339#section-5.6")
-
-input JadwalIbadahWhereUniqueInput {
-  id: ID
-}
-
-input JadwalIbadahWhereInput {
-  AND: [JadwalIbadahWhereInput!]
-  OR: [JadwalIbadahWhereInput!]
-  NOT: [JadwalIbadahWhereInput!]
-  id: IDFilter
-  tanggal: DateTimeFilter
-  hari: StringFilter
-  jam: StringFilter
-  pengkhotbah: StringFilter
-  topik: StringFilter
-}
-
-input DateTimeFilter {
-  equals: DateTime
-  in: [DateTime!]
-  notIn: [DateTime!]
-  lt: DateTime
-  lte: DateTime
-  gt: DateTime
-  gte: DateTime
-  not: DateTimeFilter
-}
-
-input JadwalIbadahOrderByInput {
-  id: OrderDirection
-  tanggal: OrderDirection
-  hari: OrderDirection
-  jam: OrderDirection
-  pengkhotbah: OrderDirection
-  topik: OrderDirection
-}
-
-input JadwalIbadahUpdateInput {
-  tanggal: DateTime
-  hari: String
-  jam: String
-  pengkhotbah: String
-  topik: String
-}
-
-input JadwalIbadahUpdateArgs {
-  where: JadwalIbadahWhereUniqueInput!
-  data: JadwalIbadahUpdateInput!
-}
-
-input JadwalIbadahCreateInput {
-  tanggal: DateTime
-  hari: String
-  jam: String
-  pengkhotbah: String
-  topik: String
+input UserRelateToOneForCreateInput {
+  create: UserCreateInput
+  connect: UserWhereUniqueInput
 }
 
 type Warta {
@@ -230,6 +191,14 @@ type Warta {
   tanggalPelaksanaan: DateTime
   file: FileFieldOutput
   createdAt: DateTime
+}
+
+scalar DateTime @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc3339#section-5.6")
+
+type FileFieldOutput {
+  filename: String!
+  filesize: Int!
+  url: String!
 }
 
 input WartaWhereUniqueInput {
@@ -243,9 +212,20 @@ input WartaWhereInput {
   id: IDFilter
   kategori: StringFilter
   judul: StringFilter
-  masaBerlaku: DateTimeNullableFilter
-  tanggalPelaksanaan: DateTimeNullableFilter
+  masaBerlaku: DateTimeFilter
+  tanggalPelaksanaan: DateTimeFilter
   createdAt: DateTimeNullableFilter
+}
+
+input DateTimeFilter {
+  equals: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  not: DateTimeFilter
 }
 
 input DateTimeNullableFilter {
@@ -277,6 +257,13 @@ input WartaUpdateInput {
   createdAt: DateTime
 }
 
+input FileFieldInput {
+  upload: Upload!
+}
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
+
 input WartaUpdateArgs {
   where: WartaWhereUniqueInput!
   data: WartaUpdateInput!
@@ -291,6 +278,51 @@ input WartaCreateInput {
   createdAt: DateTime
 }
 
+type JadwalIbadah {
+  id: ID!
+  tanggal: DateTime
+  pengkhotbah: String
+  topik: String
+}
+
+input JadwalIbadahWhereUniqueInput {
+  id: ID
+}
+
+input JadwalIbadahWhereInput {
+  AND: [JadwalIbadahWhereInput!]
+  OR: [JadwalIbadahWhereInput!]
+  NOT: [JadwalIbadahWhereInput!]
+  id: IDFilter
+  tanggal: DateTimeFilter
+  pengkhotbah: StringFilter
+  topik: StringFilter
+}
+
+input JadwalIbadahOrderByInput {
+  id: OrderDirection
+  tanggal: OrderDirection
+  pengkhotbah: OrderDirection
+  topik: OrderDirection
+}
+
+input JadwalIbadahUpdateInput {
+  tanggal: DateTime
+  pengkhotbah: String
+  topik: String
+}
+
+input JadwalIbadahUpdateArgs {
+  where: JadwalIbadahWhereUniqueInput!
+  data: JadwalIbadahUpdateInput!
+}
+
+input JadwalIbadahCreateInput {
+  tanggal: DateTime
+  pengkhotbah: String
+  topik: String
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -303,64 +335,42 @@ type Mutation {
   updateUsers(data: [UserUpdateArgs!]!): [User]
   deleteUser(where: UserWhereUniqueInput!): User
   deleteUsers(where: [UserWhereUniqueInput!]!): [User]
-  createPost(data: PostCreateInput!): Post
-  createPosts(data: [PostCreateInput!]!): [Post]
-  updatePost(where: PostWhereUniqueInput!, data: PostUpdateInput!): Post
-  updatePosts(data: [PostUpdateArgs!]!): [Post]
-  deletePost(where: PostWhereUniqueInput!): Post
-  deletePosts(where: [PostWhereUniqueInput!]!): [Post]
-  createJadwalIbadah(data: JadwalIbadahCreateInput!): JadwalIbadah
-  createJadwalIbadahs(data: [JadwalIbadahCreateInput!]!): [JadwalIbadah]
-  updateJadwalIbadah(where: JadwalIbadahWhereUniqueInput!, data: JadwalIbadahUpdateInput!): JadwalIbadah
-  updateJadwalIbadahs(data: [JadwalIbadahUpdateArgs!]!): [JadwalIbadah]
-  deleteJadwalIbadah(where: JadwalIbadahWhereUniqueInput!): JadwalIbadah
-  deleteJadwalIbadahs(where: [JadwalIbadahWhereUniqueInput!]!): [JadwalIbadah]
+  createProfile(data: ProfileCreateInput!): Profile
+  createProfiles(data: [ProfileCreateInput!]!): [Profile]
+  updateProfile(where: ProfileWhereUniqueInput!, data: ProfileUpdateInput!): Profile
+  updateProfiles(data: [ProfileUpdateArgs!]!): [Profile]
+  deleteProfile(where: ProfileWhereUniqueInput!): Profile
+  deleteProfiles(where: [ProfileWhereUniqueInput!]!): [Profile]
   createWarta(data: WartaCreateInput!): Warta
   createWartas(data: [WartaCreateInput!]!): [Warta]
   updateWarta(where: WartaWhereUniqueInput!, data: WartaUpdateInput!): Warta
   updateWartas(data: [WartaUpdateArgs!]!): [Warta]
   deleteWarta(where: WartaWhereUniqueInput!): Warta
   deleteWartas(where: [WartaWhereUniqueInput!]!): [Warta]
+  createJadwalIbadah(data: JadwalIbadahCreateInput!): JadwalIbadah
+  createJadwalIbadahs(data: [JadwalIbadahCreateInput!]!): [JadwalIbadah]
+  updateJadwalIbadah(where: JadwalIbadahWhereUniqueInput!, data: JadwalIbadahUpdateInput!): JadwalIbadah
+  updateJadwalIbadahs(data: [JadwalIbadahUpdateArgs!]!): [JadwalIbadah]
+  deleteJadwalIbadah(where: JadwalIbadahWhereUniqueInput!): JadwalIbadah
+  deleteJadwalIbadahs(where: [JadwalIbadahWhereUniqueInput!]!): [JadwalIbadah]
   endSession: Boolean!
-  authenticateUserWithPassword(email: String!, password: String!): UserAuthenticationWithPasswordResult
-  createInitialUser(data: CreateInitialUserInput!): UserAuthenticationWithPasswordSuccess!
-}
-
-union UserAuthenticationWithPasswordResult = UserAuthenticationWithPasswordSuccess | UserAuthenticationWithPasswordFailure
-
-type UserAuthenticationWithPasswordSuccess {
-  sessionToken: String!
-  item: User!
-}
-
-type UserAuthenticationWithPasswordFailure {
-  message: String!
-}
-
-input CreateInitialUserInput {
-  name: String
-  email: String
-  password: String
 }
 
 type Query {
   user(where: UserWhereUniqueInput!): User
   users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: UserWhereUniqueInput): [User!]
   usersCount(where: UserWhereInput! = {}): Int
-  post(where: PostWhereUniqueInput!): Post
-  posts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PostWhereUniqueInput): [Post!]
-  postsCount(where: PostWhereInput! = {}): Int
-  jadwalIbadah(where: JadwalIbadahWhereUniqueInput!): JadwalIbadah
-  jadwalIbadahs(where: JadwalIbadahWhereInput! = {}, orderBy: [JadwalIbadahOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: JadwalIbadahWhereUniqueInput): [JadwalIbadah!]
-  jadwalIbadahsCount(where: JadwalIbadahWhereInput! = {}): Int
+  profile(where: ProfileWhereUniqueInput!): Profile
+  profiles(where: ProfileWhereInput! = {}, orderBy: [ProfileOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ProfileWhereUniqueInput): [Profile!]
+  profilesCount(where: ProfileWhereInput! = {}): Int
   warta(where: WartaWhereUniqueInput!): Warta
   wartas(where: WartaWhereInput! = {}, orderBy: [WartaOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: WartaWhereUniqueInput): [Warta!]
   wartasCount(where: WartaWhereInput! = {}): Int
+  jadwalIbadah(where: JadwalIbadahWhereUniqueInput!): JadwalIbadah
+  jadwalIbadahs(where: JadwalIbadahWhereInput! = {}, orderBy: [JadwalIbadahOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: JadwalIbadahWhereUniqueInput): [JadwalIbadah!]
+  jadwalIbadahsCount(where: JadwalIbadahWhereInput! = {}): Int
   keystone: KeystoneMeta!
-  authenticatedItem: AuthenticatedItem
 }
-
-union AuthenticatedItem = User
 
 type KeystoneMeta {
   adminMeta: KeystoneAdminMeta!

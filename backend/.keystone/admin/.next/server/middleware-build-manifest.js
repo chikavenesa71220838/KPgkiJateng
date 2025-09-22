@@ -29,15 +29,15 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/jadwal-ibadahs.js"
     ],
+    "/jadwal-ibadahs/[id]": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/jadwal-ibadahs/[id].js"
+    ],
     "/jadwal-ibadahs/create": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/jadwal-ibadahs/create.js"
-    ],
-    "/posts": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/posts.js"
     ],
     "/wartas": [
       "static/chunks/webpack.js",
