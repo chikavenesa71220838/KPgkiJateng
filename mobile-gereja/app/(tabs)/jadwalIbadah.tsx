@@ -1,57 +1,186 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
-import { View, Platform, StyleSheet , Text, FlatList, TextInput } from 'react-native';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  Text,
+  FlatList,
+  TextInput,
+  Button,
+  Alert,
+  Platform,
+} from "react-native";
 
-const data = [
-  { id: "1", tanggal: "2024-12-25", topik: "Menyambut Kedatangan-Nya", pengkhotbah: "Pendeta A" },
-  { id: "2", tanggal: "2024-01-01", topik: "Tahun Baru, Iman Baru", pengkhotbah: "Pendeta B" },
-]
+const API_URL =
+  Platform.OS === "android"
+    ? "http://10.0.2.2:3000/api/graphql"
+    : "http://localhost:3000/api/graphql";
 
-export default function jadwalIbadah() {
-  const [setQuery, setSearchQuery] = useState('');
-  const [filteredData, setFilteredData] = useState(data);
+interface Jadwal {
+  id: string;
+  tanggal: string;
+  topik: string;
+  pengkhotbah: string;
+}
+
+export default function JadwalIbadah(): React.ReactElement {
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [jadwal, setJadwal] = useState<Jadwal[]>([]);
+  const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
+
+  const [tanggal, setTanggal] = useState<string>("");
+  const [topik, setTopik] = useState<string>("");
+  const [pengkhotbah, setPengkhotbah] = useState<string>("");
+
+const fetchData = async () => {
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          query {
+            jadwalIbadahs {
+              id
+              tanggal
+              topik
+              pengkhotbah
+            }
+          }
+        `,
+      }),
+    });
+
+    const result = await res.json();
+
+    if (result.data && result.data.jadwalIbadahs) {
+      setJadwal(result.data.jadwalIbadahs);
+      setFilteredData(result.data.jadwalIbadahs);
+    }
+  } catch (err) {
+    console.error("Fetch error:", err);
+  }
+};
 
   useEffect(() => {
-    if (setQuery) {
-      const dataBaru = data.filter(item => {
-        const textData = setQuery.toLowerCase();
-        return (
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery) {
+      const textData = searchQuery.toLowerCase();
+      const dataBaru = jadwal.filter(
+        (item) =>
           item.tanggal.toLowerCase().includes(textData) ||
           item.topik.toLowerCase().includes(textData) ||
-          item.pengkhotbah.toLowerCase().includes(textData) 
-        )
-      });
+          item.pengkhotbah.toLowerCase().includes(textData)
+      );
       setFilteredData(dataBaru);
     } else {
-      setFilteredData(data);
+      setFilteredData(jadwal);
     }
-  }, [setQuery]);
+  }, [searchQuery, jadwal]);
+
+  const tambahJadwal = async () => {
+    if (!tanggal || !topik || !pengkhotbah) {
+      Alert.alert("Error", "Semua field harus diisi!");
+      return;
+    }
+
+    const mutation = `
+      mutation {
+        createJadwalIbadah(data: {
+          tanggal: "${tanggal}"
+          topik: "${topik}"
+          pengkhotbah: "${pengkhotbah}"
+        }) {
+          id
+          tanggal
+          topik
+          pengkhotbah
+        }
+      }
+    `;
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: mutation }),
+      });
+
+      const json = await res.json();
+      if (json.data?.createJadwalIbadah) {
+        Alert.alert("Sukses", "Jadwal berhasil ditambahkan!");
+        fetchData();
+        setTanggal("");
+        setTopik("");
+        setPengkhotbah("");
+      } else {
+        Alert.alert("Gagal", "Terjadi kesalahan saat menambah data");
+      }
+    } catch (error) {
+      console.error("Error creating jadwal:", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <TextInput
         placeholder="Cari jadwal"
         style={styles.input}
-        value={setQuery}
-        onChangeText={text => setSearchQuery(text)}
+        value={searchQuery}
+        onChangeText={(text) => setSearchQuery(text)}
       />
+
       <FlatList
         data={filteredData}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item.id || index.toString()}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text>Tanggal: {item.tanggal}</Text>
+            <Text>Tanggal: {item.tanggal.split("T")[0]}</Text>
             <Text>Topik: {item.topik}</Text>
             <Text>Pengkhotbah: {item.pengkhotbah}</Text>
           </View>
         )}
+        ListEmptyComponent={<Text>Tidak ada data jadwal</Text>}
       />
+
+      <TextInput
+        placeholder="Tanggal (YYYY-MM-DD)"
+        style={styles.input}
+        value={tanggal}
+        onChangeText={setTanggal}
+      />
+      <TextInput
+        placeholder="Topik"
+        style={styles.input}
+        value={topik}
+        onChangeText={setTopik}
+      />
+      <TextInput
+        placeholder="Pengkhotbah"
+        style={styles.input}
+        value={pengkhotbah}
+        onChangeText={setPengkhotbah}
+      />
+      <Button title="Tambah Jadwal" onPress={tambahJadwal} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  input: {borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 8, marginBottom: 12},
-  card: {backgroundColor: '#ADD8FF', padding: 12, borderRadius: 10, marginBottom: 10},
+  container: { flex: 1, padding: 16, backgroundColor: "#fff" },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 12,
+  },
+  card: {
+    backgroundColor: "#ADD8FF",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
 });

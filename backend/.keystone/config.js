@@ -34,110 +34,100 @@ __export(keystone_exports, {
 module.exports = __toCommonJS(keystone_exports);
 var import_core = require("@keystone-6/core");
 var import_fields = require("@keystone-6/core/fields");
-var import_auth = require("@keystone-6/auth");
 var import_session = require("@keystone-6/core/session");
 var import_path = __toESM(require("path"));
 var import_config = require("dotenv/config");
-var sessionSecret = process.env.SESSION_SECRET;
-var { withAuth } = (0, import_auth.createAuth)({
-  listKey: "User",
-  identityField: "email",
-  secretField: "password",
-  initFirstItem: {
-    fields: ["name", "email", "password"]
-  }
-});
+var sessionSecret = process.env.SESSION_SECRET || "supersecret";
 var session = (0, import_session.statelessSessions)({
   secret: sessionSecret,
   maxAge: 60 * 60 * 24 * 30
 });
-var keystone_default = withAuth(
-  (0, import_core.config)({
-    db: {
-      provider: "sqlite",
-      url: process.env.DATABASE_URL || "file:./mobileGereja.db"
+var allowAll = {
+  operation: {
+    query: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true
+  }
+};
+var keystone_default = (0, import_core.config)({
+  db: {
+    provider: "sqlite",
+    url: process.env.DATABASE_URL || "file:./mobileGereja.db"
+  },
+  server: {
+    cors: {
+      origin: [
+        "http://localhost:8081",
+        "http://localhost:19006",
+        "exp://127.0.0.1:19000"
+      ],
+      credentials: true
     },
-    storage: {
-      local_files: {
-        kind: "local",
-        type: "file",
-        storagePath: import_path.default.join(process.cwd(), "public", "files"),
-        serverRoute: {
-          path: "/files"
-        },
-        generateUrl: (filePath) => `/files/${filePath}`
+    port: 3e3
+  },
+  storage: {
+    local_files: {
+      kind: "local",
+      type: "file",
+      storagePath: import_path.default.join(process.cwd(), "public", "files"),
+      serverRoute: {
+        path: "/files"
+      },
+      generateUrl: (filePath) => `/files/${filePath}`
+    }
+  },
+  lists: {
+    User: (0, import_core.list)({
+      access: allowAll,
+      fields: {
+        namaUser: (0, import_fields.text)({ validation: { isRequired: true } }),
+        emailUser: (0, import_fields.text)({
+          validation: { isRequired: true },
+          isIndexed: "unique"
+        }),
+        googleId: (0, import_fields.text)({ isIndexed: "unique" }),
+        role: (0, import_fields.select)({
+          options: [
+            { label: "Admin", value: "admin" },
+            { label: "Jemaat", value: "jemaat" }
+          ],
+          defaultValue: "jemaat",
+          ui: { displayMode: "segmented-control" }
+        }),
+        profile: (0, import_fields.relationship)({ ref: "Profile.user", many: false })
       }
-    },
-    lists: {
-      User: (0, import_core.list)({
-        access: {
-          operation: {
-            query: () => true,
-            create: () => true,
-            update: () => true,
-            delete: () => true
-          }
-        },
-        fields: {
-          name: (0, import_fields.text)({ validation: { isRequired: true } }),
-          email: (0, import_fields.text)({ validation: { isRequired: true }, isIndexed: "unique" }),
-          password: (0, import_fields.password)()
-        }
-      }),
-      Post: (0, import_core.list)({
-        access: {
-          operation: {
-            query: () => true,
-            create: () => true,
-            update: () => true,
-            delete: () => true
-          }
-        },
-        fields: {
-          title: (0, import_fields.text)({ validation: { isRequired: true } }),
-          content: (0, import_fields.text)(),
-          attachment: (0, import_fields.file)({ storage: "local_files" })
-        }
-      }),
-      JadwalIbadah: (0, import_core.list)({
-        access: {
-          operation: {
-            query: () => true,
-            create: () => true,
-            update: () => true,
-            delete: () => true
-          }
-        },
-        fields: {
-          tanggal: (0, import_fields.timestamp)({ validation: { isRequired: true } }),
-          hari: (0, import_fields.text)(),
-          jam: (0, import_fields.text)(),
-          pengkhotbah: (0, import_fields.text)(),
-          topik: (0, import_fields.text)()
-        }
-      }),
-      Warta: (0, import_core.list)({
-        access: {
-          operation: {
-            query: () => true,
-            create: () => true,
-            update: () => true,
-            delete: () => true
-          }
-        },
-        fields: {
-          kategori: (0, import_fields.text)({ validation: { isRequired: true } }),
-          judul: (0, import_fields.text)({ validation: { isRequired: true } }),
-          masaBerlaku: (0, import_fields.timestamp)(),
-          tanggalPelaksanaan: (0, import_fields.timestamp)(),
-          file: (0, import_fields.file)({ storage: "local_files" }),
-          createdAt: (0, import_fields.timestamp)({
-            defaultValue: { kind: "now" }
-          })
-        }
-      })
-    },
-    session
-  })
-);
+    }),
+    Profile: (0, import_core.list)({
+      access: allowAll,
+      fields: {
+        alamat: (0, import_fields.text)(),
+        noHp: (0, import_fields.text)(),
+        user: (0, import_fields.relationship)({ ref: "User.profile" })
+      }
+    }),
+    Warta: (0, import_core.list)({
+      access: allowAll,
+      fields: {
+        kategori: (0, import_fields.text)({ validation: { isRequired: true } }),
+        judul: (0, import_fields.text)({ validation: { isRequired: true } }),
+        masaBerlaku: (0, import_fields.timestamp)({ validation: { isRequired: true } }),
+        tanggalPelaksanaan: (0, import_fields.timestamp)({ validation: { isRequired: true } }),
+        file: (0, import_fields.file)({ storage: "local_files" }),
+        createdAt: (0, import_fields.timestamp)({
+          defaultValue: { kind: "now" }
+        })
+      }
+    }),
+    JadwalIbadah: (0, import_core.list)({
+      access: allowAll,
+      fields: {
+        tanggal: (0, import_fields.timestamp)({ validation: { isRequired: true } }),
+        pengkhotbah: (0, import_fields.text)(),
+        topik: (0, import_fields.text)()
+      }
+    })
+  },
+  session
+});
 //# sourceMappingURL=config.js.map
