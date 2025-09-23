@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Text, FlatList, TextInput, Button, Alert } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Text,
+  FlatList,
+  TextInput,
+  Button,
+  Alert,
+  Platform,
+} from "react-native";
 
-const API_URL = "http://10.0.2.2:3000/api/graphql";
+const API_URL =
+  Platform.OS === "android"
+    ? "http://10.0.2.2:3000/api/graphql"
+    : "http://localhost:3000/api/graphql";
 
 interface Jadwal {
   id: string;
@@ -19,33 +31,35 @@ export default function JadwalIbadah(): React.ReactElement {
   const [topik, setTopik] = useState<string>("");
   const [pengkhotbah, setPengkhotbah] = useState<string>("");
 
-  const fetchData = async () => {
-    const query = `
-      query {
-        jadwalIbadahs {
-          id
-          tanggal
-          topik
-          pengkhotbah
-        }
-      }
-    `;
+const fetchData = async () => {
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          query {
+            jadwalIbadahs {
+              id
+              tanggal
+              topik
+              pengkhotbah
+            }
+          }
+        `,
+      }),
+    });
 
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
+    const result = await res.json();
 
-      const json = await res.json();
-      const data: Jadwal[] = json.data?.jadwalIbadahs || [];
-      setJadwal(data);
-      setFilteredData(data);
-    } catch (error) {
-      console.error("Error fetching jadwal:", error);
+    if (result.data && result.data.jadwalIbadahs) {
+      setJadwal(result.data.jadwalIbadahs);
+      setFilteredData(result.data.jadwalIbadahs);
     }
-  };
+  } catch (err) {
+    console.error("Fetch error:", err);
+  }
+};
 
   useEffect(() => {
     fetchData();
@@ -54,10 +68,11 @@ export default function JadwalIbadah(): React.ReactElement {
   useEffect(() => {
     if (searchQuery) {
       const textData = searchQuery.toLowerCase();
-      const dataBaru = jadwal.filter((item) =>
-        item.tanggal.toLowerCase().includes(textData) ||
-        item.topik.toLowerCase().includes(textData) ||
-        item.pengkhotbah.toLowerCase().includes(textData)
+      const dataBaru = jadwal.filter(
+        (item) =>
+          item.tanggal.toLowerCase().includes(textData) ||
+          item.topik.toLowerCase().includes(textData) ||
+          item.pengkhotbah.toLowerCase().includes(textData)
       );
       setFilteredData(dataBaru);
     } else {
@@ -119,14 +134,15 @@ export default function JadwalIbadah(): React.ReactElement {
 
       <FlatList
         data={filteredData}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item.id || index.toString()}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text>Tanggal: {new Date(item.tanggal).toLocaleDateString()}</Text>
+            <Text>Tanggal: {item.tanggal.split("T")[0]}</Text>
             <Text>Topik: {item.topik}</Text>
             <Text>Pengkhotbah: {item.pengkhotbah}</Text>
           </View>
         )}
+        ListEmptyComponent={<Text>Tidak ada data jadwal</Text>}
       />
 
       <TextInput
@@ -154,6 +170,17 @@ export default function JadwalIbadah(): React.ReactElement {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#fff" },
-  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 8, marginBottom: 12 },
-  card: { backgroundColor: "#ADD8FF", padding: 12, borderRadius: 10, marginBottom: 10 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 12,
+  },
+  card: {
+    backgroundColor: "#ADD8FF",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
 });

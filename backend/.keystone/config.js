@@ -55,6 +55,17 @@ var keystone_default = (0, import_core.config)({
     provider: "sqlite",
     url: process.env.DATABASE_URL || "file:./mobileGereja.db"
   },
+  server: {
+    cors: {
+      origin: [
+        "http://localhost:8081",
+        "http://localhost:19006",
+        "exp://127.0.0.1:19000"
+      ],
+      credentials: true
+    },
+    port: 3e3
+  },
   storage: {
     local_files: {
       kind: "local",
