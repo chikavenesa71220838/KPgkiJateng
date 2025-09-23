@@ -22,6 +22,20 @@ interface Jadwal {
   pengkhotbah: string;
 }
 
+function getWeekRange(date: Date) {
+  const day = date.getDay();
+  const diffToMonday = (day + 6) % 7;
+  const monday = new Date(date);
+  monday.setDate(date.getDate() - diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  return { start: monday, end: sunday };
+}
+
 export default function JadwalIbadah(): React.ReactElement {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [jadwal, setJadwal] = useState<Jadwal[]>([]);
@@ -31,35 +45,50 @@ export default function JadwalIbadah(): React.ReactElement {
   const [topik, setTopik] = useState<string>("");
   const [pengkhotbah, setPengkhotbah] = useState<string>("");
 
-const fetchData = async () => {
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: `
-          query {
-            jadwalIbadahs {
-              id
-              tanggal
-              topik
-              pengkhotbah
+  const fetchData = async () => {
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            query {
+              jadwalIbadahs(orderBy: { tanggal: asc }) {
+                id
+                tanggal
+                topik
+                pengkhotbah
+              }
             }
-          }
-        `,
-      }),
-    });
+          `,
+        }),
+      });
 
-    const result = await res.json();
+      const result = await res.json();
 
-    if (result.data && result.data.jadwalIbadahs) {
-      setJadwal(result.data.jadwalIbadahs);
-      setFilteredData(result.data.jadwalIbadahs);
+      if (result.data && result.data.jadwalIbadahs) {
+        const now = new Date();
+        const thisWeek = getWeekRange(now);
+        const nextWeekStart = new Date(thisWeek.start);
+        nextWeekStart.setDate(thisWeek.start.getDate() + 7);
+        const nextWeekEnd = new Date(thisWeek.end);
+        nextWeekEnd.setDate(thisWeek.end.getDate() + 7);
+
+        const filtered = result.data.jadwalIbadahs.filter((item: Jadwal) => {
+          const tgl = new Date(item.tanggal);
+          return (
+            (tgl >= thisWeek.start && tgl <= thisWeek.end) ||
+            (tgl >= nextWeekStart && tgl <= nextWeekEnd)
+          );
+        });
+
+        setJadwal(filtered);
+        setFilteredData(filtered);
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
     }
-  } catch (err) {
-    console.error("Fetch error:", err);
-  }
-};
+  };
 
   useEffect(() => {
     fetchData();
@@ -142,7 +171,7 @@ const fetchData = async () => {
             <Text>Pengkhotbah: {item.pengkhotbah}</Text>
           </View>
         )}
-        ListEmptyComponent={<Text>Tidak ada data jadwal</Text>}
+        ListEmptyComponent={<Text>Tidak ada jadwal minggu ini & depan</Text>}
       />
 
       <TextInput

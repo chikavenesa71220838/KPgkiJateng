@@ -57,14 +57,11 @@ var keystone_default = (0, import_core.config)({
   },
   server: {
     cors: {
-      origin: [
-        "http://localhost:8081",
-        "http://localhost:19006",
-        "exp://127.0.0.1:19000"
-      ],
+      origin: true,
       credentials: true
     },
-    port: 3e3
+    port: 3e3,
+    options: { host: "0.0.0.0" }
   },
   storage: {
     local_files: {
@@ -75,6 +72,14 @@ var keystone_default = (0, import_core.config)({
         path: "/files"
       },
       generateUrl: (filePath) => `/files/${filePath}`
+    }
+  },
+  ui: {
+    isAccessAllowed: (context) => {
+      if (process.env.NODE_ENV === "development") {
+        return true;
+      }
+      return !!context.session?.data && context.session.data.role === "admin";
     }
   },
   lists: {

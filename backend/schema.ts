@@ -13,7 +13,6 @@ const allowAll = {
 };
 
 export const lists = {
-  // 🔹 User
   User: list({
     access: allowAll,
     fields: {
@@ -32,7 +31,6 @@ export const lists = {
     },
   }),
 
-  // 🔹 Profile Jemaat
   Profile: list({
     access: allowAll,
     fields: {
@@ -46,7 +44,7 @@ export const lists = {
       }),
       pendidikan: text(),
       pekerjaan: text(),
-      tanggalLahir: text(), // bisa disimpan "MM-YYYY" kalau mau parsial
+      tanggalLahir: text(),
       statusPernikahan: select({
         options: [
           { label: 'Belum Menikah', value: 'single' },
@@ -65,7 +63,6 @@ export const lists = {
     },
   }),
 
-  // 🔹 Jadwal Ibadah
   JadwalIbadah: list({
     access: allowAll,
     fields: {
@@ -75,7 +72,6 @@ export const lists = {
     },
   }),
 
-  // 🔹 Warta
   Warta: list({
     access: allowAll,
     fields: {
