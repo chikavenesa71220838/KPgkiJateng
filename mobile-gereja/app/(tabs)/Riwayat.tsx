@@ -1,57 +1,124 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
-import { View, Platform, StyleSheet , Text, FlatList, TextInput } from 'react-native';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  FlatList,
+  Platform,
+} from "react-native";
 
-const data = [
-  { id: "1", tanggal: "2024-12-25", topik: "Menyambut Kedatangan-Nya", pengkhotbah: "Pendeta A" },
-  { id: "2", tanggal: "2024-01-01", topik: "Tahun Baru, Iman Baru", pengkhotbah: "Pendeta B" },
-]
+const API_URL =
+  Platform.OS === "android"
+    ? "http://10.0.2.2:3000/api/graphql"
+    : "http://localhost:3000/api/graphql";
 
-export default function Riwayat() {
-  const [setQuery, setSearchQuery] = useState('');
-  const [filteredData, setFilteredData] = useState(data);
+interface Jadwal {
+  id: string;
+  tanggal: string;
+  topik: string;
+  pengkhotbah: string;
+}
+
+export default function Riwayat(): React.ReactElement {
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [riwayat, setRiwayat] = useState<Jadwal[]>([]);
+  const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
+
+  const fetchRiwayat = async () => {
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            query {
+              jadwalIbadahs {
+                id
+                tanggal
+                topik
+                pengkhotbah
+              }
+            }
+          `,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (result.data && result.data.jadwalIbadahs) {
+        const now = new Date();
+
+        const past = result.data.jadwalIbadahs.filter((item: Jadwal) => {
+          const tgl = new Date(item.tanggal);
+          return tgl < now;
+        });
+
+        setRiwayat(past);
+        setFilteredData(past);
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+    }
+  };
 
   useEffect(() => {
-    if (setQuery) {
-      const dataBaru = data.filter(item => {
-        const textData = setQuery.toLowerCase();
-        return (
+    fetchRiwayat();
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery) {
+      const textData = searchQuery.toLowerCase();
+      const dataBaru = riwayat.filter(
+        (item) =>
           item.tanggal.toLowerCase().includes(textData) ||
           item.topik.toLowerCase().includes(textData) ||
           item.pengkhotbah.toLowerCase().includes(textData)
-        )
-      });
+      );
       setFilteredData(dataBaru);
     } else {
-      setFilteredData(data);
+      setFilteredData(riwayat);
     }
-  }, [setQuery]);
+  }, [searchQuery, riwayat]);
 
   return (
     <View style={styles.container}>
       <TextInput
         placeholder="Cari riwayat"
         style={styles.input}
-        value={setQuery}
-        onChangeText={text => setSearchQuery(text)}
+        value={searchQuery}
+        onChangeText={(text) => setSearchQuery(text)}
       />
+
       <FlatList
         data={filteredData}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item.id || index.toString()}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text>Tanggal: {item.tanggal}</Text>
+            <Text>Tanggal: {item.tanggal.split("T")[0]}</Text>
             <Text>Topik: {item.topik}</Text>
             <Text>Pengkhotbah: {item.pengkhotbah}</Text>
           </View>
         )}
+        ListEmptyComponent={<Text>Tidak ada riwayat ibadah</Text>}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  input: {borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 8, marginBottom: 12},
-  card: {backgroundColor: '#ADD8FF', padding: 12, borderRadius: 10, marginBottom: 10},
+  container: { flex: 1, padding: 16, backgroundColor: "#fff" },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 12,
+  },
+  card: {
+    backgroundColor: "#ADD8FF",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
 });

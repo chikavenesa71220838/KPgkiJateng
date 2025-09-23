@@ -10,12 +10,14 @@ import { statelessSessions } from "@keystone-6/core/session";
 import path from "path";
 import "dotenv/config";
 
+
 // Session config
 const sessionSecret = process.env.SESSION_SECRET || "supersecret";
 const session = statelessSessions({
   secret: sessionSecret,
   maxAge: 60 * 60 * 24 * 30,
 });
+
 
 const allowAll = {
   operation: {
@@ -26,23 +28,23 @@ const allowAll = {
   },
 };
 
+
 export default config({
   db: {
     provider: "sqlite",
     url: process.env.DATABASE_URL || "file:./mobileGereja.db",
   },
 
+
   server: {
     cors: {
-      origin: [
-        "http://localhost:8081",
-        "http://localhost:19006",
-        "exp://127.0.0.1:19000",
-      ],
+      origin: true,
       credentials: true,
     },
     port: 3000,
+    options: { host: "0.0.0.0" },
   },
+
 
   storage: {
     local_files: {
@@ -55,6 +57,17 @@ export default config({
       generateUrl: (filePath) => `/files/${filePath}`,
     },
   },
+
+ui: {
+  isAccessAllowed: (context) => {
+    if (process.env.NODE_ENV === "development") {
+      // ✅ Dev mode → bebas akses biar gampang
+      return true;
+    }
+    // 🚀 Production mode → wajib login & role admin
+    return !!context.session?.data && context.session.data.role === "admin";
+  },
+},
 
   lists: {
     User: list({
@@ -78,6 +91,7 @@ export default config({
       },
     }),
 
+
     Profile: list({
       access: allowAll,
       fields: {
@@ -86,6 +100,7 @@ export default config({
         user: relationship({ ref: "User.profile" }),
       },
     }),
+
 
     Warta: list({
       access: allowAll,
@@ -101,6 +116,7 @@ export default config({
       },
     }),
 
+
     JadwalIbadah: list({
       access: allowAll,
       fields: {
@@ -110,6 +126,7 @@ export default config({
       },
     }),
   },
+
 
   session,
 });
