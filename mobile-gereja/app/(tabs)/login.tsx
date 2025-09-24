@@ -11,7 +11,6 @@ export default function LoginScreen() {
   const router = useRouter();
 
   let redirectUri: string;
-
   if (__DEV__) {
     redirectUri = "https://auth.expo.io/@dwiyanBagus/mobile-gereja";
   } else {
@@ -20,33 +19,59 @@ export default function LoginScreen() {
       path: "redirect",
     });
   }
-  // =========================================================================
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    iosClientId: "822049057915-mhkq8mqfpk0ic562cr6t13idfs66mr7i.apps.googleusercontent.com",
-    androidClientId: "822049057915-qn7cuejdfr646hv0mjermf39l1cdj9hf.apps.googleusercontent.com",
-    webClientId: "8822049057915-id9ubk6l37sp53pa6krgvbsrib6b6oj7.apps.googleusercontent.com",
-    redirectUri, 
+    iosClientId:
+      "822049057915-mhkq8mqfpk0ic562cr6t13idfs66mr7i.apps.googleusercontent.com",
+    androidClientId:
+      "822049057915-qn7cuejdfr646hv0mjermf39l1cdj9hf.apps.googleusercontent.com",
+    webClientId:
+      "8822049057915-id9ubk6l37sp53pa6krgvbsrib6b6oj7.apps.googleusercontent.com",
+    redirectUri,
   });
 
   useEffect(() => {
-    // Log ini akan memastikan URI yang benar digunakan
     console.log("Redirect URI yang digunakan:", redirectUri);
 
     if (response) {
       if (response.type === "success") {
         const { authentication } = response;
         console.log("Google Token:", authentication?.accessToken);
-        Alert.alert("Login Berhasil!", "Token berhasil didapatkan.");
-        router.push("/jadwalIbadah");
+
+        if (!authentication?.accessToken) {
+          Alert.alert("Login gagal", "Token Google tidak ditemukan.");
+          return;
+        }
+
+        // Kirim token ke backend Keystone
+        fetch("http://localhost:3000/auth/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessToken: authentication.accessToken }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              Alert.alert("Login Berhasil!", `Halo ${data.user.namaUser}`);
+              router.push("/jadwalIbadah");
+            } else {
+              Alert.alert("Login Gagal", data.error || "Coba lagi nanti.");
+            }
+          })
+          .catch((err) => {
+            console.error("Error backend:", err);
+            Alert.alert("Error", "Tidak bisa terhubung ke server.");
+          });
       } else if (response.type === "error") {
-        Alert.alert("Login Gagal", `Error: ${response.error?.message || "Coba lagi nanti."}`);
+        Alert.alert(
+          "Login Gagal",
+          `Error: ${response.error?.message || "Coba lagi nanti."}`
+        );
         console.error("Google Auth Error:", response);
       }
     }
   }, [response]);
 
-  // Sisa kode tidak ada perubahan
   const handleGoogleSignIn = () => {
     if (request) {
       promptAsync();
@@ -79,11 +104,33 @@ export default function LoginScreen() {
 }
 
 const style = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 20, backgroundColor: "#FFF" },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    backgroundColor: "#FFF",
+  },
   title: { fontSize: 24, fontWeight: "bold", marginBottom: 40 },
   buttonContainer: { alignItems: "center", width: "100%" },
-  googleButton: { backgroundColor: "#6A8BFF", paddingVertical: 15, borderRadius: 25, width: "80%", marginBottom: 20, alignItems: "center", flexDirection: "row", justifyContent: "center" },
+  googleButton: {
+    backgroundColor: "#6A8BFF",
+    paddingVertical: 15,
+    borderRadius: 25,
+    width: "80%",
+    marginBottom: 20,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+  },
   googleButtonText: { color: "#FFF", fontWeight: "bold", fontSize: 16 },
-  guestButton: { backgroundColor: "#E0E0E0", paddingVertical: 15, borderRadius: 25, alignItems: "center", justifyContent: "center", width: "80%" },
+  guestButton: {
+    backgroundColor: "#E0E0E0",
+    paddingVertical: 15,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "80%",
+  },
   guestButtonText: { color: "#333", fontWeight: "bold", fontSize: 16 },
 });
