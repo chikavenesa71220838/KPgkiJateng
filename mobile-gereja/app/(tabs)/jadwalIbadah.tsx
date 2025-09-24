@@ -3,17 +3,12 @@ import {
   View,
   StyleSheet,
   Text,
-  FlatList,
   TextInput,
   Button,
   Alert,
-  Platform,
+  ScrollView,
 } from "react-native";
-
-const API_URL =
-  Platform.OS === "android"
-    ? "http://10.0.2.2:3000/api/graphql"
-    : "http://localhost:3000/api/graphql";
+import { API_URL } from "../../utils/api";
 
 interface Jadwal {
   id: string;
@@ -22,38 +17,49 @@ interface Jadwal {
   pengkhotbah: string;
 }
 
-function getWeekRange(date: Date) {
-  const day = date.getDay();
+// ✅ helper hitung minggu ini & minggu depan
+function getRangeForQuery() {
+  const today = new Date();
+
+  const day = today.getDay();
   const diffToMonday = (day + 6) % 7;
-  const monday = new Date(date);
-  monday.setDate(date.getDate() - diffToMonday);
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - diffToMonday);
   monday.setHours(0, 0, 0, 0);
 
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
+  const endNextWeek = new Date(monday);
+  endNextWeek.setDate(monday.getDate() + 13);
+  endNextWeek.setHours(23, 59, 59, 999);
 
-  return { start: monday, end: sunday };
+  return {
+    start: monday.toISOString(),
+    end: endNextWeek.toISOString(),
+  };
 }
 
 export default function JadwalIbadah(): React.ReactElement {
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [jadwal, setJadwal] = useState<Jadwal[]>([]);
   const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
 
-  const [tanggal, setTanggal] = useState<string>("");
-  const [topik, setTopik] = useState<string>("");
-  const [pengkhotbah, setPengkhotbah] = useState<string>("");
+  const [tanggal, setTanggal] = useState("");
+  const [topik, setTopik] = useState("");
+  const [pengkhotbah, setPengkhotbah] = useState("");
 
   const fetchData = async () => {
     try {
+      const { start, end } = getRangeForQuery();
+
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `
             query {
-              jadwalIbadahs(orderBy: { tanggal: asc }) {
+              jadwalIbadahs(
+                where: { tanggal: { gte: "${start}", lte: "${end}" } }
+                orderBy: { tanggal: asc }
+              ) {
                 id
                 tanggal
                 topik
@@ -66,24 +72,9 @@ export default function JadwalIbadah(): React.ReactElement {
 
       const result = await res.json();
 
-      if (result.data && result.data.jadwalIbadahs) {
-        const now = new Date();
-        const thisWeek = getWeekRange(now);
-        const nextWeekStart = new Date(thisWeek.start);
-        nextWeekStart.setDate(thisWeek.start.getDate() + 7);
-        const nextWeekEnd = new Date(thisWeek.end);
-        nextWeekEnd.setDate(thisWeek.end.getDate() + 7);
-
-        const filtered = result.data.jadwalIbadahs.filter((item: Jadwal) => {
-          const tgl = new Date(item.tanggal);
-          return (
-            (tgl >= thisWeek.start && tgl <= thisWeek.end) ||
-            (tgl >= nextWeekStart && tgl <= nextWeekEnd)
-          );
-        });
-
-        setJadwal(filtered);
-        setFilteredData(filtered);
+      if (result.data?.jadwalIbadahs) {
+        setJadwal(result.data.jadwalIbadahs);
+        setFilteredData(result.data.jadwalIbadahs);
       }
     } catch (err) {
       console.error("Fetch error:", err);
@@ -118,7 +109,7 @@ export default function JadwalIbadah(): React.ReactElement {
     const mutation = `
       mutation {
         createJadwalIbadah(data: {
-          tanggal: "${tanggal}"
+          tanggal: "${tanggal}T00:00:00.000Z"
           topik: "${topik}"
           pengkhotbah: "${pengkhotbah}"
         }) {
@@ -153,26 +144,26 @@ export default function JadwalIbadah(): React.ReactElement {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Jadwal Ibadah</Text>
       <TextInput
         placeholder="Cari jadwal"
         style={styles.input}
         value={searchQuery}
-        onChangeText={(text) => setSearchQuery(text)}
+        onChangeText={setSearchQuery}
       />
 
-      <FlatList
-        data={filteredData}
-        keyExtractor={(item, index) => item.id || index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
+      {filteredData.length > 0 ? (
+        filteredData.map((item) => (
+          <View key={item.id} style={styles.card}>
             <Text>Tanggal: {item.tanggal.split("T")[0]}</Text>
             <Text>Topik: {item.topik}</Text>
             <Text>Pengkhotbah: {item.pengkhotbah}</Text>
           </View>
-        )}
-        ListEmptyComponent={<Text>Tidak ada jadwal minggu ini & depan</Text>}
-      />
+        ))
+      ) : (
+        <Text>Tidak ada jadwal minggu ini & depan</Text>
+      )}
 
       <TextInput
         placeholder="Tanggal (YYYY-MM-DD)"
@@ -193,7 +184,7 @@ export default function JadwalIbadah(): React.ReactElement {
         onChangeText={setPengkhotbah}
       />
       <Button title="Tambah Jadwal" onPress={tambahJadwal} />
-    </View>
+    </ScrollView>
   );
 }
 
@@ -212,4 +203,5 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 10,
   },
+  title: { fontSize: 30, fontWeight: "bold", marginBottom: 20 },
 });

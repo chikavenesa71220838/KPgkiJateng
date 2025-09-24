@@ -1,17 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  FlatList,
-  Platform,
-} from "react-native";
-
-const API_URL =
-  Platform.OS === "android"
-    ? "http://10.0.2.2:3000/api/graphql"
-    : "http://localhost:3000/api/graphql";
+import { View, Text, StyleSheet, TextInput, FlatList } from "react-native";
+import { API_URL } from "../../utils/api";
 
 interface Jadwal {
   id: string;
@@ -21,19 +10,24 @@ interface Jadwal {
 }
 
 export default function Riwayat(): React.ReactElement {
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [riwayat, setRiwayat] = useState<Jadwal[]>([]);
   const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
 
   const fetchRiwayat = async () => {
     try {
+      const now = new Date().toISOString();
+
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `
             query {
-              jadwalIbadahs {
+              jadwalIbadahs(
+                where: { tanggal: { lt: "${now}" } }
+                orderBy: { tanggal: desc }
+              ) {
                 id
                 tanggal
                 topik
@@ -46,16 +40,9 @@ export default function Riwayat(): React.ReactElement {
 
       const result = await res.json();
 
-      if (result.data && result.data.jadwalIbadahs) {
-        const now = new Date();
-
-        const past = result.data.jadwalIbadahs.filter((item: Jadwal) => {
-          const tgl = new Date(item.tanggal);
-          return tgl < now;
-        });
-
-        setRiwayat(past);
-        setFilteredData(past);
+      if (result.data?.jadwalIbadahs) {
+        setRiwayat(result.data.jadwalIbadahs);
+        setFilteredData(result.data.jadwalIbadahs);
       }
     } catch (err) {
       console.error("Fetch error:", err);
@@ -83,11 +70,12 @@ export default function Riwayat(): React.ReactElement {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Riwayat Ibadah</Text>
       <TextInput
         placeholder="Cari riwayat"
         style={styles.input}
         value={searchQuery}
-        onChangeText={(text) => setSearchQuery(text)}
+        onChangeText={setSearchQuery}
       />
 
       <FlatList
@@ -120,5 +108,10 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     marginBottom: 10,
+  },
+    title: { 
+    fontSize: 30, 
+    fontWeight: "bold", 
+    marginBottom: 20 
   },
 });
