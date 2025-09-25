@@ -12,7 +12,7 @@ export default function LoginScreen() {
 
   let redirectUri: string;
   if (__DEV__) {
-    redirectUri = "https://auth.expo.io/@dwiyanBagus/mobile-gereja";
+    redirectUri = "https://auth.expo.io/@dwiyanbagus/mobile-gereja";
   } else {
     redirectUri = AuthSession.makeRedirectUri({
       scheme: "mobilegereja",
