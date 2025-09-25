@@ -13,7 +13,7 @@ export default function LoginScreen() {
   let redirectUri: string;
 
   if (__DEV__) {
-    redirectUri = "https://auth.expo.io/@dwiyanBagus/mobile-gereja";
+    redirectUri = "https://auth.expo.io/@dwiyanbagus/mobile-gereja";
   } else {
     redirectUri = AuthSession.makeRedirectUri({
       scheme: "mobilegereja",
@@ -25,7 +25,7 @@ export default function LoginScreen() {
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: "822049057915-mhkq8mqfpk0ic562cr6t13idfs66mr7i.apps.googleusercontent.com",
     androidClientId: "822049057915-qn7cuejdfr646hv0mjermf39l1cdj9hf.apps.googleusercontent.com",
-    webClientId: "8822049057915-id9ubk6l37sp53pa6krgvbsrib6b6oj7.apps.googleusercontent.com",
+    webClientId: "822049057915-id9ubk6l37sp53pa6krgvbsrib6b6oj7.apps.googleusercontent.com",
     redirectUri, 
   });
 

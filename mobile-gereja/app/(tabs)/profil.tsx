@@ -68,6 +68,7 @@ export default function ProfilScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      <Text style={styles.title}>Profil Jemaat</Text>
       <Text style={styles.label}>Nama *</Text>
       <TextInput
         style={styles.input}
@@ -255,4 +256,9 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   btnText: { color: "#fff", fontWeight: "bold" },
+    title: { 
+    fontSize: 30, 
+    fontWeight: "bold", 
+    marginBottom: 20 
+  },
 });
