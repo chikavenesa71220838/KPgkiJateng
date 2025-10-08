@@ -1,10 +1,16 @@
 import Constants from "expo-constants";
+import { Platform } from "react-native"; // <-- Jangan lupa import ini
 
 function getApiUrl() {
   const productionUrl = "https://api.gereja.com/api/graphql";
 
   if (process.env.NODE_ENV === "production") {
     return productionUrl;
+  }
+
+  // Tambahkan pengecekan untuk platform web
+  if (Platform.OS === 'web') {
+    return "http://localhost:3000/api/graphql";
   }
 
   const debuggerHost = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
@@ -14,6 +20,7 @@ function getApiUrl() {
     return `http://${host}:3000/api/graphql`;
   }
 
+  // Fallback ini sekarang hanya untuk mobile (Android Emulator)
   return "http://10.0.2.2:3000/api/graphql";
 }
 

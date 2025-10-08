@@ -57,7 +57,7 @@ var keystone_default = (0, import_core.config)({
   },
   server: {
     cors: {
-      origin: true,
+      origin: ["http://localhost:8081", "http://localhost:8080", "http://localhost:19006"],
       credentials: true
     },
     port: 3e3,
@@ -68,17 +68,20 @@ var keystone_default = (0, import_core.config)({
       kind: "local",
       type: "file",
       storagePath: import_path.default.join(process.cwd(), "public", "files"),
-      serverRoute: {
-        path: "/files"
-      },
+      serverRoute: { path: "/files" },
       generateUrl: (filePath) => `/files/${filePath}`
+    },
+    local_images: {
+      kind: "local",
+      type: "image",
+      storagePath: import_path.default.join(process.cwd(), "public", "images"),
+      serverRoute: { path: "/images" },
+      generateUrl: (filePath) => `/images/${filePath}`
     }
   },
   ui: {
     isAccessAllowed: (context) => {
-      if (process.env.NODE_ENV === "development") {
-        return true;
-      }
+      if (process.env.NODE_ENV === "development") return true;
       return !!context.session?.data && context.session.data.role === "admin";
     }
   },
@@ -119,18 +122,54 @@ var keystone_default = (0, import_core.config)({
         masaBerlaku: (0, import_fields.timestamp)({ validation: { isRequired: true } }),
         tanggalPelaksanaan: (0, import_fields.timestamp)({ validation: { isRequired: true } }),
         file: (0, import_fields.file)({ storage: "local_files" }),
-        createdAt: (0, import_fields.timestamp)({
-          defaultValue: { kind: "now" }
-        })
+        createdAt: (0, import_fields.timestamp)({ defaultValue: { kind: "now" } })
       }
     }),
     JadwalIbadah: (0, import_core.list)({
       access: allowAll,
       fields: {
-        tanggal: (0, import_fields.timestamp)({ validation: { isRequired: true } }),
+        tanggal: (0, import_fields.calendarDay)({
+          validation: { isRequired: true }
+        }),
+        topik: (0, import_fields.text)(),
+        detailIbadah: (0, import_fields.relationship)({
+          ref: "DetailIbadah.jadwal",
+          many: true,
+          ui: {
+            displayMode: "cards",
+            cardFields: ["jam", "pengkhotbah", "banner"],
+            inlineCreate: { fields: ["jam", "pengkhotbah", "banner"] },
+            inlineEdit: { fields: ["jam", "pengkhotbah", "banner"] }
+          }
+        })
+      },
+      ui: { labelField: "topik" }
+    }),
+    DetailIbadah: (0, import_core.list)({
+      access: allowAll,
+      fields: {
+        jam: (0, import_fields.text)({
+          validation: { isRequired: true }
+        }),
         pengkhotbah: (0, import_fields.text)(),
-        topik: (0, import_fields.text)()
-      }
+        banner: (0, import_fields.image)({
+          storage: "local_images",
+          hooks: {
+            validateInput: async ({ resolvedData, addValidationError }) => {
+              const file2 = resolvedData.banner;
+              if (!file2 || !file2.filename) return;
+              const lower = file2.filename.toLowerCase();
+              if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg")) {
+                addValidationError(
+                  "Hanya file JPEG yang diperbolehkan untuk banner."
+                );
+              }
+            }
+          }
+        }),
+        jadwal: (0, import_fields.relationship)({ ref: "JadwalIbadah.detailIbadah" })
+      },
+      ui: { labelField: "jam" }
     })
   },
   session

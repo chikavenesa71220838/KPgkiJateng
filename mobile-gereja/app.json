@@ -9,11 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.gki.mobilegereja",
+      "bundleIdentifier": "com.dwiyanbagus.mobilegereja",
       "supportsTablet": true
     },
     "android": {
-      "package": "com.gki.mobilegereja",
+      "package": "com.dwiyanbagus.mobilegereja",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

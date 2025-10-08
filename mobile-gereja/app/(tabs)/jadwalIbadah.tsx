@@ -4,23 +4,27 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  Button,
-  Alert,
   ScrollView,
+  ImageBackground,
+  ActivityIndicator,
 } from "react-native";
 import { API_URL } from "../../utils/api";
+interface DetailIbadah {
+  id: string;
+  jam: string;
+  pengkhotbah: string;
+  banner?: { url: string };
+}
 
 interface Jadwal {
   id: string;
   tanggal: string;
   topik: string;
-  pengkhotbah: string;
+  detailIbadah: DetailIbadah[];
 }
 
-// ✅ helper hitung minggu ini & minggu depan
 function getRangeForQuery() {
   const today = new Date();
-
   const day = today.getDay();
   const diffToMonday = (day + 6) % 7;
   const monday = new Date(today);
@@ -32,22 +36,28 @@ function getRangeForQuery() {
   endNextWeek.setHours(23, 59, 59, 999);
 
   return {
-    start: monday.toISOString(),
-    end: endNextWeek.toISOString(),
+    start: monday.toISOString().split("T")[0],
+    end: endNextWeek.toISOString().split("T")[0],
   };
 }
 
+const formatDate = (dateString: string) => {
+  const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  return new Date(dateString).toLocaleDateString('id-ID', options);
+};
+
+
 export default function JadwalIbadah(): React.ReactElement {
+  // --- State dan logika fetch data tidak ada perubahan ---
   const [searchQuery, setSearchQuery] = useState("");
   const [jadwal, setJadwal] = useState<Jadwal[]>([]);
   const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
-
-  const [tanggal, setTanggal] = useState("");
-  const [topik, setTopik] = useState("");
-  const [pengkhotbah, setPengkhotbah] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const { start, end } = getRangeForQuery();
 
       const res = await fetch(API_URL, {
@@ -63,7 +73,14 @@ export default function JadwalIbadah(): React.ReactElement {
                 id
                 tanggal
                 topik
-                pengkhotbah
+                detailIbadah {
+                  id
+                  jam
+                  pengkhotbah
+                  banner {
+                    url
+                  }
+                }
               }
             }
           `,
@@ -71,13 +88,21 @@ export default function JadwalIbadah(): React.ReactElement {
       });
 
       const result = await res.json();
+      console.log("GraphQL result:", JSON.stringify(result, null, 2));
 
-      if (result.data?.jadwalIbadahs) {
-        setJadwal(result.data.jadwalIbadahs);
-        setFilteredData(result.data.jadwalIbadahs);
+      if (result.errors) {
+        throw new Error(result.errors[0]?.message || "GraphQL Error");
       }
-    } catch (err) {
+
+      const data = result.data?.jadwalIbadahs || [];
+      setJadwal(data);
+      setFilteredData(data);
+      setError(null);
+    } catch (err: any) {
       console.error("Fetch error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,13 +111,15 @@ export default function JadwalIbadah(): React.ReactElement {
   }, []);
 
   useEffect(() => {
-    if (searchQuery) {
+    if (searchQuery.trim() !== "") {
       const textData = searchQuery.toLowerCase();
       const dataBaru = jadwal.filter(
         (item) =>
           item.tanggal.toLowerCase().includes(textData) ||
-          item.topik.toLowerCase().includes(textData) ||
-          item.pengkhotbah.toLowerCase().includes(textData)
+          item.topik?.toLowerCase().includes(textData) ||
+          item.detailIbadah.some((d) =>
+            d.pengkhotbah?.toLowerCase().includes(textData)
+          )
       );
       setFilteredData(dataBaru);
     } else {
@@ -100,108 +127,127 @@ export default function JadwalIbadah(): React.ReactElement {
     }
   }, [searchQuery, jadwal]);
 
-  const tambahJadwal = async () => {
-    if (!tanggal || !topik || !pengkhotbah) {
-      Alert.alert("Error", "Semua field harus diisi!");
-      return;
-    }
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text>Memuat jadwal ibadah...</Text>
+      </View>
+    );
+  }
 
-    const mutation = `
-      mutation {
-        createJadwalIbadah(data: {
-          tanggal: "${tanggal}T00:00:00.000Z"
-          topik: "${topik}"
-          pengkhotbah: "${pengkhotbah}"
-        }) {
-          id
-          tanggal
-          topik
-          pengkhotbah
-        }
-      }
-    `;
-
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: mutation }),
-      });
-
-      const json = await res.json();
-      if (json.data?.createJadwalIbadah) {
-        Alert.alert("Sukses", "Jadwal berhasil ditambahkan!");
-        fetchData();
-        setTanggal("");
-        setTopik("");
-        setPengkhotbah("");
-      } else {
-        Alert.alert("Gagal", "Terjadi kesalahan saat menambah data");
-      }
-    } catch (error) {
-      console.error("Error creating jadwal:", error);
-    }
-  };
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: "red" }}>Gagal memuat data: {error}</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Jadwal Ibadah</Text>
+
       <TextInput
-        placeholder="Cari jadwal"
+        placeholder="Cari jadwal atau pengkhotbah..."
         style={styles.input}
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
 
       {filteredData.length > 0 ? (
-        filteredData.map((item) => (
-          <View key={item.id} style={styles.card}>
-            <Text>Tanggal: {item.tanggal.split("T")[0]}</Text>
-            <Text>Topik: {item.topik}</Text>
-            <Text>Pengkhotbah: {item.pengkhotbah}</Text>
-          </View>
-        ))
-      ) : (
-        <Text>Tidak ada jadwal minggu ini & depan</Text>
-      )}
+        filteredData.map((item) => {
+          const bannerUrl = item.detailIbadah[0]?.banner?.url;
+          if (bannerUrl) {
+            return (
+              <ImageBackground
+                key={item.id}
+                source={{ uri: `${API_URL.replace("/api/graphql", "")}${bannerUrl}` }}
+                style={styles.cardBackground}
+                imageStyle={{ borderRadius: 12 }} // Agar gambar mengikuti lengkungan border
+              >
+                <View style={styles.overlay}>
+                  <Text style={styles.dateOnImage}>📅 {formatDate(item.tanggal)}</Text>
+                  <Text style={styles.topikOnImage}>🕊️ {item.topik || "Tanpa Topik"}</Text>
 
-      <TextInput
-        placeholder="Tanggal (YYYY-MM-DD)"
-        style={styles.input}
-        value={tanggal}
-        onChangeText={setTanggal}
-      />
-      <TextInput
-        placeholder="Topik"
-        style={styles.input}
-        value={topik}
-        onChangeText={setTopik}
-      />
-      <TextInput
-        placeholder="Pengkhotbah"
-        style={styles.input}
-        value={pengkhotbah}
-        onChangeText={setPengkhotbah}
-      />
-      <Button title="Tambah Jadwal" onPress={tambahJadwal} />
+                  {item.detailIbadah.map((d) => (
+                    <View key={d.id} style={styles.detailCardOnImage}>
+                      <Text style={styles.textOnImage}>Jam: {d.jam || "-"}</Text>
+                      <Text style={styles.textOnImage}>🙌 Pengkhotbah: {d.pengkhotbah || "-"}</Text>
+                    </View>
+                  ))}
+                </View>
+              </ImageBackground>
+            );
+          }
+          return (
+            <View key={item.id} style={styles.card}>
+              <Text style={styles.date}>📅 {item.tanggal}</Text>
+              <Text style={styles.topik}>🕊️ {item.topik || "Tanpa Topik"}</Text>
+
+              {item.detailIbadah.map((d) => (
+                <View key={d.id} style={styles.detailCard}>
+                  <Text>Jam: {d.jam || "-"}</Text>
+                  <Text>🙌 Pengkhotbah: {d.pengkhotbah || "-"}</Text>
+                </View>
+              ))}
+            </View>
+          );
+        })
+      ) : (
+        <Text style={styles.emptyText}>
+          Tidak ada jadwal untuk minggu ini & depan.
+        </Text>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#fff" },
+  container: { flex: 1, padding: 16, backgroundColor: "#F7F8FA" },
+  title: { fontSize: 26, fontWeight: "bold", marginBottom: 16, color: "#333" },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 12,
+    backgroundColor: "#fff", borderWidth: 1, borderColor: "#ddd", borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 10, marginBottom: 16, fontSize: 16,
   },
+  emptyText: { textAlign: "center", marginTop: 24, color: "#666", fontSize: 16 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20, backgroundColor: "#F7F8FA" },
   card: {
-    backgroundColor: "#ADD8FF",
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 10,
+    backgroundColor: "#FFFFFF", padding: 16, borderRadius: 12, marginBottom: 12,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1,
+    shadowRadius: 3, elevation: 3,
   },
-  title: { fontSize: 30, fontWeight: "bold", marginBottom: 20 },
+  date: { fontWeight: "bold", marginBottom: 4, fontSize: 16, color: "#007AFF" },
+  topik: { fontStyle: "italic", color: '#555' },
+  detailCard: {
+    backgroundColor: "#F9F9F9", borderRadius: 8, padding: 12, marginTop: 10,
+    borderLeftWidth: 3, borderLeftColor: '#007AFF',
+  },
+  cardBackground: {
+    minHeight: 150,
+    marginBottom: 12,
+    justifyContent: 'flex-end',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 12,
+    padding: 16,
+  },
+  dateOnImage: {
+    fontWeight: "bold", marginBottom: 4, fontSize: 16, color: "#FFFFFF",
+    textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: -1, height: 1}, textShadowRadius: 10,
+  },
+  topikOnImage: {
+    fontStyle: "italic", color: '#E0E0E0',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: -1, height: 1}, textShadowRadius: 10,
+  },
+  detailCardOnImage: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8, padding: 12, marginTop: 10,
+    borderLeftWidth: 3, borderLeftColor: '#4D9FFF',
+  },
+  textOnImage: {
+    color: '#FFFFFF',
+  },
 });

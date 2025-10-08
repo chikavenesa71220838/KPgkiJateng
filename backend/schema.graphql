@@ -280,10 +280,13 @@ input WartaCreateInput {
 
 type JadwalIbadah {
   id: ID!
-  tanggal: DateTime
-  pengkhotbah: String
+  tanggal: CalendarDay
   topik: String
+  detailIbadah(where: DetailIbadahWhereInput! = {}, orderBy: [DetailIbadahOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DetailIbadahWhereUniqueInput): [DetailIbadah!]
+  detailIbadahCount(where: DetailIbadahWhereInput! = {}): Int
 }
+
+scalar CalendarDay @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc3339#section-5.6")
 
 input JadwalIbadahWhereUniqueInput {
   id: ID
@@ -294,22 +297,45 @@ input JadwalIbadahWhereInput {
   OR: [JadwalIbadahWhereInput!]
   NOT: [JadwalIbadahWhereInput!]
   id: IDFilter
-  tanggal: DateTimeFilter
-  pengkhotbah: StringFilter
+  tanggal: CalendarDayFilter
   topik: StringFilter
+  detailIbadah: DetailIbadahManyRelationFilter
+}
+
+input CalendarDayFilter {
+  equals: CalendarDay
+  in: [CalendarDay!]
+  notIn: [CalendarDay!]
+  lt: CalendarDay
+  lte: CalendarDay
+  gt: CalendarDay
+  gte: CalendarDay
+  not: CalendarDayFilter
+}
+
+input DetailIbadahManyRelationFilter {
+  every: DetailIbadahWhereInput
+  some: DetailIbadahWhereInput
+  none: DetailIbadahWhereInput
 }
 
 input JadwalIbadahOrderByInput {
   id: OrderDirection
   tanggal: OrderDirection
-  pengkhotbah: OrderDirection
   topik: OrderDirection
 }
 
 input JadwalIbadahUpdateInput {
-  tanggal: DateTime
-  pengkhotbah: String
+  tanggal: CalendarDay
   topik: String
+  detailIbadah: DetailIbadahRelateToManyForUpdateInput
+}
+
+input DetailIbadahRelateToManyForUpdateInput {
+  disconnect: [DetailIbadahWhereUniqueInput!]
+  set: [DetailIbadahWhereUniqueInput!]
+  create: [DetailIbadahCreateInput!]
+  connect: [DetailIbadahWhereUniqueInput!]
 }
 
 input JadwalIbadahUpdateArgs {
@@ -318,9 +344,92 @@ input JadwalIbadahUpdateArgs {
 }
 
 input JadwalIbadahCreateInput {
-  tanggal: DateTime
-  pengkhotbah: String
+  tanggal: CalendarDay
   topik: String
+  detailIbadah: DetailIbadahRelateToManyForCreateInput
+}
+
+input DetailIbadahRelateToManyForCreateInput {
+  create: [DetailIbadahCreateInput!]
+  connect: [DetailIbadahWhereUniqueInput!]
+}
+
+type DetailIbadah {
+  id: ID!
+  jam: String
+  pengkhotbah: String
+  banner: ImageFieldOutput
+  jadwal: JadwalIbadah
+}
+
+type ImageFieldOutput {
+  id: ID!
+  filesize: Int!
+  width: Int!
+  height: Int!
+  extension: ImageExtension!
+  url: String!
+}
+
+enum ImageExtension {
+  jpg
+  png
+  webp
+  gif
+}
+
+input DetailIbadahWhereUniqueInput {
+  id: ID
+}
+
+input DetailIbadahWhereInput {
+  AND: [DetailIbadahWhereInput!]
+  OR: [DetailIbadahWhereInput!]
+  NOT: [DetailIbadahWhereInput!]
+  id: IDFilter
+  jam: StringFilter
+  pengkhotbah: StringFilter
+  jadwal: JadwalIbadahWhereInput
+}
+
+input DetailIbadahOrderByInput {
+  id: OrderDirection
+  jam: OrderDirection
+  pengkhotbah: OrderDirection
+}
+
+input DetailIbadahUpdateInput {
+  jam: String
+  pengkhotbah: String
+  banner: ImageFieldInput
+  jadwal: JadwalIbadahRelateToOneForUpdateInput
+}
+
+input ImageFieldInput {
+  upload: Upload!
+}
+
+input JadwalIbadahRelateToOneForUpdateInput {
+  create: JadwalIbadahCreateInput
+  connect: JadwalIbadahWhereUniqueInput
+  disconnect: Boolean
+}
+
+input DetailIbadahUpdateArgs {
+  where: DetailIbadahWhereUniqueInput!
+  data: DetailIbadahUpdateInput!
+}
+
+input DetailIbadahCreateInput {
+  jam: String
+  pengkhotbah: String
+  banner: ImageFieldInput
+  jadwal: JadwalIbadahRelateToOneForCreateInput
+}
+
+input JadwalIbadahRelateToOneForCreateInput {
+  create: JadwalIbadahCreateInput
+  connect: JadwalIbadahWhereUniqueInput
 }
 
 """
@@ -353,6 +462,12 @@ type Mutation {
   updateJadwalIbadahs(data: [JadwalIbadahUpdateArgs!]!): [JadwalIbadah]
   deleteJadwalIbadah(where: JadwalIbadahWhereUniqueInput!): JadwalIbadah
   deleteJadwalIbadahs(where: [JadwalIbadahWhereUniqueInput!]!): [JadwalIbadah]
+  createDetailIbadah(data: DetailIbadahCreateInput!): DetailIbadah
+  createDetailIbadahs(data: [DetailIbadahCreateInput!]!): [DetailIbadah]
+  updateDetailIbadah(where: DetailIbadahWhereUniqueInput!, data: DetailIbadahUpdateInput!): DetailIbadah
+  updateDetailIbadahs(data: [DetailIbadahUpdateArgs!]!): [DetailIbadah]
+  deleteDetailIbadah(where: DetailIbadahWhereUniqueInput!): DetailIbadah
+  deleteDetailIbadahs(where: [DetailIbadahWhereUniqueInput!]!): [DetailIbadah]
   endSession: Boolean!
 }
 
@@ -369,6 +484,9 @@ type Query {
   jadwalIbadah(where: JadwalIbadahWhereUniqueInput!): JadwalIbadah
   jadwalIbadahs(where: JadwalIbadahWhereInput! = {}, orderBy: [JadwalIbadahOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: JadwalIbadahWhereUniqueInput): [JadwalIbadah!]
   jadwalIbadahsCount(where: JadwalIbadahWhereInput! = {}): Int
+  detailIbadah(where: DetailIbadahWhereUniqueInput!): DetailIbadah
+  detailIbadahs(where: DetailIbadahWhereInput! = {}, orderBy: [DetailIbadahOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DetailIbadahWhereUniqueInput): [DetailIbadah!]
+  detailIbadahsCount(where: DetailIbadahWhereInput! = {}): Int
   keystone: KeystoneMeta!
 }
 
