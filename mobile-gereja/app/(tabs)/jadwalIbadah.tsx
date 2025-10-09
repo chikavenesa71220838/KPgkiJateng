@@ -48,7 +48,6 @@ const formatDate = (dateString: string) => {
 
 
 export default function JadwalIbadah(): React.ReactElement {
-  // --- State dan logika fetch data tidak ada perubahan ---
   const [searchQuery, setSearchQuery] = useState("");
   const [jadwal, setJadwal] = useState<Jadwal[]>([]);
   const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
@@ -164,7 +163,7 @@ export default function JadwalIbadah(): React.ReactElement {
                 key={item.id}
                 source={{ uri: `${API_URL.replace("/api/graphql", "")}${bannerUrl}` }}
                 style={styles.cardBackground}
-                imageStyle={{ borderRadius: 12 }} // Agar gambar mengikuti lengkungan border
+                imageStyle={{ borderRadius: 12 }}
               >
                 <View style={styles.overlay}>
                   <Text style={styles.dateOnImage}>📅 {formatDate(item.tanggal)}</Text>

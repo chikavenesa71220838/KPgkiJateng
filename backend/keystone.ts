@@ -93,15 +93,38 @@ export default config({
       },
     }),
 
+    KategoriWarta: list({
+      access: allowAll,
+      fields: {
+        nama: text({ validation: { isRequired: true }, isIndexed: 'unique' }),
+        warta: relationship({ ref: 'Warta.kategori', many: true }),
+      },
+      ui: {
+        labelField: 'nama',
+      },
+    }),
+
     Warta: list({
       access: allowAll,
       fields: {
-        kategori: text({ validation: { isRequired: true } }),
+        kategori: relationship({
+          ref: 'KategoriWarta.warta',
+          many: false,
+          ui: {
+            displayMode: 'select',
+          }
+        }),
         judul: text({ validation: { isRequired: true } }),
-        masaBerlaku: timestamp({ validation: { isRequired: true } }),
+        masaBerlaku: calendarDay({ validation: { isRequired: true } }),
         tanggalPelaksanaan: timestamp({ validation: { isRequired: true } }),
         file: file({ storage: "local_files" }),
-        createdAt: timestamp({ defaultValue: { kind: "now" } }),
+        createdAt: timestamp({
+          defaultValue: { kind: "now" },
+          ui: {
+            createView: { fieldMode: 'hidden' },
+            itemView: { fieldMode: 'hidden' }
+          },
+        }),
       },
     }),
 
@@ -138,9 +161,7 @@ export default config({
           hooks: {
             validateInput: async ({ resolvedData, addValidationError }) => {
               const file = resolvedData.banner;
-
               if (!file || !file.filename) return;
-
               const lower = file.filename.toLowerCase();
               if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg")) {
                 addValidationError(

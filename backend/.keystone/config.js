@@ -114,15 +114,37 @@ var keystone_default = (0, import_core.config)({
         user: (0, import_fields.relationship)({ ref: "User.profile" })
       }
     }),
+    KategoriWarta: (0, import_core.list)({
+      access: allowAll,
+      fields: {
+        nama: (0, import_fields.text)({ validation: { isRequired: true }, isIndexed: "unique" }),
+        warta: (0, import_fields.relationship)({ ref: "Warta.kategori", many: true })
+      },
+      ui: {
+        labelField: "nama"
+      }
+    }),
     Warta: (0, import_core.list)({
       access: allowAll,
       fields: {
-        kategori: (0, import_fields.text)({ validation: { isRequired: true } }),
+        kategori: (0, import_fields.relationship)({
+          ref: "KategoriWarta.warta",
+          many: false,
+          ui: {
+            displayMode: "select"
+          }
+        }),
         judul: (0, import_fields.text)({ validation: { isRequired: true } }),
-        masaBerlaku: (0, import_fields.timestamp)({ validation: { isRequired: true } }),
+        masaBerlaku: (0, import_fields.calendarDay)({ validation: { isRequired: true } }),
         tanggalPelaksanaan: (0, import_fields.timestamp)({ validation: { isRequired: true } }),
         file: (0, import_fields.file)({ storage: "local_files" }),
-        createdAt: (0, import_fields.timestamp)({ defaultValue: { kind: "now" } })
+        createdAt: (0, import_fields.timestamp)({
+          defaultValue: { kind: "now" },
+          ui: {
+            createView: { fieldMode: "hidden" },
+            itemView: { fieldMode: "hidden" }
+          }
+        })
       }
     }),
     JadwalIbadah: (0, import_core.list)({
