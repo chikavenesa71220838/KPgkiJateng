@@ -27,20 +27,15 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/wartas": [
+    "/detail-ibadahs": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/wartas.js"
+      "static/chunks/pages/detail-ibadahs.js"
     ],
-    "/wartas/[id]": [
+    "/detail-ibadahs/create": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/wartas/[id].js"
-    ],
-    "/wartas/create": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/wartas/create.js"
+      "static/chunks/pages/detail-ibadahs/create.js"
     ]
   },
   "ampFirstPages": []

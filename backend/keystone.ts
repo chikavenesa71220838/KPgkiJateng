@@ -99,9 +99,7 @@ export default config({
         nama: text({ validation: { isRequired: true }, isIndexed: 'unique' }),
         warta: relationship({ ref: 'Warta.kategori', many: true }),
       },
-      ui: {
-        labelField: 'nama',
-      },
+      ui: { labelField: 'nama' },
     }),
 
     Warta: list({
@@ -110,9 +108,7 @@ export default config({
         kategori: relationship({
           ref: 'KategoriWarta.warta',
           many: false,
-          ui: {
-            displayMode: 'select',
-          }
+          ui: { displayMode: 'select' },
         }),
         judul: text({ validation: { isRequired: true } }),
         masaBerlaku: calendarDay({ validation: { isRequired: true } }),
@@ -122,10 +118,21 @@ export default config({
           defaultValue: { kind: "now" },
           ui: {
             createView: { fieldMode: 'hidden' },
-            itemView: { fieldMode: 'hidden' }
+            itemView: { fieldMode: 'hidden' },
           },
         }),
       },
+    }),
+
+    Pengkhotbah: list({
+      access: allowAll,
+      fields: {
+        nama: text({ validation: { isRequired: true } }),
+        jabatan: text(),
+        kontak: text(),
+        detailIbadah: relationship({ ref: "DetailIbadah.pengkhotbah", many: true }),
+      },
+      ui: { labelField: "nama" },
     }),
 
     JadwalIbadah: list({
@@ -155,7 +162,12 @@ export default config({
         jam: text({
           validation: { isRequired: true },
         }),
-        pengkhotbah: text(),
+        pengkhotbah: relationship({
+          ref: "Pengkhotbah.detailIbadah",
+          ui: {
+            displayMode: "select",
+          },
+        }),
         banner: image({
           storage: "local_images",
           hooks: {
@@ -164,9 +176,7 @@ export default config({
               if (!file || !file.filename) return;
               const lower = file.filename.toLowerCase();
               if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg")) {
-                addValidationError(
-                  "Hanya file JPEG yang diperbolehkan untuk banner."
-                );
+                addValidationError("Hanya file JPEG yang diperbolehkan untuk banner.");
               }
             },
           },

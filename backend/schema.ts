@@ -107,6 +107,19 @@ export const lists = {
     },
   }),
 
+  Pengkhotbah: list({
+    access: allowAll,
+    fields: {
+      nama: text({ validation: { isRequired: true } }),
+      jabatan: text(),
+      kontak: text(),
+      detailIbadah: relationship({ ref: "DetailIbadah.pengkhotbah", many: true }),
+    },
+    ui: {
+      labelField: "nama",
+    },
+  }),
+
   JadwalIbadah: list({
     access: allowAll,
     fields: {
@@ -134,7 +147,12 @@ export const lists = {
       jam: text({
         validation: { isRequired: true },
       }),
-      pengkhotbah: text(),
+      pengkhotbah: relationship({
+        ref: "Pengkhotbah.detailIbadah",
+        ui: {
+          displayMode: "select",
+        },
+      }),
       banner: image({
         storage: "local_images",
         hooks: {

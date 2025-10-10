@@ -120,9 +120,7 @@ var keystone_default = (0, import_core.config)({
         nama: (0, import_fields.text)({ validation: { isRequired: true }, isIndexed: "unique" }),
         warta: (0, import_fields.relationship)({ ref: "Warta.kategori", many: true })
       },
-      ui: {
-        labelField: "nama"
-      }
+      ui: { labelField: "nama" }
     }),
     Warta: (0, import_core.list)({
       access: allowAll,
@@ -130,9 +128,7 @@ var keystone_default = (0, import_core.config)({
         kategori: (0, import_fields.relationship)({
           ref: "KategoriWarta.warta",
           many: false,
-          ui: {
-            displayMode: "select"
-          }
+          ui: { displayMode: "select" }
         }),
         judul: (0, import_fields.text)({ validation: { isRequired: true } }),
         masaBerlaku: (0, import_fields.calendarDay)({ validation: { isRequired: true } }),
@@ -146,6 +142,16 @@ var keystone_default = (0, import_core.config)({
           }
         })
       }
+    }),
+    Pengkhotbah: (0, import_core.list)({
+      access: allowAll,
+      fields: {
+        nama: (0, import_fields.text)({ validation: { isRequired: true } }),
+        jabatan: (0, import_fields.text)(),
+        kontak: (0, import_fields.text)(),
+        detailIbadah: (0, import_fields.relationship)({ ref: "DetailIbadah.pengkhotbah", many: true })
+      },
+      ui: { labelField: "nama" }
     }),
     JadwalIbadah: (0, import_core.list)({
       access: allowAll,
@@ -173,7 +179,12 @@ var keystone_default = (0, import_core.config)({
         jam: (0, import_fields.text)({
           validation: { isRequired: true }
         }),
-        pengkhotbah: (0, import_fields.text)(),
+        pengkhotbah: (0, import_fields.relationship)({
+          ref: "Pengkhotbah.detailIbadah",
+          ui: {
+            displayMode: "select"
+          }
+        }),
         banner: (0, import_fields.image)({
           storage: "local_images",
           hooks: {
@@ -182,9 +193,7 @@ var keystone_default = (0, import_core.config)({
               if (!file2 || !file2.filename) return;
               const lower = file2.filename.toLowerCase();
               if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg")) {
-                addValidationError(
-                  "Hanya file JPEG yang diperbolehkan untuk banner."
-                );
+                addValidationError("Hanya file JPEG yang diperbolehkan untuk banner.");
               }
             }
           }

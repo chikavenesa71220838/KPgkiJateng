@@ -3,7 +3,6 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/wartas/create": "pages/wartas/create.js",
-  "/wartas": "pages/wartas.js",
-  "/wartas/[id]": "pages/wartas/[id].js"
+  "/detail-ibadahs": "pages/detail-ibadahs.js",
+  "/detail-ibadahs/create": "pages/detail-ibadahs/create.js"
 }

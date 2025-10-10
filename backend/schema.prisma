@@ -48,6 +48,14 @@ model Warta {
   @@index([kategoriId])
 }
 
+model Pengkhotbah {
+  id           String         @id @default(cuid())
+  nama         String         @default("")
+  jabatan      String         @default("")
+  kontak       String         @default("")
+  detailIbadah DetailIbadah[] @relation("DetailIbadah_pengkhotbah")
+}
+
 model JadwalIbadah {
   id           String         @id @default(cuid())
   tanggal      String
@@ -58,7 +66,8 @@ model JadwalIbadah {
 model DetailIbadah {
   id               String        @id @default(cuid())
   jam              String        @default("")
-  pengkhotbah      String        @default("")
+  pengkhotbah      Pengkhotbah?  @relation("DetailIbadah_pengkhotbah", fields: [pengkhotbahId], references: [id])
+  pengkhotbahId    String?       @map("pengkhotbah")
   banner_id        String?
   banner_filesize  Int?
   banner_width     Int?
@@ -67,5 +76,6 @@ model DetailIbadah {
   jadwal           JadwalIbadah? @relation("DetailIbadah_jadwal", fields: [jadwalId], references: [id])
   jadwalId         String?       @map("jadwal")
 
+  @@index([pengkhotbahId])
   @@index([jadwalId])
 }
