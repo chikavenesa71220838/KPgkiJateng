@@ -183,15 +183,76 @@ input UserRelateToOneForCreateInput {
   connect: UserWhereUniqueInput
 }
 
+type KategoriWarta {
+  id: ID!
+  nama: String
+  warta(where: WartaWhereInput! = {}, orderBy: [WartaOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: WartaWhereUniqueInput): [Warta!]
+  wartaCount(where: WartaWhereInput! = {}): Int
+}
+
+input KategoriWartaWhereUniqueInput {
+  id: ID
+  nama: String
+}
+
+input KategoriWartaWhereInput {
+  AND: [KategoriWartaWhereInput!]
+  OR: [KategoriWartaWhereInput!]
+  NOT: [KategoriWartaWhereInput!]
+  id: IDFilter
+  nama: StringFilter
+  warta: WartaManyRelationFilter
+}
+
+input WartaManyRelationFilter {
+  every: WartaWhereInput
+  some: WartaWhereInput
+  none: WartaWhereInput
+}
+
+input KategoriWartaOrderByInput {
+  id: OrderDirection
+  nama: OrderDirection
+}
+
+input KategoriWartaUpdateInput {
+  nama: String
+  warta: WartaRelateToManyForUpdateInput
+}
+
+input WartaRelateToManyForUpdateInput {
+  disconnect: [WartaWhereUniqueInput!]
+  set: [WartaWhereUniqueInput!]
+  create: [WartaCreateInput!]
+  connect: [WartaWhereUniqueInput!]
+}
+
+input KategoriWartaUpdateArgs {
+  where: KategoriWartaWhereUniqueInput!
+  data: KategoriWartaUpdateInput!
+}
+
+input KategoriWartaCreateInput {
+  nama: String
+  warta: WartaRelateToManyForCreateInput
+}
+
+input WartaRelateToManyForCreateInput {
+  create: [WartaCreateInput!]
+  connect: [WartaWhereUniqueInput!]
+}
+
 type Warta {
   id: ID!
-  kategori: String
+  kategori: KategoriWarta
   judul: String
-  masaBerlaku: DateTime
+  masaBerlaku: CalendarDay
   tanggalPelaksanaan: DateTime
   file: FileFieldOutput
   createdAt: DateTime
 }
+
+scalar CalendarDay @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc3339#section-5.6")
 
 scalar DateTime @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc3339#section-5.6")
 
@@ -210,11 +271,22 @@ input WartaWhereInput {
   OR: [WartaWhereInput!]
   NOT: [WartaWhereInput!]
   id: IDFilter
-  kategori: StringFilter
+  kategori: KategoriWartaWhereInput
   judul: StringFilter
-  masaBerlaku: DateTimeFilter
+  masaBerlaku: CalendarDayFilter
   tanggalPelaksanaan: DateTimeFilter
   createdAt: DateTimeNullableFilter
+}
+
+input CalendarDayFilter {
+  equals: CalendarDay
+  in: [CalendarDay!]
+  notIn: [CalendarDay!]
+  lt: CalendarDay
+  lte: CalendarDay
+  gt: CalendarDay
+  gte: CalendarDay
+  not: CalendarDayFilter
 }
 
 input DateTimeFilter {
@@ -241,7 +313,6 @@ input DateTimeNullableFilter {
 
 input WartaOrderByInput {
   id: OrderDirection
-  kategori: OrderDirection
   judul: OrderDirection
   masaBerlaku: OrderDirection
   tanggalPelaksanaan: OrderDirection
@@ -249,12 +320,18 @@ input WartaOrderByInput {
 }
 
 input WartaUpdateInput {
-  kategori: String
+  kategori: KategoriWartaRelateToOneForUpdateInput
   judul: String
-  masaBerlaku: DateTime
+  masaBerlaku: CalendarDay
   tanggalPelaksanaan: DateTime
   file: FileFieldInput
   createdAt: DateTime
+}
+
+input KategoriWartaRelateToOneForUpdateInput {
+  create: KategoriWartaCreateInput
+  connect: KategoriWartaWhereUniqueInput
+  disconnect: Boolean
 }
 
 input FileFieldInput {
@@ -270,19 +347,25 @@ input WartaUpdateArgs {
 }
 
 input WartaCreateInput {
-  kategori: String
+  kategori: KategoriWartaRelateToOneForCreateInput
   judul: String
-  masaBerlaku: DateTime
+  masaBerlaku: CalendarDay
   tanggalPelaksanaan: DateTime
   file: FileFieldInput
   createdAt: DateTime
 }
 
+input KategoriWartaRelateToOneForCreateInput {
+  create: KategoriWartaCreateInput
+  connect: KategoriWartaWhereUniqueInput
+}
+
 type JadwalIbadah {
   id: ID!
-  tanggal: DateTime
-  pengkhotbah: String
+  tanggal: CalendarDay
   topik: String
+  detailIbadah(where: DetailIbadahWhereInput! = {}, orderBy: [DetailIbadahOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DetailIbadahWhereUniqueInput): [DetailIbadah!]
+  detailIbadahCount(where: DetailIbadahWhereInput! = {}): Int
 }
 
 input JadwalIbadahWhereUniqueInput {
@@ -294,22 +377,34 @@ input JadwalIbadahWhereInput {
   OR: [JadwalIbadahWhereInput!]
   NOT: [JadwalIbadahWhereInput!]
   id: IDFilter
-  tanggal: DateTimeFilter
-  pengkhotbah: StringFilter
+  tanggal: CalendarDayFilter
   topik: StringFilter
+  detailIbadah: DetailIbadahManyRelationFilter
+}
+
+input DetailIbadahManyRelationFilter {
+  every: DetailIbadahWhereInput
+  some: DetailIbadahWhereInput
+  none: DetailIbadahWhereInput
 }
 
 input JadwalIbadahOrderByInput {
   id: OrderDirection
   tanggal: OrderDirection
-  pengkhotbah: OrderDirection
   topik: OrderDirection
 }
 
 input JadwalIbadahUpdateInput {
-  tanggal: DateTime
-  pengkhotbah: String
+  tanggal: CalendarDay
   topik: String
+  detailIbadah: DetailIbadahRelateToManyForUpdateInput
+}
+
+input DetailIbadahRelateToManyForUpdateInput {
+  disconnect: [DetailIbadahWhereUniqueInput!]
+  set: [DetailIbadahWhereUniqueInput!]
+  create: [DetailIbadahCreateInput!]
+  connect: [DetailIbadahWhereUniqueInput!]
 }
 
 input JadwalIbadahUpdateArgs {
@@ -318,9 +413,92 @@ input JadwalIbadahUpdateArgs {
 }
 
 input JadwalIbadahCreateInput {
-  tanggal: DateTime
-  pengkhotbah: String
+  tanggal: CalendarDay
   topik: String
+  detailIbadah: DetailIbadahRelateToManyForCreateInput
+}
+
+input DetailIbadahRelateToManyForCreateInput {
+  create: [DetailIbadahCreateInput!]
+  connect: [DetailIbadahWhereUniqueInput!]
+}
+
+type DetailIbadah {
+  id: ID!
+  jam: String
+  pengkhotbah: String
+  banner: ImageFieldOutput
+  jadwal: JadwalIbadah
+}
+
+type ImageFieldOutput {
+  id: ID!
+  filesize: Int!
+  width: Int!
+  height: Int!
+  extension: ImageExtension!
+  url: String!
+}
+
+enum ImageExtension {
+  jpg
+  png
+  webp
+  gif
+}
+
+input DetailIbadahWhereUniqueInput {
+  id: ID
+}
+
+input DetailIbadahWhereInput {
+  AND: [DetailIbadahWhereInput!]
+  OR: [DetailIbadahWhereInput!]
+  NOT: [DetailIbadahWhereInput!]
+  id: IDFilter
+  jam: StringFilter
+  pengkhotbah: StringFilter
+  jadwal: JadwalIbadahWhereInput
+}
+
+input DetailIbadahOrderByInput {
+  id: OrderDirection
+  jam: OrderDirection
+  pengkhotbah: OrderDirection
+}
+
+input DetailIbadahUpdateInput {
+  jam: String
+  pengkhotbah: String
+  banner: ImageFieldInput
+  jadwal: JadwalIbadahRelateToOneForUpdateInput
+}
+
+input ImageFieldInput {
+  upload: Upload!
+}
+
+input JadwalIbadahRelateToOneForUpdateInput {
+  create: JadwalIbadahCreateInput
+  connect: JadwalIbadahWhereUniqueInput
+  disconnect: Boolean
+}
+
+input DetailIbadahUpdateArgs {
+  where: DetailIbadahWhereUniqueInput!
+  data: DetailIbadahUpdateInput!
+}
+
+input DetailIbadahCreateInput {
+  jam: String
+  pengkhotbah: String
+  banner: ImageFieldInput
+  jadwal: JadwalIbadahRelateToOneForCreateInput
+}
+
+input JadwalIbadahRelateToOneForCreateInput {
+  create: JadwalIbadahCreateInput
+  connect: JadwalIbadahWhereUniqueInput
 }
 
 """
@@ -341,6 +519,12 @@ type Mutation {
   updateProfiles(data: [ProfileUpdateArgs!]!): [Profile]
   deleteProfile(where: ProfileWhereUniqueInput!): Profile
   deleteProfiles(where: [ProfileWhereUniqueInput!]!): [Profile]
+  createKategoriWarta(data: KategoriWartaCreateInput!): KategoriWarta
+  createKategoriWartas(data: [KategoriWartaCreateInput!]!): [KategoriWarta]
+  updateKategoriWarta(where: KategoriWartaWhereUniqueInput!, data: KategoriWartaUpdateInput!): KategoriWarta
+  updateKategoriWartas(data: [KategoriWartaUpdateArgs!]!): [KategoriWarta]
+  deleteKategoriWarta(where: KategoriWartaWhereUniqueInput!): KategoriWarta
+  deleteKategoriWartas(where: [KategoriWartaWhereUniqueInput!]!): [KategoriWarta]
   createWarta(data: WartaCreateInput!): Warta
   createWartas(data: [WartaCreateInput!]!): [Warta]
   updateWarta(where: WartaWhereUniqueInput!, data: WartaUpdateInput!): Warta
@@ -353,6 +537,12 @@ type Mutation {
   updateJadwalIbadahs(data: [JadwalIbadahUpdateArgs!]!): [JadwalIbadah]
   deleteJadwalIbadah(where: JadwalIbadahWhereUniqueInput!): JadwalIbadah
   deleteJadwalIbadahs(where: [JadwalIbadahWhereUniqueInput!]!): [JadwalIbadah]
+  createDetailIbadah(data: DetailIbadahCreateInput!): DetailIbadah
+  createDetailIbadahs(data: [DetailIbadahCreateInput!]!): [DetailIbadah]
+  updateDetailIbadah(where: DetailIbadahWhereUniqueInput!, data: DetailIbadahUpdateInput!): DetailIbadah
+  updateDetailIbadahs(data: [DetailIbadahUpdateArgs!]!): [DetailIbadah]
+  deleteDetailIbadah(where: DetailIbadahWhereUniqueInput!): DetailIbadah
+  deleteDetailIbadahs(where: [DetailIbadahWhereUniqueInput!]!): [DetailIbadah]
   endSession: Boolean!
 }
 
@@ -363,12 +553,18 @@ type Query {
   profile(where: ProfileWhereUniqueInput!): Profile
   profiles(where: ProfileWhereInput! = {}, orderBy: [ProfileOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ProfileWhereUniqueInput): [Profile!]
   profilesCount(where: ProfileWhereInput! = {}): Int
+  kategoriWarta(where: KategoriWartaWhereUniqueInput!): KategoriWarta
+  kategoriWartas(where: KategoriWartaWhereInput! = {}, orderBy: [KategoriWartaOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: KategoriWartaWhereUniqueInput): [KategoriWarta!]
+  kategoriWartasCount(where: KategoriWartaWhereInput! = {}): Int
   warta(where: WartaWhereUniqueInput!): Warta
   wartas(where: WartaWhereInput! = {}, orderBy: [WartaOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: WartaWhereUniqueInput): [Warta!]
   wartasCount(where: WartaWhereInput! = {}): Int
   jadwalIbadah(where: JadwalIbadahWhereUniqueInput!): JadwalIbadah
   jadwalIbadahs(where: JadwalIbadahWhereInput! = {}, orderBy: [JadwalIbadahOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: JadwalIbadahWhereUniqueInput): [JadwalIbadah!]
   jadwalIbadahsCount(where: JadwalIbadahWhereInput! = {}): Int
+  detailIbadah(where: DetailIbadahWhereUniqueInput!): DetailIbadah
+  detailIbadahs(where: DetailIbadahWhereInput! = {}, orderBy: [DetailIbadahOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DetailIbadahWhereUniqueInput): [DetailIbadah!]
+  detailIbadahsCount(where: DetailIbadahWhereInput! = {}): Int
   keystone: KeystoneMeta!
 }
 

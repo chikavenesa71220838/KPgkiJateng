@@ -28,20 +28,44 @@ model Profile {
   userId String? @unique @map("user")
 }
 
+model KategoriWarta {
+  id    String  @id @default(cuid())
+  nama  String  @unique @default("")
+  warta Warta[] @relation("Warta_kategori")
+}
+
 model Warta {
-  id                 String    @id @default(cuid())
-  kategori           String    @default("")
-  judul              String    @default("")
-  masaBerlaku        DateTime
+  id                 String         @id @default(cuid())
+  kategori           KategoriWarta? @relation("Warta_kategori", fields: [kategoriId], references: [id])
+  kategoriId         String?        @map("kategori")
+  judul              String         @default("")
+  masaBerlaku        String
   tanggalPelaksanaan DateTime
   file_filesize      Int?
   file_filename      String?
-  createdAt          DateTime? @default(now())
+  createdAt          DateTime?      @default(now())
+
+  @@index([kategoriId])
 }
 
 model JadwalIbadah {
-  id          String   @id @default(cuid())
-  tanggal     DateTime
-  pengkhotbah String   @default("")
-  topik       String   @default("")
+  id           String         @id @default(cuid())
+  tanggal      String
+  topik        String         @default("")
+  detailIbadah DetailIbadah[] @relation("DetailIbadah_jadwal")
+}
+
+model DetailIbadah {
+  id               String        @id @default(cuid())
+  jam              String        @default("")
+  pengkhotbah      String        @default("")
+  banner_id        String?
+  banner_filesize  Int?
+  banner_width     Int?
+  banner_height    Int?
+  banner_extension String?
+  jadwal           JadwalIbadah? @relation("DetailIbadah_jadwal", fields: [jadwalId], references: [id])
+  jadwalId         String?       @map("jadwal")
+
+  @@index([jadwalId])
 }

@@ -1,1 +1,9 @@
-{}
+{
+  "/_app": "pages/_app.js",
+  "/_error": "pages/_error.js",
+  "/_document": "pages/_document.js",
+  "/": "pages/index.js",
+  "/wartas/create": "pages/wartas/create.js",
+  "/wartas": "pages/wartas.js",
+  "/wartas/[id]": "pages/wartas/[id].js"
+}
