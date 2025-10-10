@@ -14,18 +14,18 @@ export default function TabLayout() {
     <Tabs
       tabBarPosition="bottom"
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: "#000",
-        tabBarInactiveTintColor: "gray",
+        tabBarActiveTintColor: "#ffd000ff",
+        tabBarInactiveTintColor: "white",
         tabBarShowLabel: true,
         tabBarPosition: "bottom",
         tabBarStyle: {
-          backgroundColor: "#FFF",
+          backgroundColor: "#207163ff",
           borderTopWidth: 0,
           elevation: 0
         },
         tabBarIndicatorStyle: {
-          backgroundColor: "#000",
-          height: 3,
+          backgroundColor: "#ffd000ff",
+          height: 5,
           borderRadius: 2,
           top: 0
         },
