@@ -15,17 +15,30 @@ model User {
   id        String   @id @default(cuid())
   namaUser  String   @default("")
   emailUser String   @unique @default("")
+  password  String?
   googleId  String   @unique @default("")
   role      String?  @default("jemaat")
   profile   Profile? @relation("Profile_user")
 }
 
 model Profile {
-  id     String  @id @default(cuid())
-  alamat String  @default("")
-  noHp   String  @default("")
-  user   User?   @relation("Profile_user", fields: [userId], references: [id])
-  userId String? @unique @map("user")
+  id                   String  @id @default(cuid())
+  alamat               String  @default("")
+  nomorWa              String  @default("")
+  jenisKelamin         String?
+  pendidikan           String  @default("")
+  pekerjaan            String  @default("")
+  tanggalLahir         String  @default("")
+  statusPernikahan     String?
+  domisili             String  @default("")
+  statusKeanggotaan    String?
+  fotoProfil_id        String?
+  fotoProfil_filesize  Int?
+  fotoProfil_width     Int?
+  fotoProfil_height    Int?
+  fotoProfil_extension String?
+  user                 User?   @relation("Profile_user", fields: [userId], references: [id])
+  userId               String? @unique @map("user")
 }
 
 model KategoriWarta {
@@ -39,13 +52,21 @@ model Warta {
   kategori           KategoriWarta? @relation("Warta_kategori", fields: [kategoriId], references: [id])
   kategoriId         String?        @map("kategori")
   judul              String         @default("")
-  masaBerlaku        String
-  tanggalPelaksanaan DateTime
+  masaBerlaku        String?
+  tanggalPelaksanaan DateTime?
   file_filesize      Int?
   file_filename      String?
   createdAt          DateTime?      @default(now())
 
   @@index([kategoriId])
+}
+
+model Pengkhotbah {
+  id           String         @id @default(cuid())
+  nama         String         @default("")
+  jabatan      String         @default("")
+  kontak       String         @default("")
+  detailIbadah DetailIbadah[] @relation("DetailIbadah_pengkhotbah")
 }
 
 model JadwalIbadah {
@@ -58,7 +79,8 @@ model JadwalIbadah {
 model DetailIbadah {
   id               String        @id @default(cuid())
   jam              String        @default("")
-  pengkhotbah      String        @default("")
+  pengkhotbah      Pengkhotbah?  @relation("DetailIbadah_pengkhotbah", fields: [pengkhotbahId], references: [id])
+  pengkhotbahId    String?       @map("pengkhotbah")
   banner_id        String?
   banner_filesize  Int?
   banner_width     Int?
@@ -67,5 +89,6 @@ model DetailIbadah {
   jadwal           JadwalIbadah? @relation("DetailIbadah_jadwal", fields: [jadwalId], references: [id])
   jadwalId         String?       @map("jadwal")
 
+  @@index([pengkhotbahId])
   @@index([jadwalId])
 }
