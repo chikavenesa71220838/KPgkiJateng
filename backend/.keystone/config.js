@@ -159,19 +159,26 @@ var Warta = (0, import_core4.list)({
       many: false,
       ui: { displayMode: "select" }
     }),
-    judul: (0, import_fields4.text)({ validation: { isRequired: true } }),
+    judul: (0, import_fields4.text)({
+      validation: { isRequired: true }
+    }),
     masaBerlaku: (0, import_fields4.calendarDay)(),
     tanggalPelaksanaan: (0, import_fields4.timestamp)(),
+    isiWarta: (0, import_fields4.text)({
+      ui: { displayMode: "textarea" },
+      validation: { isRequired: true }
+    }),
     file: (0, import_fields4.file)({
       storage: "local_files",
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
           const file2 = resolvedData.file;
-          if (!file2 || !file2.mimetype) {
-            return;
-          }
-          if (file2.mimetype !== "application/pdf") {
-            addValidationError("Hanya file PDF yang diperbolehkan untuk warta.");
+          if (!file2 || !file2.mimetype) return;
+          const allowedTypes = ["image/jpeg", "image/jpg"];
+          if (!allowedTypes.includes(file2.mimetype)) {
+            addValidationError(
+              "Hanya file gambar JPG atau JPEG yang diperbolehkan untuk warta."
+            );
           }
         }
       }

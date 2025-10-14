@@ -13,7 +13,7 @@ import { API_URL } from "../../utils/api";
 interface DetailIbadah {
   id: string;
   jam: string;
-  pengkhotbah: string;
+  pengkhotbah?: { nama: string };
   banner?: { url: string };
 }
 
@@ -62,7 +62,9 @@ export default function Riwayat(): React.ReactElement {
                 detailIbadah {
                   id
                   jam
-                  pengkhotbah
+                  pengkhotbah {
+                    nama
+                  }
                   banner {
                     url
                   }
@@ -74,7 +76,8 @@ export default function Riwayat(): React.ReactElement {
       });
 
       const result = await res.json();
-      if (result.errors) throw new Error(result.errors[0]?.message || "GraphQL Error");
+      if (result.errors)
+        throw new Error(result.errors[0]?.message || "GraphQL Error");
 
       const data = result.data?.jadwalIbadahs || [];
       setRiwayat(data);
@@ -100,7 +103,7 @@ export default function Riwayat(): React.ReactElement {
           item.tanggal.toLowerCase().includes(textData) ||
           item.topik?.toLowerCase().includes(textData) ||
           item.detailIbadah.some((d) =>
-            d.pengkhotbah?.toLowerCase().includes(textData)
+            d.pengkhotbah?.nama.toLowerCase().includes(textData)
           )
       );
       setFilteredData(filtered);
@@ -144,16 +147,16 @@ export default function Riwayat(): React.ReactElement {
               {d.banner?.url ? (
                 <Image
                   source={{
-                    uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
+                    uri: `${API_URL.replace("/api/graphql", "")}${
+                      d.banner.url
+                    }`,
                   }}
                   style={styles.banner}
                 />
               ) : (
                 <View style={[styles.banner, { backgroundColor: "#000" }]} />
               )}
-              <Text style={styles.topik}>
-                {item.topik || "Tanpa Topik"}
-              </Text>
+              <Text style={styles.topik}>{item.topik || "Tanpa Topik"}</Text>
               <Text style={styles.text}>
                 <Text style={styles.label}>Hari/Tanggal: </Text>
                 {formatDate(item.tanggal)}
@@ -164,7 +167,7 @@ export default function Riwayat(): React.ReactElement {
               </Text>
               <Text style={styles.text}>
                 <Text style={styles.label}>Pengkhotbah: </Text>
-                {d.pengkhotbah || "-"}
+                {d.pengkhotbah?.nama || "-"}
               </Text>
             </View>
           ))

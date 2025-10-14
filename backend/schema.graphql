@@ -321,6 +321,7 @@ type Warta {
   judul: String
   masaBerlaku: CalendarDay
   tanggalPelaksanaan: DateTime
+  isiWarta: String
   file: FileFieldOutput
   createdAt: DateTime
 }
@@ -348,6 +349,7 @@ input WartaWhereInput {
   judul: StringFilter
   masaBerlaku: CalendarDayNullableFilter
   tanggalPelaksanaan: DateTimeNullableFilter
+  isiWarta: StringFilter
   createdAt: DateTimeNullableFilter
 }
 
@@ -378,6 +380,7 @@ input WartaOrderByInput {
   judul: OrderDirection
   masaBerlaku: OrderDirection
   tanggalPelaksanaan: OrderDirection
+  isiWarta: OrderDirection
   createdAt: OrderDirection
 }
 
@@ -386,6 +389,7 @@ input WartaUpdateInput {
   judul: String
   masaBerlaku: CalendarDay
   tanggalPelaksanaan: DateTime
+  isiWarta: String
   file: FileFieldInput
   createdAt: DateTime
 }
@@ -410,6 +414,7 @@ input WartaCreateInput {
   judul: String
   masaBerlaku: CalendarDay
   tanggalPelaksanaan: DateTime
+  isiWarta: String
   file: FileFieldInput
   createdAt: DateTime
 }
