@@ -201,8 +201,7 @@ var Pengkhotbah = (0, import_core5.list)({
   access: allowAll5,
   fields: {
     nama: (0, import_fields5.text)({ validation: { isRequired: true } }),
-    jabatan: (0, import_fields5.text)(),
-    kontak: (0, import_fields5.text)(),
+    // kontak: text(),
     detailIbadah: (0, import_fields5.relationship)({ ref: "DetailIbadah.pengkhotbah", many: true })
   },
   ui: { labelField: "nama" }

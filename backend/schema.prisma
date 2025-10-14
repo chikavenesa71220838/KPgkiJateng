@@ -65,8 +65,6 @@ model Warta {
 model Pengkhotbah {
   id           String         @id @default(cuid())
   nama         String         @default("")
-  jabatan      String         @default("")
-  kontak       String         @default("")
   detailIbadah DetailIbadah[] @relation("DetailIbadah_pengkhotbah")
 }
 

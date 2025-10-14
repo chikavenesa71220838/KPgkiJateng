@@ -7,8 +7,7 @@ export const Pengkhotbah = list({
   access: allowAll,
   fields: {
     nama: text({ validation: { isRequired: true } }),
-    jabatan: text(),
-    kontak: text(),
+    // kontak: text(),
     detailIbadah: relationship({ ref: "DetailIbadah.pengkhotbah", many: true }),
   },
   ui: { labelField: "nama" },
