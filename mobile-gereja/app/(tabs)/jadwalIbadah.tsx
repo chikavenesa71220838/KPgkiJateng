@@ -13,7 +13,7 @@ import { API_URL } from "../../utils/api";
 interface DetailIbadah {
   id: string;
   jam: string;
-  pengkhotbah: string;
+  pengkhotbah?: { nama: string };
   banner?: { url: string };
 }
 
@@ -44,20 +44,27 @@ export default function JadwalIbadah(): React.ReactElement {
   const fetchData = async () => {
     try {
       setLoading(true);
+      const now = new Date().toISOString().split("T")[0];
+
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `
             query {
-              jadwalIbadahs(orderBy: { tanggal: asc }) {
+              jadwalIbadahs(
+                where: { tanggal: { gte: "${now}" } }
+                orderBy: { tanggal: asc }
+              ) {
                 id
                 tanggal
                 topik
                 detailIbadah {
                   id
                   jam
-                  pengkhotbah
+                  pengkhotbah {
+                    nama
+                  }
                   banner {
                     url
                   }
@@ -69,10 +76,15 @@ export default function JadwalIbadah(): React.ReactElement {
       });
 
       const result = await res.json();
+      if (result.errors)
+        throw new Error(result.errors[0]?.message || "GraphQL Error");
+
       const data = result.data?.jadwalIbadahs || [];
       setJadwal(data);
       setFilteredData(data);
+      setError(null);
     } catch (err: any) {
+      console.error("Fetch error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -91,7 +103,7 @@ export default function JadwalIbadah(): React.ReactElement {
           item.tanggal.toLowerCase().includes(textData) ||
           item.topik?.toLowerCase().includes(textData) ||
           item.detailIbadah.some((d) =>
-            d.pengkhotbah?.toLowerCase().includes(textData)
+            d.pengkhotbah?.nama.toLowerCase().includes(textData)
           )
       );
       setFilteredData(filtered);
@@ -142,9 +154,7 @@ export default function JadwalIbadah(): React.ReactElement {
               ) : (
                 <View style={[styles.banner, { backgroundColor: "#000" }]} />
               )}
-              <Text style={styles.topik}>
-                {item.topik || "Tanpa Topik"}
-              </Text>
+              <Text style={styles.topik}>{item.topik || "Tanpa Topik"}</Text>
               <Text style={styles.text}>
                 <Text style={styles.label}>Hari/Tanggal: </Text>
                 {formatDate(item.tanggal)}
@@ -155,7 +165,7 @@ export default function JadwalIbadah(): React.ReactElement {
               </Text>
               <Text style={styles.text}>
                 <Text style={styles.label}>Pengkhotbah: </Text>
-                {d.pengkhotbah || "-"}
+                {d.pengkhotbah?.nama || "-"}
               </Text>
             </View>
           ))
