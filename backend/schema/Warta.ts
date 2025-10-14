@@ -24,27 +24,36 @@ export const Warta = list({
       many: false,
       ui: { displayMode: "select" },
     }),
-    judul: text({ validation: { isRequired: true } }),
+
+    judul: text({
+      validation: { isRequired: true },
+    }),
+
     masaBerlaku: calendarDay(),
+
     tanggalPelaksanaan: timestamp(),
+
+    isiWarta: text({
+      ui: { displayMode: "textarea" },
+      validation: { isRequired: true },
+    }),
+
     file: file({
       storage: "local_files",
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
           const file = resolvedData.file;
-
-          // Jika tidak ada file, lewati validasi
-          if (!file || !file.mimetype) {
-            return;
-          }
-
-          // Jika file ada tapi bukan PDF, tampilkan error
-          if (file.mimetype !== "application/pdf") {
-            addValidationError("Hanya file PDF yang diperbolehkan untuk warta.");
+          if (!file || !file.mimetype) return;
+          const allowedTypes = ["image/jpeg", "image/jpg"];
+          if (!allowedTypes.includes(file.mimetype)) {
+            addValidationError(
+              "Hanya file gambar JPG atau JPEG yang diperbolehkan untuk warta."
+            );
           }
         },
       },
     }),
+
     createdAt: timestamp({
       defaultValue: { kind: "now" },
       ui: {
