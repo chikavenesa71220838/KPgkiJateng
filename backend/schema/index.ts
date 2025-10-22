@@ -6,6 +6,7 @@ import { Warta } from "./Warta";
 import { Pengkhotbah } from "./Pengkhotbah";
 import { JadwalIbadah } from "./JadwalIbadah";
 import { DetailIbadah } from "./DetailIbadah";
+import { AyatHarian } from "./AyatHarian";
 
 export const lists = {
   User,
@@ -15,4 +16,5 @@ export const lists = {
   Pengkhotbah,
   JadwalIbadah,
   DetailIbadah,
+  AyatHarian
 };

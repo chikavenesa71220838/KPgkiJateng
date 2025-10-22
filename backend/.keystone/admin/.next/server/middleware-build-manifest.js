@@ -9,6 +9,11 @@ self.__BUILD_MANIFEST = {
   "lowPriorityFiles": [],
   "rootMainFiles": [],
   "pages": {
+    "/": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/index.js"
+    ],
     "/_app": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -19,30 +24,15 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/detail-ibadahs": [
+    "/ayat-harians": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/detail-ibadahs.js"
+      "static/chunks/pages/ayat-harians.js"
     ],
-    "/jadwal-ibadahs": [
+    "/ayat-harians/[id]": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/jadwal-ibadahs.js"
-    ],
-    "/jadwal-ibadahs/[id]": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/jadwal-ibadahs/[id].js"
-    ],
-    "/jadwal-ibadahs/create": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/jadwal-ibadahs/create.js"
-    ],
-    "/pengkhotbahs/[id]": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/pengkhotbahs/[id].js"
+      "static/chunks/pages/ayat-harians/[id].js"
     ]
   },
   "ampFirstPages": []

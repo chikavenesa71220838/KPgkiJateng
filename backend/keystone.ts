@@ -2,8 +2,11 @@
 import { config } from "@keystone-6/core";
 import { statelessSessions } from "@keystone-6/core/session";
 import path from "path";
+import express from "express";
 import "dotenv/config";
+
 import { lists } from "./schema/index";
+import ayatHarianRoute from "./routes/ayatHarian.js";
 
 const sessionSecret = process.env.SESSION_SECRET || "supersecret";
 const session = statelessSessions({
@@ -27,6 +30,12 @@ export default config({
     },
     port: 3000,
     options: { host: "0.0.0.0" },
+    extendExpressApp: (app, context) => {
+      ayatHarianRoute(app, context);
+      app.get("/api/status", (req, res) => {
+        res.json({ status: "API is running" });
+      });
+    }
   },
   storage: {
     local_files: {

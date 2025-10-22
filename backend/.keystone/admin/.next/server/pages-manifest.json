@@ -1,10 +1,8 @@
 {
   "/_app": "pages/_app.js",
-  "/_document": "pages/_document.js",
   "/_error": "pages/_error.js",
-  "/jadwal-ibadahs": "pages/jadwal-ibadahs.js",
-  "/pengkhotbahs/[id]": "pages/pengkhotbahs/[id].js",
-  "/jadwal-ibadahs/create": "pages/jadwal-ibadahs/create.js",
-  "/detail-ibadahs": "pages/detail-ibadahs.js",
-  "/jadwal-ibadahs/[id]": "pages/jadwal-ibadahs/[id].js"
+  "/_document": "pages/_document.js",
+  "/ayat-harians": "pages/ayat-harians.js",
+  "/ayat-harians/[id]": "pages/ayat-harians/[id].js",
+  "/": "pages/index.js"
 }

@@ -1,7 +1,14 @@
 import { list } from "@keystone-6/core";
 import { text, relationship } from "@keystone-6/core/fields";
 
-const allowAll = { operation: { query: () => true, create: () => true, update: () => true, delete: () => true } };
+const allowAll = {
+  operation: {
+    query: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true,
+  },
+};
 
 export const Pengkhotbah = list({
   access: allowAll,

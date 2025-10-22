@@ -91,3 +91,12 @@ model DetailIbadah {
   @@index([pengkhotbahId])
   @@index([jadwalId])
 }
+
+model AyatHarian {
+  id      String   @id @default(cuid())
+  book    String   @default("")
+  chapter String   @default("")
+  verse   String   @default("")
+  text    String   @default("")
+  tanggal DateTime @default(now())
+}
