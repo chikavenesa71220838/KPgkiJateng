@@ -10,13 +10,11 @@ const fallbackVerse = {
   text: "Tuhan adalah gembalaku, takkan kekurangan aku."
 };
 
-// Fungsi pseudo-random dari seed
 function getSeededRandom(seed, max) {
   const x = Math.sin(seed) * 10000;
   return Math.floor((x - Math.floor(x)) * max);
 }
 
-// Ambil seed dari tanggal
 function getTodaySeed() {
   const today = new Date();
   const y = today.getFullYear();
@@ -25,7 +23,6 @@ function getTodaySeed() {
   return y * 10000 + m * 100 + d;
 }
 
-// Fetch dengan timeout
 async function fetchWithTimeout(url, timeout = 5000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
