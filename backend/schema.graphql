@@ -606,6 +606,72 @@ input JadwalIbadahRelateToOneForCreateInput {
   connect: JadwalIbadahWhereUniqueInput
 }
 
+type AyatHarian {
+  id: ID!
+  book: String
+  chapter: String
+  verse: String
+  text: String
+  tanggal: DateTime
+}
+
+input AyatHarianWhereUniqueInput {
+  id: ID
+}
+
+input AyatHarianWhereInput {
+  AND: [AyatHarianWhereInput!]
+  OR: [AyatHarianWhereInput!]
+  NOT: [AyatHarianWhereInput!]
+  id: IDFilter
+  book: StringFilter
+  chapter: StringFilter
+  verse: StringFilter
+  text: StringFilter
+  tanggal: DateTimeFilter
+}
+
+input DateTimeFilter {
+  equals: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  not: DateTimeFilter
+}
+
+input AyatHarianOrderByInput {
+  id: OrderDirection
+  book: OrderDirection
+  chapter: OrderDirection
+  verse: OrderDirection
+  text: OrderDirection
+  tanggal: OrderDirection
+}
+
+input AyatHarianUpdateInput {
+  book: String
+  chapter: String
+  verse: String
+  text: String
+  tanggal: DateTime
+}
+
+input AyatHarianUpdateArgs {
+  where: AyatHarianWhereUniqueInput!
+  data: AyatHarianUpdateInput!
+}
+
+input AyatHarianCreateInput {
+  book: String
+  chapter: String
+  verse: String
+  text: String
+  tanggal: DateTime
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -654,6 +720,12 @@ type Mutation {
   updateDetailIbadahs(data: [DetailIbadahUpdateArgs!]!): [DetailIbadah]
   deleteDetailIbadah(where: DetailIbadahWhereUniqueInput!): DetailIbadah
   deleteDetailIbadahs(where: [DetailIbadahWhereUniqueInput!]!): [DetailIbadah]
+  createAyatHarian(data: AyatHarianCreateInput!): AyatHarian
+  createAyatHarians(data: [AyatHarianCreateInput!]!): [AyatHarian]
+  updateAyatHarian(where: AyatHarianWhereUniqueInput!, data: AyatHarianUpdateInput!): AyatHarian
+  updateAyatHarians(data: [AyatHarianUpdateArgs!]!): [AyatHarian]
+  deleteAyatHarian(where: AyatHarianWhereUniqueInput!): AyatHarian
+  deleteAyatHarians(where: [AyatHarianWhereUniqueInput!]!): [AyatHarian]
   endSession: Boolean!
 }
 
@@ -679,6 +751,9 @@ type Query {
   detailIbadah(where: DetailIbadahWhereUniqueInput!): DetailIbadah
   detailIbadahs(where: DetailIbadahWhereInput! = {}, orderBy: [DetailIbadahOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DetailIbadahWhereUniqueInput): [DetailIbadah!]
   detailIbadahsCount(where: DetailIbadahWhereInput! = {}): Int
+  ayatHarian(where: AyatHarianWhereUniqueInput!): AyatHarian
+  ayatHarians(where: AyatHarianWhereInput! = {}, orderBy: [AyatHarianOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AyatHarianWhereUniqueInput): [AyatHarian!]
+  ayatHariansCount(where: AyatHarianWhereInput! = {}): Int
   keystone: KeystoneMeta!
 }
 
