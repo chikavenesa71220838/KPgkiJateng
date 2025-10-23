@@ -2,21 +2,31 @@ import { withLayoutContext } from 'expo-router';
 import React from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { Ionicons} from '@expo/vector-icons';
-import { View } from 'react-native';
+import { View, Image, Text, StyleSheet } from 'react-native';
 import { Background } from '@react-navigation/elements';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-const { Navigator } = createMaterialTopTabNavigator();
+
+const { Navigator } = createBottomTabNavigator();
 const Tabs = withLayoutContext(Navigator);
 
 export default function TabLayout() {
 
   return (
+    <View style={{ flex: 1 }}>
+      <View style={styles.header}>
+        <Image source={require("../../../mobile-gereja/assets/images/logogereja.png")}
+        style={styles.logo}
+      />
+      <Text style={styles.headerText}>GKI Ngupasan</Text>
+    </View>
+
     <Tabs
-      tabBarPosition="bottom"
       screenOptions={({ route }) => ({
+        headerShown: false,
         tabBarActiveTintColor: "#ffd000ff",
         tabBarInactiveTintColor: "white",
-        tabBarShowLabel: true,
+        tabBarShowLabel: false,
         tabBarPosition: "bottom",
         tabBarStyle: {
           backgroundColor: "#207163ff",
@@ -29,11 +39,21 @@ export default function TabLayout() {
           borderRadius: 2,
           top: 0
         },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          marginTop: 4,
+        },
+        tabBarIconStyle: {
+          marginBottom: 5
+        },
+
         tabBarIcon: ({ focused, color}) => {
           const size = focused ? 24 : 24;
           let iconName: keyof typeof Ionicons.glyphMap = "home";
-
-          if (route.name === "jadwalIbadah") {
+          
+          if (route.name === "home") {
+            iconName = "home";
+          } else if (route.name === "jadwalIbadah") {
             iconName = "calendar";
           } else if (route.name === "warta") {
             iconName = "newspaper";
@@ -51,10 +71,36 @@ export default function TabLayout() {
         }
       })}
     >
-      <Tabs.Screen name="jadwalIbadah" options={{ title: "Jadwal" }} />
-      <Tabs.Screen name="warta" options={{ title: "Warta" }} />
-      <Tabs.Screen name="Riwayat" options={{ title: "Riwayat" }} />
-      <Tabs.Screen name="profil" options={{ title: "Profil" }} />
+      <text></text>
+      <Tabs.Screen name="home" />
+      <Tabs.Screen name="jadwalIbadah" />
+      <Tabs.Screen name="warta"  />
+      <Tabs.Screen name="Riwayat"  />
+      <Tabs.Screen name="profil"/>
     </Tabs>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderColor: "#ddd",
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#207163ff",
+  },
+});
