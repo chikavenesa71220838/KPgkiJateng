@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { API_URL } from "../../utils/api";
+import { Ionicons } from "@expo/vector-icons";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 interface DetailIbadah {
   id: string;
@@ -40,6 +42,7 @@ export default function JadwalIbadah(): React.ReactElement {
   const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   const fetchData = async () => {
     try {
@@ -95,22 +98,36 @@ export default function JadwalIbadah(): React.ReactElement {
     fetchData();
   }, []);
 
+  // 🔹 Filter otomatis ketika tanggal atau pencarian berubah
   useEffect(() => {
+    const formatted = selectedDate.toISOString().split("T")[0];
+    let data = jadwal.filter((item) => item.tanggal.startsWith(formatted));
+
     if (searchQuery.trim() !== "") {
       const textData = searchQuery.toLowerCase();
-      const filtered = jadwal.filter(
+      data = data.filter(
         (item) =>
-          item.tanggal.toLowerCase().includes(textData) ||
           item.topik?.toLowerCase().includes(textData) ||
           item.detailIbadah.some((d) =>
             d.pengkhotbah?.nama.toLowerCase().includes(textData)
           )
       );
-      setFilteredData(filtered);
-    } else {
-      setFilteredData(jadwal);
     }
-  }, [searchQuery, jadwal]);
+
+    setFilteredData(data);
+  }, [searchQuery, selectedDate, jadwal]);
+
+  const handlePrevDate = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(selectedDate.getDate() - 1);
+    setSelectedDate(newDate);
+  };
+
+  const handleNextDate = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(selectedDate.getDate() + 1);
+    setSelectedDate(newDate);
+  };
 
   if (loading) {
     return (
@@ -134,11 +151,25 @@ export default function JadwalIbadah(): React.ReactElement {
       <Text style={styles.title}>Jadwal Ibadah</Text>
 
       <TextInput
-        placeholder="Cari berdasarkan tanggal, topik, atau pengkhotbah"
+        placeholder="Cari berdasarkan topik atau pengkhotbah"
         style={styles.input}
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
+
+      <View style={styles.datePickerContainer}>
+        <TouchableOpacity onPress={handlePrevDate}>
+          <Ionicons name="chevron-back" size={24} color="#207163ff" />
+        </TouchableOpacity>
+
+        <Text style={styles.dateText}>
+          {formatDate(selectedDate.toISOString())}
+        </Text>
+
+        <TouchableOpacity onPress={handleNextDate}>
+          <Ionicons name="chevron-forward" size={24} color="#207163ff" />
+        </TouchableOpacity>
+      </View>
 
       {filteredData.length > 0 ? (
         filteredData.map((item) =>
@@ -155,18 +186,12 @@ export default function JadwalIbadah(): React.ReactElement {
                 <View style={[styles.banner, { backgroundColor: "#000" }]} />
               )}
               <Text style={styles.topik}>{item.topik || "Tanpa Topik"}</Text>
+              <Text style={styles.text}>{formatDate(item.tanggal)}</Text>
               <Text style={styles.text}>
-                <Text style={styles.label}>Hari/Tanggal: </Text>
-                {formatDate(item.tanggal)}
+                <Text style={styles.text}>Pukul </Text>
+                {d.jam || "-"} WIB
               </Text>
-              <Text style={styles.text}>
-                <Text style={styles.label}>Pukul: </Text>
-                {d.jam || "-"}
-              </Text>
-              <Text style={styles.text}>
-                <Text style={styles.label}>Pengkhotbah: </Text>
-                {d.pengkhotbah?.nama || "-"}
-              </Text>
+              <Text style={styles.text}>{d.pengkhotbah?.nama || "-"}</Text>
             </View>
           ))
         )
@@ -223,8 +248,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 2,
   },
-  label: {
+  datePickerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  dateText: {
+    fontSize: 16,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#000",
   },
 });

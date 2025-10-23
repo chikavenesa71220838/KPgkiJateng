@@ -24,15 +24,15 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/ayat-harians": [
+    "/jadwal-ibadahs": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/ayat-harians.js"
+      "static/chunks/pages/jadwal-ibadahs.js"
     ],
-    "/ayat-harians/[id]": [
+    "/jadwal-ibadahs/[id]": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/ayat-harians/[id].js"
+      "static/chunks/pages/jadwal-ibadahs/[id].js"
     ]
   },
   "ampFirstPages": []
