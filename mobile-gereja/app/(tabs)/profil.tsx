@@ -1,264 +1,236 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
+  Image,
+  TouchableOpacity,
+  Linking,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 
-export default function ProfilScreen() {
-  const [form, setForm] = useState({
-    nama: "",
-    alamat: "",
-    kodePos: "",
-    noWa: "",
-    email: "",
-    jenisKelamin: "",
-    pendidikan: "",
-    pekerjaan: "",
-    statusKawin: "",
-    statusKeanggotaan: "",
-    tanggalLahir: "",
-  });
-
-  const handleChange = (key: string, value: string) => {
-    setForm({ ...form, [key]: value });
-  };
-
-  const handleSave = () => {
-    alert(`Profil berhasil disimpan!`);
-  };
-
- 
-  const bulanMap: Record<string, string> = {
-    Januari: "01",
-    Februari: "02",
-    Maret: "03",
-    April: "04",
-    Mei: "05",
-    Juni: "06",
-    Juli: "07",
-    Agustus: "08",
-    September: "09",
-    Oktober: "10",
-    November: "11",
-    Desember: "12",
-  };
-
-  const bulanList = Object.keys(bulanMap);
-
-  const tahunList = Array.from({ length: 200 }, (_, i) =>
-    (new Date().getFullYear() - i).toString()
-  );
-
-  const [bulan, setBulan] = useState("");
-  const [tahun, setTahun] = useState("");
-
-  const updateTanggalLahir = (b: string, t: string) => {
-    setBulan(b);
-    setTahun(t);
-    if (b && t) {
-      const bulanNum = bulanMap[b]; // ambil angka bulan
-      handleChange("tanggalLahir", `${t}-${bulanNum}`);
-    }
-  };
-
+export default function ProfilGereja(): React.ReactElement {
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Profil Jemaat</Text>
-      <Text style={styles.label}>Nama *</Text>
-      <TextInput
-        style={styles.input}
-        value={form.nama}
-        onChangeText={(v) => handleChange("nama", v)}
-      />
+      {/* Profil Gereja */}
+      <Text style={styles.sectionTitle}>Profil Gereja</Text>
 
-      <Text style={styles.label}>Alamat *</Text>
-      <TextInput
-        style={styles.input}
-        value={form.alamat}
-        onChangeText={(v) => handleChange("alamat", v)}
-      />
-
-      <Text style={styles.label}>Kode Pos *</Text>
-      <TextInput
-        style={styles.input}
-        value={form.kodePos}
-        onChangeText={(v) => handleChange("kodePos", v)}
-        keyboardType="numeric"
-      />
-
-      <Text style={styles.label}>Nomor WA *</Text>
-      <TextInput
-        style={styles.input}
-        value={form.noWa}
-        onChangeText={(v) => handleChange("noWa", v)}
-        keyboardType="phone-pad"
-      />
-
-      <Text style={styles.label}>Email *</Text>
-      <TextInput
-        style={styles.input}
-        value={form.email}
-        onChangeText={(v) => handleChange("email", v)}
-        keyboardType="email-address"
-      />
-
-      <Text style={styles.label}>Jenis Kelamin *</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={form.jenisKelamin}
-          onValueChange={(v) => handleChange("jenisKelamin", v)}
-        >
-          <Picker.Item label="Pilih jenis kelamin..." value="" />
-          <Picker.Item label="Laki-laki" value="Laki-laki" />
-          <Picker.Item label="Perempuan" value="Perempuan" />
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>Pendidikan Terakhir *</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={form.pendidikan}
-          onValueChange={(v) => handleChange("pendidikan", v)}
-        >
-          <Picker.Item label="Pilih pendidikan terakhir..." value="" />
-          <Picker.Item label="Tidak/Belum Sekolah" value="Tidak/Belum Sekolah" />
-          <Picker.Item label="SD/Sederajat" value="SD/Sederajat" />
-          <Picker.Item label="SMP/Sederajat" value="SMP/Sederajat" />
-          <Picker.Item label="SMA/SMK/Sederajat" value="SMA/SMK/Sederajat" />
-          <Picker.Item label="Diploma" value="Diploma" />
-          <Picker.Item label="Sarjana (S1)" value="Sarjana (S1)" />
-          <Picker.Item label="Magister (S2)" value="Magister (S2)" />
-          <Picker.Item label="Doktor (S3)" value="Doktor (S3)" />
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>Pekerjaan *</Text>
-      <TextInput
-        style={styles.input}
-        value={form.pekerjaan}
-        onChangeText={(v) => handleChange("pekerjaan", v)}
-      />
-
-      <Text style={styles.label}>Tanggal Lahir (Bulan & Tahun) *</Text>
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        <View style={[styles.pickerWrapper, { flex: 1 }]}>
-          <Picker
-            selectedValue={bulan}
-            onValueChange={(v) => updateTanggalLahir(v, tahun)}
-          >
-            <Picker.Item label="Bulan" value="" />
-            {bulanList.map((b, i) => (
-              <Picker.Item key={i} label={b} value={b} />
-            ))}
-          </Picker>
-        </View>
-        <View style={[styles.pickerWrapper, { flex: 1 }]}>
-          <Picker
-            selectedValue={tahun}
-            onValueChange={(v) => updateTanggalLahir(bulan, v)}
-          >
-            <Picker.Item label="Tahun" value="" />
-            {tahunList.map((t, i) => (
-              <Picker.Item key={i} label={t} value={t} />
-            ))}
-          </Picker>
+      {/* Alamat + Foto Gereja */}
+      <View style={[styles.infoCard, styles.flexRow]}>
+        <Image
+          source={require("../../assets/images/fotogereja.jpeg")}
+          style={styles.gerejaImage}
+        />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.infoTitle}>Alamat</Text>
+          <Text style={styles.infoText}>
+            Jl. Bhayangkara No.25, Ngampilan, Kota Yogyakarta, Daerah Istimewa
+            Yogyakarta 55261
+          </Text>
         </View>
       </View>
 
-      <Text style={styles.label}>Status Perkawinan *</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={form.statusKawin}
-          onValueChange={(v) => handleChange("statusKawin", v)}
-        >
-          <Picker.Item label="Pilih status perkawinan..." value="" />
-          <Picker.Item label="Belum Menikah" value="Belum Menikah" />
-          <Picker.Item label="Menikah" value="Menikah" />
-          <Picker.Item label="Cerai Hidup" value="Cerai Hidup" />
-          <Picker.Item label="Cerai Mati" value="Cerai Mati" />
-        </Picker>
+      {/* Jam Kerja */}
+      <View style={styles.infoCard}>
+        <Text style={styles.infoTitle}>Jam Kerja Kantor</Text>
+        <Text style={styles.infoText}>Senin – Jumat : 08.00 – 15.30</Text>
+        <Text style={styles.infoText}>Sabtu : 08.00 – 13.00</Text>
+        <Text style={styles.infoText}>Minggu : 07.30 – 10.30</Text>
       </View>
 
-      <Text style={styles.label}>Status Keanggotaan Gereja *</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={form.statusKeanggotaan}
-          onValueChange={(v) => handleChange("statusKeanggotaan", v)}
-        >
-          <Picker.Item label="Pilih status keanggotaan..." value="" />
-          <Picker.Item label="Anggota" value="Anggota" />
-          <Picker.Item label="Simpatisan" value="Simpatisan" />
-        </Picker>
+      {/* Telepon */}
+      <View style={[styles.infoCard, styles.rowBetween]}>
+        <Text style={styles.infoTitle}>Telepon</Text>
+        <Text style={styles.infoText}>(0274) 514704</Text>
       </View>
 
-      <TouchableOpacity style={styles.btnSave} onPress={handleSave}>
-        <Text style={styles.btnText}>Simpan</Text>
-      </TouchableOpacity>
+      {/* Sosial Media */}
+      <View style={styles.infoCard}>
+        <View style={styles.socialHeader}>
+          <Text style={styles.infoTitle}>Sosial Media</Text>
+          <View style={styles.socialIcons}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL("https://wa.me/6280000000000")}
+            >
+              <FontAwesome
+                name="whatsapp"
+                size={24}
+                color="white"
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => Linking.openURL("https://instagram.com")}
+            >
+              <FontAwesome
+                name="instagram"
+                size={24}
+                color="white"
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => Linking.openURL("mailto:gki@example.com")}
+            >
+              <Ionicons name="mail" size={24} color="white" style={styles.icon} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => Linking.openURL("https://youtube.com")}
+            >
+              <FontAwesome
+                name="youtube-play"
+                size={24}
+                color="white"
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => Linking.openURL("https://facebook.com")}
+            >
+              <FontAwesome
+                name="facebook"
+                size={24}
+                color="white"
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
 
-      <TouchableOpacity
-        style={styles.btnHapus}
-        onPress={() =>
-          setForm({
-            nama: "",
-            alamat: "",
-            kodePos: "",
-            noWa: "",
-            email: "",
-            jenisKelamin: "",
-            pendidikan: "",
-            pekerjaan: "",
-            statusKawin: "",
-            statusKeanggotaan: "",
-            tanggalLahir: "",
-          })
-        }
-      >
-        <Text style={styles.btnText}>Hapus</Text>
-      </TouchableOpacity>
+      {/* Sejarah Gereja */}
+      <View style={styles.infoCard}>
+        <Text style={styles.infoTitle}>Sejarah Gereja</Text>
+      </View>
+
+      {/* Pendeta Gereja */}
+      <Text style={styles.subTitle}>Pendeta Gereja</Text>
+
+      <View style={styles.pendetaList}>
+        {[
+          {
+            id: 1,
+            nama: "Pdt. Iyan",
+            telp: "081888888888",
+            img: require("F:/KP/KPgkiJateng/mobile-gereja/assets/images/logogereja.png"),
+          },
+          {
+            id: 2,
+            nama: "Pdt. Albert",
+            telp: "081777777777",
+            img: require("F:/KP/KPgkiJateng/mobile-gereja/assets/images/logogereja.png"),
+          },
+          {
+            id: 3,
+            nama: "Pdt. Maria",
+            telp: "081999999999",
+            img: require("F:/KP/KPgkiJateng/mobile-gereja/assets/images/logogereja.png"),
+          },
+        ].map((p) => (
+          <View key={p.id} style={styles.pendetaCard}>
+            <Image source={p.img} style={styles.pendetaImg} />
+            <Text style={styles.pendetaName}>{p.nama}</Text>
+            <Text style={styles.pendetaPhone}>{p.telp}</Text>
+          </View>
+        ))}
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
-  label: { fontWeight: "bold", marginBottom: 4, marginTop: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: "#f9f9f9",
+  container: {
+    flex: 1,
+    backgroundColor: "#E9F6F5",
+    padding: 16,
   },
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    backgroundColor: "#f9f9f9",
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#207163",
+    marginVertical: 10,
   },
-  btnSave: {
-    backgroundColor: "#1E90FF",
-    padding: 14,
-    borderRadius: 10,
+  subTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#207163",
+    marginTop: 15,
+    marginBottom: 8,
+  },
+  infoCard: {
+    backgroundColor: "#207163",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  infoTitle: {
+    color: "white",
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  infoText: {
+    color: "white",
+    fontSize: 14,
+  },
+  flexRow: {
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 24,
-    marginBottom: 20,
+    gap: 12,
   },
-  btnHapus: {
-    backgroundColor: "#FF6347",
-    padding: 14,
+  gerejaImage: {
+    width: 120,
+    height: 120,
     borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 40,
+    marginRight: 10,
   },
-  btnText: { color: "#fff", fontWeight: "bold" },
-    title: { 
-    fontSize: 30, 
-    fontWeight: "bold", 
-    marginBottom: 20 
+  rowBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  socialHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  socialIcons: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  icon: {
+    marginLeft: 10,
+  },
+
+  /*** Pendeta Section ***/
+  pendetaList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  pendetaCard: {
+    backgroundColor: "#207163",
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+    width: "48%",
+    marginBottom: 12,
+  },
+  pendetaImg: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    marginBottom: 8,
+  },
+  pendetaName: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+    textAlign: "center",
+  },
+  pendetaPhone: {
+    color: "white",
+    fontSize: 14,
+    textAlign: "center",
   },
 });
