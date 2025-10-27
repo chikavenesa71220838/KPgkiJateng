@@ -212,9 +212,6 @@ var Pengkhotbah = (0, import_core5.list)({
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
           const file2 = resolvedData.foto;
-          if (file2 && file2.mimetype !== "image/jpeg" && file2.mimetype !== "image/jpg" && file2.mimetype !== "image/pjpeg") {
-            addValidationError("Hanya file JPEG atau JPG yang diperbolehkan.");
-          }
         }
       }
     }),
