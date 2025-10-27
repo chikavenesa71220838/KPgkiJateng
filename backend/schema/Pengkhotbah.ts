@@ -13,15 +13,16 @@ const allowAll = {
 export const Pengkhotbah = list({
   access: allowAll,
   fields: {
-    gambarProfil: image({
+    foto: image({
       storage: "local_images",
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
-          const file = resolvedData.gambarProfil;
+          const file = resolvedData.foto;
           if (
             file &&
             file.mimetype !== "image/jpeg" &&
-            file.mimetype !== "image/jpg"
+            file.mimetype !== "image/jpg" &&
+            file.mimetype !== "image/pjpeg"
           ) {
             addValidationError("Hanya file JPEG atau JPG yang diperbolehkan.");
           }

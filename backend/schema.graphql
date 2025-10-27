@@ -426,7 +426,9 @@ input KategoriWartaRelateToOneForCreateInput {
 
 type Pengkhotbah {
   id: ID!
+  foto: ImageFieldOutput
   nama: String
+  kontak: String
   detailIbadah(where: DetailIbadahWhereInput! = {}, orderBy: [DetailIbadahOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DetailIbadahWhereUniqueInput): [DetailIbadah!]
   detailIbadahCount(where: DetailIbadahWhereInput! = {}): Int
 }
@@ -441,6 +443,7 @@ input PengkhotbahWhereInput {
   NOT: [PengkhotbahWhereInput!]
   id: IDFilter
   nama: StringFilter
+  kontak: StringFilter
   detailIbadah: DetailIbadahManyRelationFilter
 }
 
@@ -453,10 +456,13 @@ input DetailIbadahManyRelationFilter {
 input PengkhotbahOrderByInput {
   id: OrderDirection
   nama: OrderDirection
+  kontak: OrderDirection
 }
 
 input PengkhotbahUpdateInput {
+  foto: ImageFieldInput
   nama: String
+  kontak: String
   detailIbadah: DetailIbadahRelateToManyForUpdateInput
 }
 
@@ -473,7 +479,9 @@ input PengkhotbahUpdateArgs {
 }
 
 input PengkhotbahCreateInput {
+  foto: ImageFieldInput
   nama: String
+  kontak: String
   detailIbadah: DetailIbadahRelateToManyForCreateInput
 }
 
