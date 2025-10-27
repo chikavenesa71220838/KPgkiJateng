@@ -27,15 +27,15 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/jadwal-ibadahs": [
+    "/pengkhotbahs": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/jadwal-ibadahs.js"
+      "static/chunks/pages/pengkhotbahs.js"
     ],
-    "/jadwal-ibadahs/[id]": [
+    "/pengkhotbahs/[id]": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/jadwal-ibadahs/[id].js"
+      "static/chunks/pages/pengkhotbahs/[id].js"
     ]
   },
   "ampFirstPages": []

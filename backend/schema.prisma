@@ -63,9 +63,15 @@ model Warta {
 }
 
 model Pengkhotbah {
-  id           String         @id @default(cuid())
-  nama         String         @default("")
-  detailIbadah DetailIbadah[] @relation("DetailIbadah_pengkhotbah")
+  id             String         @id @default(cuid())
+  foto_id        String?
+  foto_filesize  Int?
+  foto_width     Int?
+  foto_height    Int?
+  foto_extension String?
+  nama           String         @default("")
+  kontak         String         @default("")
+  detailIbadah   DetailIbadah[] @relation("DetailIbadah_pengkhotbah")
 }
 
 model JadwalIbadah {

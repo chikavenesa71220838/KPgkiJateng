@@ -207,8 +207,19 @@ var allowAll5 = {
 var Pengkhotbah = (0, import_core5.list)({
   access: allowAll5,
   fields: {
+    foto: (0, import_fields5.image)({
+      storage: "local_images",
+      hooks: {
+        validateInput: async ({ resolvedData, addValidationError }) => {
+          const file2 = resolvedData.foto;
+          if (file2 && file2.mimetype !== "image/jpeg" && file2.mimetype !== "image/jpg" && file2.mimetype !== "image/pjpeg") {
+            addValidationError("Hanya file JPEG atau JPG yang diperbolehkan.");
+          }
+        }
+      }
+    }),
     nama: (0, import_fields5.text)({ validation: { isRequired: true } }),
-    // kontak: text(),
+    kontak: (0, import_fields5.text)(),
     detailIbadah: (0, import_fields5.relationship)({ ref: "DetailIbadah.pengkhotbah", many: true })
   },
   ui: { labelField: "nama" }

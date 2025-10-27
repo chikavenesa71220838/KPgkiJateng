@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,23 +7,58 @@ import {
   Image,
   TouchableOpacity,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 
 export default function ProfilGereja(): React.ReactElement {
+  const [pendeta, setPendeta] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchPendeta() {
+      try {
+        const res = await fetch("http://localhost:3000/api/graphql", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: `
+              query {
+                pengkhotbahs {
+                  id
+                  nama
+                  kontak
+                }
+              }
+            `,
+          }),
+        });
+
+        const json = await res.json();
+        setPendeta(json.data.pengkhotbahs);
+      } catch (error) {
+        console.error("Gagal mengambil data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchPendeta();
+  }, []);
+
   return (
     <ScrollView style={styles.container}>
       {/* Profil Gereja */}
       <Text style={styles.sectionTitle}>Profil Gereja</Text>
 
       {/* Alamat + Foto Gereja */}
-      <View style={[styles.infoCard, styles.flexRow]}>
+      <View style={[styles.infoCardGereja, styles.flexRow]}>
         <Image
           source={require("../../assets/images/fotogereja.jpeg")}
           style={styles.gerejaImage}
         />
         <View style={{ flex: 1 }}>
-          <Text style={styles.infoTitle}>Alamat</Text>
+          <Text style={styles.infoTitle}>Alamat GKI Ngupasan</Text>
           <Text style={styles.infoText}>
             Jl. Bhayangkara No.25, Ngampilan, Kota Yogyakarta, Daerah Istimewa
             Yogyakarta 55261
@@ -50,50 +85,20 @@ export default function ProfilGereja(): React.ReactElement {
         <View style={styles.socialHeader}>
           <Text style={styles.infoTitle}>Sosial Media</Text>
           <View style={styles.socialIcons}>
-            <TouchableOpacity
-              onPress={() => Linking.openURL("https://wa.me/6280000000000")}
-            >
-              <FontAwesome
-                name="whatsapp"
-                size={24}
-                color="white"
-                style={styles.icon}
-              />
+            <TouchableOpacity onPress={() => Linking.openURL("https://wa.me/6280000000000")}>
+              <FontAwesome name="whatsapp" size={24} color="white" style={styles.icon} />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => Linking.openURL("https://instagram.com")}
-            >
-              <FontAwesome
-                name="instagram"
-                size={24}
-                color="white"
-                style={styles.icon}
-              />
+            <TouchableOpacity onPress={() => Linking.openURL("https://instagram.com")}>
+              <FontAwesome name="instagram" size={24} color="white" style={styles.icon} />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => Linking.openURL("mailto:gki@example.com")}
-            >
+            <TouchableOpacity onPress={() => Linking.openURL("mailto:gki@example.com")}>
               <Ionicons name="mail" size={24} color="white" style={styles.icon} />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => Linking.openURL("https://youtube.com")}
-            >
-              <FontAwesome
-                name="youtube-play"
-                size={24}
-                color="white"
-                style={styles.icon}
-              />
+            <TouchableOpacity onPress={() => Linking.openURL("https://youtube.com")}>
+              <FontAwesome name="youtube-play" size={24} color="white" style={styles.icon} />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => Linking.openURL("https://facebook.com")}
-            >
-              <FontAwesome
-                name="facebook"
-                size={24}
-                color="white"
-                style={styles.icon}
-              />
+            <TouchableOpacity onPress={() => Linking.openURL("https://facebook.com")}>
+              <FontAwesome name="facebook" size={24} color="white" style={styles.icon} />
             </TouchableOpacity>
           </View>
         </View>
@@ -107,34 +112,22 @@ export default function ProfilGereja(): React.ReactElement {
       {/* Pendeta Gereja */}
       <Text style={styles.subTitle}>Pendeta Gereja</Text>
 
-      <View style={styles.pendetaList}>
-        {[
-          {
-            id: 1,
-            nama: "Pdt. Iyan",
-            telp: "081888888888",
-            img: require("F:/KP/KPgkiJateng/mobile-gereja/assets/images/logogereja.png"),
-          },
-          {
-            id: 2,
-            nama: "Pdt. Albert",
-            telp: "081777777777",
-            img: require("F:/KP/KPgkiJateng/mobile-gereja/assets/images/logogereja.png"),
-          },
-          {
-            id: 3,
-            nama: "Pdt. Maria",
-            telp: "081999999999",
-            img: require("F:/KP/KPgkiJateng/mobile-gereja/assets/images/logogereja.png"),
-          },
-        ].map((p) => (
-          <View key={p.id} style={styles.pendetaCard}>
-            <Image source={p.img} style={styles.pendetaImg} />
-            <Text style={styles.pendetaName}>{p.nama}</Text>
-            <Text style={styles.pendetaPhone}>{p.telp}</Text>
-          </View>
-        ))}
-      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color="#207163" />
+      ) : (
+        <View style={styles.pendetaList}>
+          {pendeta.map((p, index) => (
+            <View key={index} style={styles.pendetaCard}>
+              <Image
+                source={require("../../assets/images/logogereja.png")}
+                style={styles.pendetaImg}
+              />
+              <Text style={styles.pendetaName}>{p.nama}</Text>
+              <Text style={styles.pendetaPhone}>{p.kontak || "Tidak ada kontak"}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -142,7 +135,7 @@ export default function ProfilGereja(): React.ReactElement {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E9F6F5",
+    backgroundColor: "#fff",
     padding: 16,
   },
   sectionTitle: {
@@ -164,10 +157,17 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
   },
+  infoCardGereja: {
+    backgroundColor: "#207163",
+    borderRadius: 12,
+    paddingLeft: 0,
+    marginBottom: 12,
+  },
   infoTitle: {
     color: "white",
     fontWeight: "bold",
     marginBottom: 4,
+    fontSize: 16,
   },
   infoText: {
     color: "white",
@@ -179,10 +179,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   gerejaImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 10,
-    marginRight: 10,
+    width: 100,
+    height: 100,
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
   },
   rowBetween: {
     flexDirection: "row",
@@ -201,8 +201,6 @@ const styles = StyleSheet.create({
   icon: {
     marginLeft: 10,
   },
-
-  /*** Pendeta Section ***/
   pendetaList: {
     flexDirection: "row",
     flexWrap: "wrap",
