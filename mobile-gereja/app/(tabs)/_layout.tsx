@@ -77,7 +77,6 @@ export default function TabLayout() {
       <Tabs.Screen name="warta"  />
       <Tabs.Screen name="Riwayat"  />
       <Tabs.Screen name="profil"/>
-      <Tabs.Screen name="sejarah" />
     </Tabs>
     </View>
   );
