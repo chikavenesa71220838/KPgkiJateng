@@ -10,45 +10,65 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native"; // ✅ Tambahkan ini
+import { API_URL } from "../../utils/api";
+
+interface Pendeta {
+  id: string;
+  nama: string;
+  kontak?: string;
+  foto?: { url: string };
+}
 
 export default function ProfilGereja(): React.ReactElement {
-  const [pendeta, setPendeta] = useState<any[]>([]);
+  const [pendeta, setPendeta] = useState<Pendeta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchPendeta() {
-      try {
-        const res = await fetch("http://localhost:3000/api/graphql", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: `
-              query {
-                pengkhotbahs {
-                  id
-                  nama
-                  kontak
+  const navigation = useNavigation(); // ✅ Tambahkan ini
+
+  const fetchPendeta = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            query {
+              pengkhotbahs(orderBy: { nama: asc }) {
+                id
+                nama
+                kontak
+                foto {
+                  url
                 }
               }
-            `,
-          }),
-        });
+            }
+          `,
+        }),
+      });
 
-        const json = await res.json();
-        setPendeta(json.data.pengkhotbahs);
-      } catch (error) {
-        console.error("Gagal mengambil data:", error);
-      } finally {
-        setLoading(false);
-      }
+      const result = await res.json();
+      if (result.errors)
+        throw new Error(result.errors[0]?.message || "GraphQL Error");
+
+      setPendeta(result.data?.pengkhotbahs || []);
+      setError(null);
+    } catch (err: any) {
+      console.error("Gagal memuat data pendeta:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchPendeta();
   }, []);
 
   return (
     <ScrollView style={styles.container}>
-      {/* Profil Gereja */}
       <Text style={styles.sectionTitle}>Profil Gereja</Text>
 
       {/* Alamat + Foto Gereja */}
@@ -85,45 +105,82 @@ export default function ProfilGereja(): React.ReactElement {
         <View style={styles.socialHeader}>
           <Text style={styles.infoTitle}>Sosial Media</Text>
           <View style={styles.socialIcons}>
-            <TouchableOpacity onPress={() => Linking.openURL("https://wa.me/6280000000000")}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL("https://wa.me/6280000000000")}
+            >
               <FontAwesome name="whatsapp" size={24} color="white" style={styles.icon} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => Linking.openURL("https://instagram.com")}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL("https://instagram.com")}
+            >
               <FontAwesome name="instagram" size={24} color="white" style={styles.icon} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => Linking.openURL("mailto:gki@example.com")}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL("mailto:gki@example.com")}
+            >
               <Ionicons name="mail" size={24} color="white" style={styles.icon} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => Linking.openURL("https://youtube.com")}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL("https://youtube.com")}
+            >
               <FontAwesome name="youtube-play" size={24} color="white" style={styles.icon} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => Linking.openURL("https://facebook.com")}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL("https://facebook.com")}
+            >
               <FontAwesome name="facebook" size={24} color="white" style={styles.icon} />
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
-      {/* Sejarah Gereja */}
-      <View style={styles.infoCard}>
+      {/* ✅ Sejarah Gereja */}
+      <TouchableOpacity
+        style={[styles.infoCard, styles.rowBetween]}
+        onPress={() => navigation.navigate("sejarah" as never)}
+      >
         <Text style={styles.infoTitle}>Sejarah Gereja</Text>
-      </View>
+        <Ionicons name="chevron-forward" size={20} color="white" />
+      </TouchableOpacity>
 
       {/* Pendeta Gereja */}
       <Text style={styles.subTitle}>Pendeta Gereja</Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#207163" />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#207163" />
+          <Text style={{ color: "#207163", marginTop: 8 }}>
+            Memuat data pendeta...
+          </Text>
+        </View>
+      ) : error ? (
+        <Text style={{ color: "red", textAlign: "center" }}>
+          Gagal memuat data: {error}
+        </Text>
+      ) : pendeta.length === 0 ? (
+        <Text style={{ textAlign: "center", color: "#207163", marginTop: 10 }}>
+          Tidak ada data pendeta.
+        </Text>
       ) : (
         <View style={styles.pendetaList}>
-          {pendeta.map((p, index) => (
-            <View key={index} style={styles.pendetaCard}>
+          {pendeta.map((p) => (
+            <View key={p.id} style={styles.pendetaCard}>
               <Image
-                source={require("../../assets/images/logogereja.png")}
+                source={
+                  p.foto?.url
+                    ? { uri: `${API_URL.replace("/api/graphql", "")}${p.foto.url}` }
+                    : require("../../assets/images/logogereja.png")
+                }
                 style={styles.pendetaImg}
               />
-              <Text style={styles.pendetaName}>{p.nama}</Text>
-              <Text style={styles.pendetaPhone}>{p.kontak || "Tidak ada kontak"}</Text>
+              <View style={styles.pendetaInfo}>
+                <Text style={styles.pendetaName}>{p.nama}</Text>
+                {p.kontak ? (
+                  <TouchableOpacity onPress={() => Linking.openURL(`tel:${p.kontak}`)}>
+                    <Text style={styles.pendetaPhone}>{p.kontak}</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             </View>
           ))}
         </View>
@@ -133,11 +190,7 @@ export default function ProfilGereja(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    padding: 16,
-  },
+  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
@@ -169,15 +222,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontSize: 16,
   },
-  infoText: {
-    color: "white",
-    fontSize: 14,
-  },
-  flexRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
+  infoText: { color: "white", fontSize: 14 },
+  flexRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   gerejaImage: {
     width: 100,
     height: 100,
@@ -194,13 +240,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  socialIcons: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  icon: {
-    marginLeft: 10,
-  },
+  socialIcons: { flexDirection: "row", alignItems: "center" },
+  icon: { marginLeft: 10 },
   pendetaList: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -209,16 +250,20 @@ const styles = StyleSheet.create({
   pendetaCard: {
     backgroundColor: "#207163",
     borderRadius: 12,
-    padding: 12,
-    alignItems: "center",
+    overflow: "hidden",
     width: "48%",
     marginBottom: 12,
   },
   pendetaImg: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    marginBottom: 8,
+    width: "100%",
+    aspectRatio: 1,
+    resizeMode: "contain",
+    backgroundColor: "#fff",
+  },
+  pendetaInfo: {
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    alignItems: "center",
   },
   pendetaName: {
     color: "white",
@@ -227,8 +272,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   pendetaPhone: {
-    color: "white",
+    color: "#b2dfdb",
     fontSize: 14,
-    textAlign: "center",
+    marginTop: 4,
+    textDecorationLine: "underline",
   },
+  center: { justifyContent: "center", alignItems: "center", marginTop: 20 },
 });

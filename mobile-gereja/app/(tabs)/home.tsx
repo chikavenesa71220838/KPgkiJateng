@@ -123,8 +123,8 @@ export default function HomeScreen() {
     { id: 2, nama: "Ibadah Umum", jadwal: "Minggu, 06.00" },
     { id: 3, nama: "Ibadah Umum", jadwal: "Minggu, 09.30" },
     { id: 4, nama: "Ibadah Umum", jadwal: "Minggu, 16.30" },
-    { id: 4, nama: "Ibadah Pra-Remaja", jadwal: "Minggu, 07.30" },
-    { id: 4, nama: "Ibadah Remaja", jadwal: "Minggu, 07.30" }
+    { id: 5, nama: "Ibadah Pra-Remaja", jadwal: "Minggu, 07.30" },
+    { id: 6, nama: "Ibadah Remaja", jadwal: "Minggu, 07.30" }
   ];
 
   if (loading) {

@@ -18,13 +18,17 @@ export const Pengkhotbah = list({
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
           const file = resolvedData.foto;
+          if (!file || !file.filename) return;
+
+          const lower = file.filename.toLowerCase();
           if (
-            file &&
-            file.mimetype !== "image/jpeg" &&
-            file.mimetype !== "image/jpg" &&
-            file.mimetype !== "image/pjpeg"
+            !lower.endsWith(".jpg") &&
+            !lower.endsWith(".jpeg") &&
+            !lower.endsWith(".png")
           ) {
-            addValidationError("Hanya file JPEG atau JPG yang diperbolehkan.");
+            addValidationError(
+              "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk foto."
+            );
           }
         },
       },

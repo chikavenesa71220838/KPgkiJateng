@@ -1,4 +1,4 @@
-import { withLayoutContext } from 'expo-router';
+import { Stack, withLayoutContext } from 'expo-router';
 import React from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { Ionicons} from '@expo/vector-icons';
@@ -77,6 +77,7 @@ export default function TabLayout() {
       <Tabs.Screen name="warta"  />
       <Tabs.Screen name="Riwayat"  />
       <Tabs.Screen name="profil"/>
+      <Tabs.Screen name="sejarah" />
     </Tabs>
     </View>
   );

@@ -1,8 +1,6 @@
-// services/ayatService.js
 import fetch from "node-fetch";
 import { books } from "./kitab.js";
 
-// Fallback verse kalau API gagal
 const fallbackVerse = {
   book: "Mazmur",
   chapter: "23",
@@ -43,35 +41,30 @@ export async function getRandomVerse() {
   const chapter = getSeededRandom(seed + 1, randomBook.chapters) + 1;
 
   const url = `https://beeble.vercel.app/api/v1/passage/${randomBook.code}/${chapter}`;
-
   let attempts = 0;
-  const maxAttempts = 3;
 
-  while (attempts < maxAttempts) {
+  while (attempts < 3) {
     try {
-      const res = await fetchWithTimeout(url, 7000); // 7 detik timeout
-      if (!res.ok) throw new Error(`Error fetching verse: ${res.status} ${res.statusText}`);
+      const res = await fetchWithTimeout(url, 7000);
+      if (!res.ok) throw new Error(`Error fetching verse: ${res.statusText}`);
 
       const data = await res.json();
-      const contentVerses = data.data.verses.filter(v => v.type === "content");
-      if (!contentVerses.length) throw new Error("Tidak ada ayat content di chapter ini");
+      const verses = data.data.verses.filter(v => v.type === "content");
+      if (!verses.length) throw new Error("Tidak ada ayat content");
 
-      const verseIndex = getSeededRandom(seed + 2, contentVerses.length);
-      const verse = contentVerses[verseIndex];
+      const verseIndex = getSeededRandom(seed + 2, verses.length);
+      const verse = verses[verseIndex];
 
       return {
         book: data.data.book.name,
         chapter: String(data.data.book.chapter),
         verse: String(verse.verse),
-        text: verse.content,
+        text: verse.content
       };
     } catch (err) {
       attempts++;
-      console.warn(`Attempt ${attempts} failed:`, err.message);
-      if (attempts >= maxAttempts) {
-        console.warn("API gagal, pakai fallback verse.");
-        return fallbackVerse;
-      }
+      console.warn(`Attempt ${attempts} gagal: ${err.message}`);
+      if (attempts >= 3) return fallbackVerse;
     }
   }
 }
