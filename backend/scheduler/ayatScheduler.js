@@ -30,10 +30,7 @@ export default function startAyatScheduler(context) {
     }
   }
 
-  // Jalankan sekali saat server start
   updateDailyVerse();
-
-  // Jalankan otomatis setiap jam 00:00 WIB
   cron.schedule("0 0 * * *", () => {
     updateDailyVerse();
   }, {
