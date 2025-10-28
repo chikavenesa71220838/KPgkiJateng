@@ -106,3 +106,40 @@ model AyatHarian {
   text    String   @default("")
   tanggal DateTime @default(now())
 }
+
+model Pendeta {
+  id              String  @id @default(cuid())
+  foto_id         String?
+  foto_filesize   Int?
+  foto_width      Int?
+  foto_height     Int?
+  foto_extension  String?
+  nama            String  @default("")
+  email           String  @unique @default("")
+  kontak          String  @default("")
+  sejakKapanAktif String
+  gereja          Gereja? @relation("Pendeta_gereja", fields: [gerejaId], references: [id])
+  gerejaId        String? @map("gereja")
+
+  @@index([gerejaId])
+}
+
+model Gereja {
+  id               String    @id @default(cuid())
+  gambar_id        String?
+  gambar_filesize  Int?
+  gambar_width     Int?
+  gambar_height    Int?
+  gambar_extension String?
+  nama             String    @default("")
+  alamat           String    @default("")
+  hari             String    @default("")
+  telepon          String    @default("")
+  linkWhatsapp     String    @default("")
+  linkInstagram    String    @default("")
+  linkYoutube      String    @default("")
+  linkFacebook     String    @default("")
+  linkEmail        String    @default("")
+  sejarah          String    @default("")
+  pendeta          Pendeta[] @relation("Pendeta_gereja")
+}
