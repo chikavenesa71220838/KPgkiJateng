@@ -35,9 +35,6 @@ const formatDate = (dateString?: string) => {
   return new Date(dateString).toLocaleDateString("id-ID", options);
 };
 
-const formatMonthYear = (date: Date) =>
-  date.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
-
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
@@ -152,11 +149,15 @@ export default function Warta(): React.ReactElement {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Warta Gereja</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 50 }}
+      showsVerticalScrollIndicator={false}
+    >
+      <Text style={styles.title}>Warta</Text>
 
       <TextInput
-        placeholder="Cari berdasarkan judul, isi, atau kategori"
+        placeholder="Cari berdasarkan tanggal, topik, atau pengkhotbah"
         style={styles.input}
         value={searchQuery}
         onChangeText={setSearchQuery}
@@ -164,13 +165,18 @@ export default function Warta(): React.ReactElement {
 
       <View style={styles.datePickerContainer}>
         <TouchableOpacity onPress={handlePrevMonth}>
-          <Ionicons name="chevron-back" size={24} color="#207163ff" />
+          <Ionicons name="chevron-back" size={20} color="#207163" />
         </TouchableOpacity>
 
-        <Text style={styles.dateText}>{formatMonthYear(selectedDate)}</Text>
+        <Text style={styles.dateText}>
+          {selectedDate.toLocaleDateString("id-ID", {
+            month: "long",
+            year: "numeric",
+          })}
+        </Text>
 
         <TouchableOpacity onPress={handleNextMonth}>
-          <Ionicons name="chevron-forward" size={24} color="#207163ff" />
+          <Ionicons name="chevron-forward" size={20} color="#207163" />
         </TouchableOpacity>
       </View>
 
@@ -178,37 +184,41 @@ export default function Warta(): React.ReactElement {
         filteredData.map((item) => {
           const isExpanded = expandedId === item.id;
           return (
-            <View key={item.id} style={styles.card}>
-              {item.file?.url ? (
-                <Image
-                  source={{
-                    uri: `${API_URL.replace("/api/graphql", "")}${item.file.url}`,
-                  }}
-                  style={styles.banner}
-                />
-              ) : (
-                <View style={[styles.banner, { backgroundColor: "#000" }]} />
-              )}
-              <Text style={styles.topik}>{item.judul}</Text>
-              <Text style={styles.text}>
-                <Text style={styles.label}>Kategori: </Text>
-                {item.kategori?.nama || "-"}
-              </Text>
+            <View key={item.id} style={styles.cardContainer}>
+              {/* Bagian utama kartu */}
+              <View style={styles.cardRow}>
+                <View style={styles.leftBox}>
+                  {item.file?.url ? (
+                    <Image
+                      source={{
+                        uri: `${API_URL.replace("/api/graphql", "")}${item.file.url}`,
+                      }}
+                      style={styles.image}
+                    />
+                  ) : (
+                    <View style={styles.imagePlaceholder} />
+                  )}
+                </View>
 
-              <Text style={styles.text}>
-                <Text style={styles.label}>Masa Berlaku: </Text>
-                {formatDate(item.masaBerlaku)}
-              </Text>
+                <View style={styles.rightBox}>
+                  <Text style={styles.category}>
+                    {item.kategori?.nama || "Umum"}
+                  </Text>
+                  <Text style={styles.judul}>{item.judul}</Text>
+                  <Text style={styles.tanggalPelaksanaan}>
+                    {formatDate(item.tanggalPelaksanaan)}
+                  </Text>
 
-              <Text style={styles.text}>
-                <Text style={styles.label}>Tanggal Kegiatan: </Text>
-                {formatDate(item.tanggalPelaksanaan)}
-              </Text>
+                  {/* Masa berlaku di pojok kanan bawah */}
+                  <Text style={styles.masaBerlaku}>
+                    {formatDate(item.masaBerlaku)}
+                  </Text>
+                </View>
+              </View>
 
+              {/* Bagian isi warta (expand) */}
               {isExpanded && (
-                <Text style={[styles.text, { marginTop: 6 }]}>
-                  {item.isiWarta || "-"}
-                </Text>
+                <Text style={styles.detail}>{item.isiWarta || "-"}</Text>
               )}
 
               <TouchableOpacity onPress={() => toggleExpand(item.id)}>
@@ -227,74 +237,109 @@ export default function Warta(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#fff" },
+  container: { backgroundColor: "#fff", paddingHorizontal: 10 },
   title: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#207163ff",
-    marginBottom: 10,
+    color: "#207163",
+    marginVertical: 8,
   },
   input: {
-    backgroundColor: "#DDF2F2",
+    backgroundColor: "#E9F5F4",
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    marginBottom: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    marginBottom: 12,
   },
   datePickerContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    gap: 8,
+    marginBottom: 14,
   },
   dateText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#000",
   },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  emptyText: { textAlign: "center", color: "#666", marginTop: 20 },
-  card: {
-    backgroundColor: "#36c0c0ff",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 4,
+  cardContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    overflow: "hidden",
+    elevation: 2,
   },
-  banner: {
+  cardRow: {
+    flexDirection: "row",
+    height: 90,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  leftBox: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  rightBox: {
+    flex: 1.3,
+    backgroundColor: "#1A6969",
+    padding: 8,
+    justifyContent: "center",
+    position: "relative",
+  },
+  image: {
     width: "100%",
-    height: 160,
-    borderRadius: 8,
-    marginBottom: 10,
+    height: "100%",
+    resizeMode: "cover",
   },
-  topik: {
+  imagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#000",
+  },
+  category: {
+    color: "#fff",
     fontWeight: "bold",
-    color: "#fff",
-    fontSize: 16,
-    marginBottom: 6,
-  },
-  text: {
-    color: "#fff",
-    fontSize: 14,
+    fontSize: 12,
     marginBottom: 2,
   },
-  label: {
-    fontWeight: "bold",
+  judul: {
     color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  tanggalPelaksanaan: {
+    color: "#fff",
+    fontSize: 11,
+  },
+  masaBerlaku: {
+    position: "absolute",
+    bottom: 6,
+    right: 8,
+    color: "#fff",
+    fontSize: 10,
+  },
+  detail: {
+    padding: 8,
+    fontSize: 12,
+    color: "#333",
+    backgroundColor: "#f8f8f8",
   },
   expandToggle: {
-    color: "#f9f9f9",
+    color: "#207163",
     fontStyle: "italic",
-    fontSize: 13,
-    marginTop: 10,
+    fontSize: 12,
     textAlign: "right",
+    padding: 6,
   },
+  emptyText: {
+    textAlign: "center",
+    color: "#666",
+    marginTop: 20,
+  },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
 });
