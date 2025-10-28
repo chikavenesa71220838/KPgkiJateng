@@ -5,9 +5,11 @@ import path from "path";
 import express from "express";
 import "dotenv/config";
 
-import { lists } from "./schema/index";
+import { lists } from "./schema/index.js";
 import ayatHarianRoute from "./routes/ayatHarian.js";
+import startAyatScheduler from "./scheduler/ayatScheduler.js";
 
+// 🔐 Session config
 const sessionSecret = process.env.SESSION_SECRET || "supersecret";
 const session = statelessSessions({
   secret: sessionSecret,
@@ -30,13 +32,21 @@ export default config({
     },
     port: 3000,
     options: { host: "0.0.0.0" },
+
     extendExpressApp: (app, context) => {
-      ayatHarianRoute(app, context);
+      app.use(express.json());
+
+      //`context` di sini sudah merupakan Keystone context, tidak perlu dipanggil
+      const sudoContext = context.sudo();
+      ayatHarianRoute(app, sudoContext);
+      startAyatScheduler(sudoContext);
+      // 🔍 Route test
       app.get("/api/status", (req, res) => {
-        res.json({ status: "API is running" });
+        res.json({ status: "API is running ✅" });
       });
-    }
+    },
   },
+
   storage: {
     local_files: {
       kind: "local",
@@ -53,12 +63,14 @@ export default config({
       generateUrl: (filePath) => `/images/${filePath}`,
     },
   },
+
   ui: {
     isAccessAllowed: (context) => {
       if (process.env.NODE_ENV === "development") return true;
       return !!context.session?.data && context.session.data.role === "admin";
     },
   },
+
   lists,
   session,
 });
