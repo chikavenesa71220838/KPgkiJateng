@@ -104,8 +104,9 @@ export default function ProfilGereja(): React.ReactElement {
 
         {/* Telepon */}
         <TouchableOpacity
-          onPress={() => salinTeks("(0274) 514704")}
           style={[styles.infoCard, styles.rowBetween]}
+          onPress={() => Linking.openURL(`tel:(0274)514704`)}
+          onLongPress={() => salinTeks("(0274) 514704")}
         >
           <Text style={styles.infoTitle}>Telepon</Text>
           <Text style={[styles.infoText, { textDecorationLine: "underline" }]}>
@@ -152,10 +153,14 @@ export default function ProfilGereja(): React.ReactElement {
         {loading ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color="#207163" />
-            <Text style={{ color: "#207163", marginTop: 8 }}>Memuat data pendeta...</Text>
+            <Text style={{ color: "#207163", marginTop: 8 }}>
+              Memuat data pendeta...
+            </Text>
           </View>
         ) : error ? (
-          <Text style={{ color: "red", textAlign: "center" }}>Gagal memuat data: {error}</Text>
+          <Text style={{ color: "red", textAlign: "center" }}>
+            Gagal memuat data: {error}
+          </Text>
         ) : pendeta.length === 0 ? (
           <Text style={{ textAlign: "center", color: "#207163", marginTop: 10 }}>
             Tidak ada data pendeta.
@@ -163,7 +168,12 @@ export default function ProfilGereja(): React.ReactElement {
         ) : (
           <View style={styles.pendetaList}>
             {pendeta.map((p) => (
-              <View key={p.id} style={styles.pendetaCard}>
+              <TouchableOpacity
+                key={p.id}
+                style={styles.pendetaCard}
+                onPress={() => Linking.openURL(`tel:${p.kontak}`)}
+                onLongPress={() => salinTeks(p.kontak)}
+              >
                 <Image
                   source={
                     p.foto?.url
@@ -174,13 +184,11 @@ export default function ProfilGereja(): React.ReactElement {
                 />
                 <View style={styles.pendetaInfo}>
                   <Text style={styles.pendetaName}>{p.nama}</Text>
-                  {p.kontak ? (
-                    <TouchableOpacity onPress={() => Linking.openURL(`tel:${p.kontak}`)}>
-                      <Text style={styles.pendetaPhone}>{p.kontak}</Text>
-                    </TouchableOpacity>
-                  ) : null}
+                  <Text style={[styles.pendetaPhone, { textDecorationLine: "underline" }]}>
+                    {p.kontak || "Tidak ada kontak"}
+                  </Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
