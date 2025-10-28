@@ -9,11 +9,6 @@ self.__BUILD_MANIFEST = {
   "lowPriorityFiles": [],
   "rootMainFiles": [],
   "pages": {
-    "/": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/index.js"
-    ],
     "/_app": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -24,15 +19,20 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/pengkhotbahs": [
+    "/jadwal-ibadahs": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/pengkhotbahs.js"
+      "static/chunks/pages/jadwal-ibadahs.js"
     ],
-    "/pengkhotbahs/[id]": [
+    "/kategori-wartas": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/pengkhotbahs/[id].js"
+      "static/chunks/pages/kategori-wartas.js"
+    ],
+    "/wartas": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/wartas.js"
     ]
   },
   "ampFirstPages": []
