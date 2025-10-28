@@ -32,7 +32,7 @@ __export(keystone_exports, {
   default: () => keystone_default
 });
 module.exports = __toCommonJS(keystone_exports);
-var import_core9 = require("@keystone-6/core");
+var import_core11 = require("@keystone-6/core");
 var import_session = require("@keystone-6/core/session");
 var import_path = __toESM(require("path"));
 var import_express = __toESM(require("express"));
@@ -322,6 +322,146 @@ var AyatHarian = (0, import_core8.list)({
   }
 });
 
+// schema/pendeta.ts
+var import_core9 = require("@keystone-6/core");
+var import_fields9 = require("@keystone-6/core/fields");
+var allowAll9 = {
+  operation: {
+    query: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true
+  }
+};
+var Pendeta = (0, import_core9.list)({
+  access: allowAll9,
+  fields: {
+    foto: (0, import_fields9.image)({
+      storage: "local_images",
+      hooks: {
+        validateInput: async ({ resolvedData, addValidationError }) => {
+          const file2 = resolvedData.foto;
+          if (!file2 || !file2.filename) return;
+          const lower = file2.filename.toLowerCase();
+          if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.endsWith(".png")) {
+            addValidationError(
+              "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk foto."
+            );
+          }
+        }
+      }
+    }),
+    nama: (0, import_fields9.text)({ validation: { isRequired: true } }),
+    email: (0, import_fields9.text)({
+      validation: { isRequired: true },
+      isIndexed: "unique",
+      ui: { description: "Email pendeta (harus unik)" }
+    }),
+    kontak: (0, import_fields9.text)(),
+    sejakKapanAktif: (0, import_fields9.calendarDay)({
+      validation: { isRequired: true },
+      ui: {
+        description: "Tanggal mulai aktif di gereja ini"
+      }
+    }),
+    gereja: (0, import_fields9.relationship)({
+      ref: "Gereja.pendeta",
+      ui: { description: "Gereja tempat pendeta ini aktif melayani" }
+    })
+  },
+  ui: { labelField: "nama" }
+});
+
+// schema/dataGereja.ts
+var import_core10 = require("@keystone-6/core");
+var import_fields10 = require("@keystone-6/core/fields");
+var allowAll10 = {
+  operation: {
+    query: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true
+  }
+};
+var Gereja = (0, import_core10.list)({
+  access: allowAll10,
+  fields: {
+    gambar: (0, import_fields10.image)({
+      storage: "local_images",
+      hooks: {
+        validateInput: async ({ resolvedData, addValidationError }) => {
+          const file2 = resolvedData.gambar;
+          if (!file2 || !file2.filename) return;
+          const lower = file2.filename.toLowerCase();
+          if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.endsWith(".png")) {
+            addValidationError(
+              "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk gambar gereja."
+            );
+          }
+        }
+      },
+      ui: {
+        description: "Foto atau banner utama gereja"
+      }
+    }),
+    nama: (0, import_fields10.text)({ validation: { isRequired: true } }),
+    alamat: (0, import_fields10.text)({
+      validation: { isRequired: true },
+      ui: { displayMode: "textarea", description: "Alamat lengkap gereja" }
+    }),
+    hari: (0, import_fields10.text)({
+      validation: { isRequired: true },
+      ui: {
+        displayMode: "textarea",
+        description: "Hari operasional gereja (contoh: Senin - Minggu)"
+      }
+    }),
+    telepon: (0, import_fields10.text)({
+      ui: { description: "Nomor telepon gereja" }
+    }),
+    linkWhatsapp: (0, import_fields10.text)({
+      ui: { description: "Tautan WhatsApp gereja" }
+    }),
+    linkInstagram: (0, import_fields10.text)({
+      ui: { description: "Tautan Instagram gereja" }
+    }),
+    linkYoutube: (0, import_fields10.text)({
+      ui: { description: "Tautan YouTube gereja" }
+    }),
+    linkFacebook: (0, import_fields10.text)({
+      ui: { description: "Tautan Facebook gereja" }
+    }),
+    linkEmail: (0, import_fields10.text)({
+      ui: { description: "Alamat email resmi gereja" }
+    }),
+    sejarah: (0, import_fields10.text)({
+      ui: {
+        displayMode: "textarea",
+        description: "Sejarah singkat gereja ini"
+      }
+    }),
+    pendeta: (0, import_fields10.relationship)({
+      ref: "Pendeta.gereja",
+      many: true,
+      ui: {
+        description: "Daftar pendeta yang aktif di gereja ini"
+      }
+    })
+  },
+  ui: {
+    labelField: "nama",
+    listView: {
+      initialColumns: [
+        "nama",
+        "alamat",
+        "hari",
+        "jamBuka",
+        "jamTutup"
+      ]
+    }
+  }
+});
+
 // schema/index.ts
 var lists = {
   User,
@@ -331,7 +471,9 @@ var lists = {
   Pengkhotbah,
   JadwalIbadah,
   DetailIbadah,
-  AyatHarian
+  AyatHarian,
+  Pendeta,
+  Gereja
 };
 
 // services/aytService.js
@@ -547,7 +689,7 @@ var session = (0, import_session.statelessSessions)({
   maxAge: 60 * 60 * 24 * 30
   // 30 hari
 });
-var keystone_default = (0, import_core9.config)({
+var keystone_default = (0, import_core11.config)({
   db: {
     provider: "sqlite",
     url: process.env.DATABASE_URL || "file:./mobileGereja.db"

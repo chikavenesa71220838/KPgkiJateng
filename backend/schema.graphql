@@ -680,6 +680,181 @@ input AyatHarianCreateInput {
   tanggal: DateTime
 }
 
+type Pendeta {
+  id: ID!
+  foto: ImageFieldOutput
+  nama: String
+  email: String
+  kontak: String
+  sejakKapanAktif: CalendarDay
+  gereja: Gereja
+}
+
+input PendetaWhereUniqueInput {
+  id: ID
+  email: String
+}
+
+input PendetaWhereInput {
+  AND: [PendetaWhereInput!]
+  OR: [PendetaWhereInput!]
+  NOT: [PendetaWhereInput!]
+  id: IDFilter
+  nama: StringFilter
+  email: StringFilter
+  kontak: StringFilter
+  sejakKapanAktif: CalendarDayFilter
+  gereja: GerejaWhereInput
+}
+
+input PendetaOrderByInput {
+  id: OrderDirection
+  nama: OrderDirection
+  email: OrderDirection
+  kontak: OrderDirection
+  sejakKapanAktif: OrderDirection
+}
+
+input PendetaUpdateInput {
+  foto: ImageFieldInput
+  nama: String
+  email: String
+  kontak: String
+  sejakKapanAktif: CalendarDay
+  gereja: GerejaRelateToOneForUpdateInput
+}
+
+input GerejaRelateToOneForUpdateInput {
+  create: GerejaCreateInput
+  connect: GerejaWhereUniqueInput
+  disconnect: Boolean
+}
+
+input PendetaUpdateArgs {
+  where: PendetaWhereUniqueInput!
+  data: PendetaUpdateInput!
+}
+
+input PendetaCreateInput {
+  foto: ImageFieldInput
+  nama: String
+  email: String
+  kontak: String
+  sejakKapanAktif: CalendarDay
+  gereja: GerejaRelateToOneForCreateInput
+}
+
+input GerejaRelateToOneForCreateInput {
+  create: GerejaCreateInput
+  connect: GerejaWhereUniqueInput
+}
+
+type Gereja {
+  id: ID!
+  gambar: ImageFieldOutput
+  nama: String
+  alamat: String
+  hari: String
+  telepon: String
+  linkWhatsapp: String
+  linkInstagram: String
+  linkYoutube: String
+  linkFacebook: String
+  linkEmail: String
+  sejarah: String
+  pendeta(where: PendetaWhereInput! = {}, orderBy: [PendetaOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PendetaWhereUniqueInput): [Pendeta!]
+  pendetaCount(where: PendetaWhereInput! = {}): Int
+}
+
+input GerejaWhereUniqueInput {
+  id: ID
+}
+
+input GerejaWhereInput {
+  AND: [GerejaWhereInput!]
+  OR: [GerejaWhereInput!]
+  NOT: [GerejaWhereInput!]
+  id: IDFilter
+  nama: StringFilter
+  alamat: StringFilter
+  hari: StringFilter
+  telepon: StringFilter
+  linkWhatsapp: StringFilter
+  linkInstagram: StringFilter
+  linkYoutube: StringFilter
+  linkFacebook: StringFilter
+  linkEmail: StringFilter
+  sejarah: StringFilter
+  pendeta: PendetaManyRelationFilter
+}
+
+input PendetaManyRelationFilter {
+  every: PendetaWhereInput
+  some: PendetaWhereInput
+  none: PendetaWhereInput
+}
+
+input GerejaOrderByInput {
+  id: OrderDirection
+  nama: OrderDirection
+  alamat: OrderDirection
+  hari: OrderDirection
+  telepon: OrderDirection
+  linkWhatsapp: OrderDirection
+  linkInstagram: OrderDirection
+  linkYoutube: OrderDirection
+  linkFacebook: OrderDirection
+  linkEmail: OrderDirection
+  sejarah: OrderDirection
+}
+
+input GerejaUpdateInput {
+  gambar: ImageFieldInput
+  nama: String
+  alamat: String
+  hari: String
+  telepon: String
+  linkWhatsapp: String
+  linkInstagram: String
+  linkYoutube: String
+  linkFacebook: String
+  linkEmail: String
+  sejarah: String
+  pendeta: PendetaRelateToManyForUpdateInput
+}
+
+input PendetaRelateToManyForUpdateInput {
+  disconnect: [PendetaWhereUniqueInput!]
+  set: [PendetaWhereUniqueInput!]
+  create: [PendetaCreateInput!]
+  connect: [PendetaWhereUniqueInput!]
+}
+
+input GerejaUpdateArgs {
+  where: GerejaWhereUniqueInput!
+  data: GerejaUpdateInput!
+}
+
+input GerejaCreateInput {
+  gambar: ImageFieldInput
+  nama: String
+  alamat: String
+  hari: String
+  telepon: String
+  linkWhatsapp: String
+  linkInstagram: String
+  linkYoutube: String
+  linkFacebook: String
+  linkEmail: String
+  sejarah: String
+  pendeta: PendetaRelateToManyForCreateInput
+}
+
+input PendetaRelateToManyForCreateInput {
+  create: [PendetaCreateInput!]
+  connect: [PendetaWhereUniqueInput!]
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -734,6 +909,18 @@ type Mutation {
   updateAyatHarians(data: [AyatHarianUpdateArgs!]!): [AyatHarian]
   deleteAyatHarian(where: AyatHarianWhereUniqueInput!): AyatHarian
   deleteAyatHarians(where: [AyatHarianWhereUniqueInput!]!): [AyatHarian]
+  createPendeta(data: PendetaCreateInput!): Pendeta
+  createPendetas(data: [PendetaCreateInput!]!): [Pendeta]
+  updatePendeta(where: PendetaWhereUniqueInput!, data: PendetaUpdateInput!): Pendeta
+  updatePendetas(data: [PendetaUpdateArgs!]!): [Pendeta]
+  deletePendeta(where: PendetaWhereUniqueInput!): Pendeta
+  deletePendetas(where: [PendetaWhereUniqueInput!]!): [Pendeta]
+  createGereja(data: GerejaCreateInput!): Gereja
+  createGerejas(data: [GerejaCreateInput!]!): [Gereja]
+  updateGereja(where: GerejaWhereUniqueInput!, data: GerejaUpdateInput!): Gereja
+  updateGerejas(data: [GerejaUpdateArgs!]!): [Gereja]
+  deleteGereja(where: GerejaWhereUniqueInput!): Gereja
+  deleteGerejas(where: [GerejaWhereUniqueInput!]!): [Gereja]
   endSession: Boolean!
 }
 
@@ -762,6 +949,12 @@ type Query {
   ayatHarian(where: AyatHarianWhereUniqueInput!): AyatHarian
   ayatHarians(where: AyatHarianWhereInput! = {}, orderBy: [AyatHarianOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AyatHarianWhereUniqueInput): [AyatHarian!]
   ayatHariansCount(where: AyatHarianWhereInput! = {}): Int
+  pendeta(where: PendetaWhereUniqueInput!): Pendeta
+  pendetas(where: PendetaWhereInput! = {}, orderBy: [PendetaOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PendetaWhereUniqueInput): [Pendeta!]
+  pendetasCount(where: PendetaWhereInput! = {}): Int
+  gereja(where: GerejaWhereUniqueInput!): Gereja
+  gerejas(where: GerejaWhereInput! = {}, orderBy: [GerejaOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: GerejaWhereUniqueInput): [Gereja!]
+  gerejasCount(where: GerejaWhereInput! = {}): Int
   keystone: KeystoneMeta!
 }
 

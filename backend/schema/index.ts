@@ -7,6 +7,8 @@ import { Pengkhotbah } from "./Pengkhotbah";
 import { JadwalIbadah } from "./JadwalIbadah";
 import { DetailIbadah } from "./DetailIbadah";
 import { AyatHarian } from "./AyatHarian";
+import { Pendeta } from "./pendeta";
+import { Gereja } from "./dataGereja";
 
 export const lists = {
   User,
@@ -16,5 +18,7 @@ export const lists = {
   Pengkhotbah,
   JadwalIbadah,
   DetailIbadah,
-  AyatHarian
+  AyatHarian,
+  Pendeta,
+  Gereja
 };
