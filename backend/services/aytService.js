@@ -1,4 +1,3 @@
-// services/ayatService.js
 import fetch from "node-fetch";
 import { books } from "./kitab.js";
 
@@ -10,6 +9,7 @@ const fallbackVerse = {
   text: "Tuhan adalah gembalaku, takkan kekurangan aku."
 };
 
+// Fungsi pembangkit angka acak berbasis tanggal
 function getSeededRandom(seed, max) {
   const x = Math.sin(seed) * 10000;
   return Math.floor((x - Math.floor(x)) * max);
@@ -23,6 +23,7 @@ function getTodaySeed() {
   return y * 10000 + m * 100 + d;
 }
 
+// Fetch API dengan timeout
 async function fetchWithTimeout(url, timeout = 5000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
@@ -36,6 +37,7 @@ async function fetchWithTimeout(url, timeout = 5000) {
   }
 }
 
+// Ambil 1 ayat acak berdasarkan tanggal hari ini
 export async function getRandomVerse() {
   const seed = getTodaySeed();
   const bookIndex = getSeededRandom(seed, books.length);
@@ -49,7 +51,7 @@ export async function getRandomVerse() {
 
   while (attempts < maxAttempts) {
     try {
-      const res = await fetchWithTimeout(url, 7000); // 7 detik timeout
+      const res = await fetchWithTimeout(url, 7000); // timeout 7 detik
       if (!res.ok) throw new Error(`Error fetching verse: ${res.status} ${res.statusText}`);
 
       const data = await res.json();

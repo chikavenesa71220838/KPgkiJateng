@@ -35,6 +35,7 @@ module.exports = __toCommonJS(keystone_exports);
 var import_core9 = require("@keystone-6/core");
 var import_session = require("@keystone-6/core/session");
 var import_path = __toESM(require("path"));
+var import_express = __toESM(require("express"));
 var import_config = require("dotenv/config");
 
 // schema/User.ts
@@ -212,6 +213,13 @@ var Pengkhotbah = (0, import_core5.list)({
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
           const file2 = resolvedData.foto;
+          if (!file2 || !file2.filename) return;
+          const lower = file2.filename.toLowerCase();
+          if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.endsWith(".png")) {
+            addValidationError(
+              "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk foto."
+            );
+          }
         }
       }
     }),
@@ -476,6 +484,7 @@ async function ayatHarianRoute(app, context) {
         where: { tanggal: { gte: today.toISOString() } }
       });
       if (!ayat) {
+        console.log("Belum ada ayat hari ini, membuat baru...");
         const randomAyat = await getRandomVerse();
         ayat = await prisma.ayatHarian.create({
           data: {
@@ -489,10 +498,46 @@ async function ayatHarianRoute(app, context) {
       }
       res.json(ayat);
     } catch (err) {
-      console.error(err);
+      console.error("Gagal mengambil ayat:", err);
       res.status(500).json({ error: err.message });
     }
   });
+}
+
+// scheduler/ayatScheduler.js
+var import_node_cron = __toESM(require("node-cron"));
+function startAyatScheduler(context) {
+  async function updateDailyVerse() {
+    const { prisma } = context.sudo();
+    const today = /* @__PURE__ */ new Date();
+    today.setHours(0, 0, 0, 0);
+    const existing = await prisma.ayatHarian.findFirst({
+      where: { tanggal: { gte: today.toISOString() } }
+    });
+    if (!existing) {
+      console.log("Tidak ada ayat hari ini, membuat baru...");
+      const randomAyat = await getRandomVerse();
+      await prisma.ayatHarian.create({
+        data: {
+          book: randomAyat.book,
+          chapter: randomAyat.chapter,
+          verse: randomAyat.verse,
+          text: randomAyat.text,
+          tanggal: (/* @__PURE__ */ new Date()).toISOString()
+        }
+      });
+      console.log("Ayat harian baru tersimpan di database");
+    } else {
+      console.log("Ayat harian sudah ada, tidak diperbarui.");
+    }
+  }
+  updateDailyVerse();
+  import_node_cron.default.schedule("0 0 * * *", () => {
+    updateDailyVerse();
+  }, {
+    timezone: "Asia/Jakarta"
+  });
+  console.log("\u{1F4C5} Scheduler Ayat Harian aktif (Asia/Jakarta, 00:00)");
 }
 
 // keystone.ts
@@ -519,9 +564,12 @@ var keystone_default = (0, import_core9.config)({
     port: 3e3,
     options: { host: "0.0.0.0" },
     extendExpressApp: (app, context) => {
-      ayatHarianRoute(app, context);
+      app.use(import_express.default.json());
+      const sudoContext = context.sudo();
+      ayatHarianRoute(app, sudoContext);
+      startAyatScheduler(sudoContext);
       app.get("/api/status", (req, res) => {
-        res.json({ status: "API is running" });
+        res.json({ status: "API is running \u2705" });
       });
     }
   },

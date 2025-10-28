@@ -13,6 +13,7 @@ import {
   UIManager,
 } from "react-native";
 import { API_URL } from "../../utils/api";
+import { Ionicons } from "@expo/vector-icons";
 
 interface WartaItem {
   id: string;
@@ -27,13 +28,15 @@ interface WartaItem {
 const formatDate = (dateString?: string) => {
   if (!dateString) return "-";
   const options: Intl.DateTimeFormatOptions = {
-    weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   };
   return new Date(dateString).toLocaleDateString("id-ID", options);
 };
+
+const formatMonthYear = (date: Date) =>
+  date.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -46,6 +49,7 @@ export default function Warta(): React.ReactElement {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   const fetchWarta = async () => {
     try {
@@ -91,19 +95,39 @@ export default function Warta(): React.ReactElement {
   }, []);
 
   useEffect(() => {
+    const selectedMonth = selectedDate.getMonth();
+    const selectedYear = selectedDate.getFullYear();
+
+    let data = warta.filter((item) => {
+      if (!item.masaBerlaku) return false;
+      const d = new Date(item.masaBerlaku);
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+
     if (searchQuery.trim() !== "") {
       const textData = searchQuery.toLowerCase();
-      const filtered = warta.filter(
+      data = data.filter(
         (item) =>
           item.judul?.toLowerCase().includes(textData) ||
           item.kategori?.nama?.toLowerCase().includes(textData) ||
           item.isiWarta?.toLowerCase().includes(textData)
       );
-      setFilteredData(filtered);
-    } else {
-      setFilteredData(warta);
     }
-  }, [searchQuery, warta]);
+
+    setFilteredData(data);
+  }, [searchQuery, selectedDate, warta]);
+
+  const handlePrevMonth = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(selectedDate.getMonth() - 1);
+    setSelectedDate(newDate);
+  };
+
+  const handleNextMonth = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(selectedDate.getMonth() + 1);
+    setSelectedDate(newDate);
+  };
 
   const toggleExpand = (id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -137,6 +161,18 @@ export default function Warta(): React.ReactElement {
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
+
+      <View style={styles.datePickerContainer}>
+        <TouchableOpacity onPress={handlePrevMonth}>
+          <Ionicons name="chevron-back" size={24} color="#207163ff" />
+        </TouchableOpacity>
+
+        <Text style={styles.dateText}>{formatMonthYear(selectedDate)}</Text>
+
+        <TouchableOpacity onPress={handleNextMonth}>
+          <Ionicons name="chevron-forward" size={24} color="#207163ff" />
+        </TouchableOpacity>
+      </View>
 
       {filteredData.length > 0 ? (
         filteredData.map((item) => {
@@ -184,7 +220,7 @@ export default function Warta(): React.ReactElement {
           );
         })
       ) : (
-        <Text style={styles.emptyText}>Tidak ada warta tersedia.</Text>
+        <Text style={styles.emptyText}>Tidak ada warta untuk bulan ini.</Text>
       )}
     </ScrollView>
   );
@@ -205,6 +241,20 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
     marginBottom: 16,
+  },
+  datePickerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  dateText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#000",
   },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   emptyText: { textAlign: "center", color: "#666", marginTop: 20 },

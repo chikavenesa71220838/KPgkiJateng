@@ -12,7 +12,6 @@ import {
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import Toast from "react-native-toast-message";
-import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { API_URL } from "@/utils/api";
 
@@ -20,12 +19,14 @@ export default function ProfilGereja(): React.ReactElement {
   const router = useRouter();
   const [pendeta, setPendeta] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const BASE_URL = API_URL.replace("/api/graphql", "");
+
   useEffect(() => {
     async function fetchPendeta() {
       try {
-        const res = await fetch("API_URL", {
+        const res = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -45,9 +46,15 @@ export default function ProfilGereja(): React.ReactElement {
         });
 
         const json = await res.json();
+
+        if (json.errors) {
+          throw new Error(json.errors[0].message);
+        }
+
         setPendeta(json.data.pengkhotbahs);
-      } catch (error) {
-        console.error("Gagal mengambil data:", error);
+      } catch (err: any) {
+        console.error("Gagal mengambil data:", err);
+        setError(err.message || "Terjadi kesalahan");
       } finally {
         setLoading(false);
       }
@@ -111,62 +118,20 @@ export default function ProfilGereja(): React.ReactElement {
           <View style={styles.socialHeader}>
             <Text style={styles.infoTitle}>Sosial Media</Text>
             <View style={styles.socialIcons}>
-              <TouchableOpacity
-                onPress={() => Linking.openURL("https://wa.me/6281904056700")}
-              >
-                <FontAwesome
-                  name="whatsapp"
-                  size={24}
-                  color="white"
-                  style={styles.icon}
-                />
+              <TouchableOpacity onPress={() => Linking.openURL("https://wa.me/6281904056700")}>
+                <FontAwesome name="whatsapp" size={24} color="white" style={styles.icon} />
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  Linking.openURL("https://www.instagram.com/gkingupasan_/")
-                }
-              >
-                <FontAwesome
-                  name="instagram"
-                  size={24}
-                  color="white"
-                  style={styles.icon}
-                />
+              <TouchableOpacity onPress={() => Linking.openURL("https://www.instagram.com/gkingupasan_/")}>
+                <FontAwesome name="instagram" size={24} color="white" style={styles.icon} />
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  Linking.openURL("mailto:gkingupasan@yahoo.com")
-                }
-              >
+              <TouchableOpacity onPress={() => Linking.openURL("mailto:gkingupasan@yahoo.com")}>
                 <Ionicons name="mail" size={24} color="white" style={styles.icon} />
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  Linking.openURL(
-                    "https://www.youtube.com/channel/UC5wamDcvGr3A2V0Ras7eUYg"
-                  )
-                }
-              >
-                <FontAwesome
-                  name="youtube-play"
-                  size={24}
-                  color="white"
-                  style={styles.icon}
-                />
+              <TouchableOpacity onPress={() => Linking.openURL("https://www.youtube.com/channel/UC5wamDcvGr3A2V0Ras7eUYg")}>
+                <FontAwesome name="youtube-play" size={24} color="white" style={styles.icon} />
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  Linking.openURL(
-                    "https://web.facebook.com/mulmed.gkingupasan/?_rdc=1&_rdr#"
-                  )
-                }
-              >
-                <FontAwesome
-                  name="facebook"
-                  size={24}
-                  color="white"
-                  style={styles.icon}
-                />
+              <TouchableOpacity onPress={() => Linking.openURL("https://web.facebook.com/mulmed.gkingupasan/")}>
+                <FontAwesome name="facebook" size={24} color="white" style={styles.icon} />
               </TouchableOpacity>
             </View>
           </View>
@@ -185,41 +150,41 @@ export default function ProfilGereja(): React.ReactElement {
         <Text style={styles.subTitle}>Pendeta Gereja</Text>
 
         {loading ? (
-          <ActivityIndicator size="large" color="#207163" />
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color="#207163" />
+            <Text style={{ color: "#207163", marginTop: 8 }}>Memuat data pendeta...</Text>
+          </View>
+        ) : error ? (
+          <Text style={{ color: "red", textAlign: "center" }}>Gagal memuat data: {error}</Text>
+        ) : pendeta.length === 0 ? (
+          <Text style={{ textAlign: "center", color: "#207163", marginTop: 10 }}>
+            Tidak ada data pendeta.
+          </Text>
         ) : (
           <View style={styles.pendetaList}>
             {pendeta.map((p) => (
-              <TouchableOpacity
-                key={p.id}
-                style={styles.pendetaCard}
-                onPress={() => salinTeks(p.kontak || "Tidak ada kontak")}
-              >
+              <View key={p.id} style={styles.pendetaCard}>
                 <Image
                   source={
                     p.foto?.url
-                      ? { uri: `http://localhost:3000${p.foto.url}` }
+                      ? { uri: `${BASE_URL}${p.foto.url}` }
                       : require("../../assets/images/logogereja.png")
                   }
                   style={styles.pendetaImg}
                 />
                 <View style={styles.pendetaInfo}>
                   <Text style={styles.pendetaName}>{p.nama}</Text>
-                  <Text
-                    style={[
-                      styles.pendetaPhone,
-                      { textDecorationLine: "underline" },
-                    ]}
-                  >
-                    {p.kontak || "Tidak ada kontak"}
-                  </Text>
+                  {p.kontak ? (
+                    <TouchableOpacity onPress={() => Linking.openURL(`tel:${p.kontak}`)}>
+                      <Text style={styles.pendetaPhone}>{p.kontak}</Text>
+                    </TouchableOpacity>
+                  ) : null}
                 </View>
-              </TouchableOpacity>
+              </View>
             ))}
           </View>
         )}
       </ScrollView>
-
-      {/* Komponen Toast */}
       <Toast />
     </>
   );
@@ -227,6 +192,7 @@ export default function ProfilGereja(): React.ReactElement {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", padding: 16 },
+  center: { alignItems: "center", justifyContent: "center", marginVertical: 10 },
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
@@ -279,7 +245,7 @@ const styles = StyleSheet.create({
   socialIcons: { flexDirection: "row", alignItems: "center" },
   icon: { marginLeft: 10 },
 
-  // Bagian Pendeta
+  // Pendeta
   pendetaList: {
     flexDirection: "row",
     flexWrap: "wrap",

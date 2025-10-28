@@ -2,8 +2,5 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/wartas": "pages/wartas.js",
-  "/jadwal-ibadahs": "pages/jadwal-ibadahs.js",
-  "/kategori-wartas": "pages/kategori-wartas.js",
-  "/pengkhotbahs": "pages/pengkhotbahs.js"
+  "/": "pages/index.js"
 }
