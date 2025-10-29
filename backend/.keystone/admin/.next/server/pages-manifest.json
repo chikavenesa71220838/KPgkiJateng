@@ -1,8 +1,9 @@
 {
   "/_app": "pages/_app.js",
-  "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/": "pages/index.js",
+  "/_error": "pages/_error.js",
+  "/gerejas/[id]": "pages/gerejas/[id].js",
+  "/pendetas": "pages/pendetas.js",
   "/gerejas": "pages/gerejas.js",
-  "/gerejas/[id]": "pages/gerejas/[id].js"
+  "/pendetas/create": "pages/pendetas/create.js"
 }
