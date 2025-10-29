@@ -33,16 +33,6 @@ self.__BUILD_MANIFEST = {
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/gerejas/[id].js"
-    ],
-    "/pendetas": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/pendetas.js"
-    ],
-    "/profiles": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/profiles.js"
     ]
   },
   "ampFirstPages": []
