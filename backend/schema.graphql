@@ -751,6 +751,7 @@ input GerejaRelateToOneForCreateInput {
 
 type Gereja {
   id: ID!
+  logo: ImageFieldOutput
   gambar: ImageFieldOutput
   nama: String
   alamat: String
@@ -809,6 +810,7 @@ input GerejaOrderByInput {
 }
 
 input GerejaUpdateInput {
+  logo: ImageFieldInput
   gambar: ImageFieldInput
   nama: String
   alamat: String
@@ -836,6 +838,7 @@ input GerejaUpdateArgs {
 }
 
 input GerejaCreateInput {
+  logo: ImageFieldInput
   gambar: ImageFieldInput
   nama: String
   alamat: String

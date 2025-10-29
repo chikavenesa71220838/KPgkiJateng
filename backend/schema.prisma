@@ -126,6 +126,11 @@ model Pendeta {
 
 model Gereja {
   id               String    @id @default(cuid())
+  logo_id          String?
+  logo_filesize    Int?
+  logo_width       Int?
+  logo_height      Int?
+  logo_extension   String?
   gambar_id        String?
   gambar_filesize  Int?
   gambar_width     Int?

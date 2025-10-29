@@ -1,9 +1,5 @@
 import { list } from "@keystone-6/core";
-import {
-  text,
-  relationship,
-  image,
-} from "@keystone-6/core/fields";
+import { text, relationship, image } from "@keystone-6/core/fields";
 
 const allowAll = {
   operation: {
@@ -17,6 +13,29 @@ const allowAll = {
 export const Gereja = list({
   access: allowAll,
   fields: {
+    logo: image({
+      storage: "local_images",
+      hooks: {
+        validateInput: async ({ resolvedData, addValidationError }) => {
+          const file = resolvedData.logo;
+          if (!file || !file.filename) return;
+
+          const lower = file.filename.toLowerCase();
+          if (
+            !lower.endsWith(".jpg") &&
+            !lower.endsWith(".jpeg") &&
+            !lower.endsWith(".png")
+          ) {
+            addValidationError(
+              "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk gambar gereja."
+            );
+          }
+        },
+      },
+      ui: {
+        description: "logo gereja",
+      },
+    }),
     gambar: image({
       storage: "local_images",
       hooks: {
@@ -50,9 +69,9 @@ export const Gereja = list({
 
     hari: text({
       validation: { isRequired: true },
-      ui: { 
+      ui: {
         displayMode: "textarea",
-        description: "Hari operasional gereja (contoh: Senin - Minggu)" 
+        description: "Hari operasional gereja (contoh: Senin - Minggu)",
       },
     }),
 
@@ -99,13 +118,7 @@ export const Gereja = list({
   ui: {
     labelField: "nama",
     listView: {
-      initialColumns: [
-        "nama",
-        "alamat",
-        "hari",
-        "jamBuka",
-        "jamTutup",
-      ],
+      initialColumns: ["nama", "alamat", "hari", "jamBuka", "jamTutup"],
     },
   },
 });

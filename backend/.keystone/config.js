@@ -386,6 +386,24 @@ var allowAll10 = {
 var Gereja = (0, import_core10.list)({
   access: allowAll10,
   fields: {
+    logo: (0, import_fields10.image)({
+      storage: "local_images",
+      hooks: {
+        validateInput: async ({ resolvedData, addValidationError }) => {
+          const file2 = resolvedData.logo;
+          if (!file2 || !file2.filename) return;
+          const lower = file2.filename.toLowerCase();
+          if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.endsWith(".png")) {
+            addValidationError(
+              "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk gambar gereja."
+            );
+          }
+        }
+      },
+      ui: {
+        description: "logo gereja"
+      }
+    }),
     gambar: (0, import_fields10.image)({
       storage: "local_images",
       hooks: {
@@ -451,13 +469,7 @@ var Gereja = (0, import_core10.list)({
   ui: {
     labelField: "nama",
     listView: {
-      initialColumns: [
-        "nama",
-        "alamat",
-        "hari",
-        "jamBuka",
-        "jamTutup"
-      ]
+      initialColumns: ["nama", "alamat", "hari", "jamBuka", "jamTutup"]
     }
   }
 });
