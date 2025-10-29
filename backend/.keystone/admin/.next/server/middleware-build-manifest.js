@@ -9,6 +9,11 @@ self.__BUILD_MANIFEST = {
   "lowPriorityFiles": [],
   "rootMainFiles": [],
   "pages": {
+    "/": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/index.js"
+    ],
     "/_app": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -19,20 +24,20 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/gerejas": [
+    "/pendetas": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/gerejas.js"
+      "static/chunks/pages/pendetas.js"
     ],
-    "/gerejas/[id]": [
+    "/pendetas/[id]": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/gerejas/[id].js"
+      "static/chunks/pages/pendetas/[id].js"
     ],
-    "/gerejas/create": [
+    "/pendetas/create": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/gerejas/create.js"
+      "static/chunks/pages/pendetas/create.js"
     ]
   },
   "ampFirstPages": []
