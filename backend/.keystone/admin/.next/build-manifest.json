@@ -27,20 +27,25 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
+    "/gerejas": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/gerejas.js"
+    ],
+    "/gerejas/[id]": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/gerejas/[id].js"
+    ],
     "/pendetas": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/pendetas.js"
     ],
-    "/pendetas/[id]": [
+    "/profiles": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/pendetas/[id].js"
-    ],
-    "/pendetas/create": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/pendetas/create.js"
+      "static/chunks/pages/profiles.js"
     ]
   },
   "ampFirstPages": []
