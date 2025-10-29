@@ -28,6 +28,8 @@ export default function TabLayout() {
         tabBarInactiveTintColor: "white",
         tabBarShowLabel: false,
         tabBarPosition: "bottom",
+        tabBarHideOnKeyboard: false,
+        keyboardHidesTabBar: false,
         tabBarStyle: {
           backgroundColor: "#207163ff",
           borderTopWidth: 0,

@@ -18,40 +18,68 @@ import { API_URL } from "@/utils/api";
 export default function ProfilGereja(): React.ReactElement {
   const router = useRouter();
   const [pendeta, setPendeta] = useState<any[]>([]);
+  const [gereja, setGereja] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const BASE_URL = API_URL.replace("/api/graphql", "");
 
   useEffect(() => {
-    async function fetchPendeta() {
+    async function fetchData() {
       try {
-        const res = await fetch(API_URL, {
+        // Ambil data gereja
+        const resGereja = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             query: `
               query {
-                pengkhotbahs {
+                gerejas {
                   id
                   nama
-                  kontak
-                  foto {
-                    url
-                  }
+                  alamat
+                  hari
+                  telepon
+                  linkWhatsapp
+                  linkInstagram
+                  linkYoutube
+                  linkFacebook
+                  linkEmail
+                  gambar { url }
+                  sejarah
                 }
               }
             `,
           }),
         });
 
-        const json = await res.json();
+        const jsonGereja = await resGereja.json();
+        if (jsonGereja.errors) throw new Error(jsonGereja.errors[0].message);
+        const dataGereja = jsonGereja.data.gerejas?.[0];
+        setGereja(dataGereja);
 
-        if (json.errors) {
-          throw new Error(json.errors[0].message);
-        }
+        // Ambil data pendeta (dari list Pendeta di Keystone)
+        const resPendeta = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: `
+              query {
+                pendetas {
+                  id
+                  nama
+                  email
+                  sejakKapanAktif
+                  foto { url }
+                }
+              }
+            `,
+          }),
+        });
 
-        setPendeta(json.data.pengkhotbahs);
+        const jsonPendeta = await resPendeta.json();
+        if (jsonPendeta.errors) throw new Error(jsonPendeta.errors[0].message);
+        setPendeta(jsonPendeta.data.pendetas);
       } catch (err: any) {
         console.error("Gagal mengambil data:", err);
         setError(err.message || "Terjadi kesalahan");
@@ -60,19 +88,53 @@ export default function ProfilGereja(): React.ReactElement {
       }
     }
 
-    fetchPendeta();
+    fetchData();
   }, []);
 
-  // Fungsi salin teks
-  const salinTeks = async (teks: string) => {
+  // Fungsi salin teks (email)
+  const salinTeksEmail = async (teks: string) => {
     await Clipboard.setStringAsync(teks);
     Toast.show({
       type: "success",
-      text1: "Nomor telepon telah disalin!",
+      text1: "Email telah disalin!",
       position: "bottom",
       visibilityTime: 1500,
     });
   };
+
+  const salinTeks = async (teks: string) => {
+    await Clipboard.setStringAsync(teks);
+    Toast.show({
+      type: "success",
+      text1: "Nomor telah disalin!",
+      position: "bottom",
+      visibilityTime: 1500,
+    });
+  };
+
+  if (loading)
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#207163" />
+        <Text style={{ color: "#207163", marginTop: 8 }}>
+          Memuat data gereja...
+        </Text>
+      </View>
+    );
+
+  if (error)
+    return (
+      <Text style={{ color: "red", textAlign: "center", marginTop: 20 }}>
+        {error}
+      </Text>
+    );
+
+  if (!gereja)
+    return (
+      <Text style={{ color: "#207163", textAlign: "center", marginTop: 20 }}>
+        Tidak ada data gereja.
+      </Text>
+    );
 
   return (
     <>
@@ -82,58 +144,110 @@ export default function ProfilGereja(): React.ReactElement {
         {/* Alamat + Foto Gereja */}
         <View style={[styles.infoCardGereja, styles.flexRow]}>
           <Image
-            source={require("../../assets/images/fotogereja.jpeg")}
+            source={
+              gereja.gambar?.url
+                ? { uri: `${BASE_URL}${gereja.gambar.url}` }
+                : require("../../assets/images/fotogereja.jpeg")
+            }
             style={styles.gerejaImage}
           />
           <View style={{ flex: 1 }}>
-            <Text style={styles.infoTitle}>Alamat GKI Ngupasan</Text>
-            <Text style={styles.infoText}>
-              Jl. Bhayangkara No.25, Ngampilan, Kota Yogyakarta, Daerah Istimewa
-              Yogyakarta 55261
-            </Text>
+            <Text style={styles.infoTitle}>{gereja.nama}</Text>
+            <Text style={styles.infoText}>{gereja.alamat}</Text>
           </View>
         </View>
 
         {/* Jam Kerja */}
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>Jam Kerja Kantor</Text>
-          <Text style={styles.infoText}>Senin – Jumat : 08.00 – 15.30</Text>
-          <Text style={styles.infoText}>Sabtu : 08.00 – 13.00</Text>
-          <Text style={styles.infoText}>Minggu : 07.30 – 10.30</Text>
+          {gereja.hari?.split("\n").map((h: string, i: number) => (
+            <Text key={i} style={styles.infoText}>
+              {h}
+            </Text>
+          ))}
         </View>
 
         {/* Telepon */}
-        <TouchableOpacity
-          style={[styles.infoCard, styles.rowBetween]}
-          onPress={() => Linking.openURL(`tel:(0274)514704`)}
-          onLongPress={() => salinTeks("(0274) 514704")}
-        >
-          <Text style={styles.infoTitle}>Telepon</Text>
-          <Text style={[styles.infoText, { textDecorationLine: "underline" }]}>
-            (0274) 514704
-          </Text>
-        </TouchableOpacity>
+        {gereja.telepon ? (
+          <TouchableOpacity
+            style={[styles.infoCard, styles.rowBetween]}
+            onPress={() => Linking.openURL(`tel:${gereja.telepon}`)}
+            onLongPress={() => salinTeks(gereja.telepon)}
+          >
+            <Text style={styles.infoTitle}>Telepon</Text>
+            <Text
+              style={[styles.infoText, { textDecorationLine: "underline" }]}
+            >
+              {gereja.telepon}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
 
         {/* Sosial Media */}
         <View style={styles.infoCard}>
           <View style={styles.socialHeader}>
             <Text style={styles.infoTitle}>Sosial Media</Text>
             <View style={styles.socialIcons}>
-              <TouchableOpacity onPress={() => Linking.openURL("https://wa.me/6281904056700")}>
-                <FontAwesome name="whatsapp" size={24} color="white" style={styles.icon} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => Linking.openURL("https://www.instagram.com/gkingupasan_/")}>
-                <FontAwesome name="instagram" size={24} color="white" style={styles.icon} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => Linking.openURL("mailto:gkingupasan@yahoo.com")}>
-                <Ionicons name="mail" size={24} color="white" style={styles.icon} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => Linking.openURL("https://www.youtube.com/channel/UC5wamDcvGr3A2V0Ras7eUYg")}>
-                <FontAwesome name="youtube-play" size={24} color="white" style={styles.icon} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => Linking.openURL("https://web.facebook.com/mulmed.gkingupasan/")}>
-                <FontAwesome name="facebook" size={24} color="white" style={styles.icon} />
-              </TouchableOpacity>
+              {gereja.linkWhatsapp && (
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(gereja.linkWhatsapp)}
+                >
+                  <FontAwesome
+                    name="whatsapp"
+                    size={24}
+                    color="white"
+                    style={styles.icon}
+                  />
+                </TouchableOpacity>
+              )}
+              {gereja.linkInstagram && (
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(gereja.linkInstagram)}
+                >
+                  <FontAwesome
+                    name="instagram"
+                    size={24}
+                    color="white"
+                    style={styles.icon}
+                  />
+                </TouchableOpacity>
+              )}
+              {gereja.linkEmail && (
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(gereja.linkEmail)}
+                >
+                  <Ionicons
+                    name="mail"
+                    size={24}
+                    color="white"
+                    style={styles.icon}
+                  />
+                </TouchableOpacity>
+              )}
+              {gereja.linkYoutube && (
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(gereja.linkYoutube)}
+                >
+                  <FontAwesome
+                    name="youtube-play"
+                    size={24}
+                    color="white"
+                    style={styles.icon}
+                  />
+                </TouchableOpacity>
+              )}
+              {gereja.linkFacebook && (
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(gereja.linkFacebook)}
+                >
+                  <FontAwesome
+                    name="facebook"
+                    size={24}
+                    color="white"
+                    style={styles.icon}
+                  />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </View>
@@ -150,19 +264,10 @@ export default function ProfilGereja(): React.ReactElement {
         {/* Pendeta Gereja */}
         <Text style={styles.subTitle}>Pendeta Gereja</Text>
 
-        {loading ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color="#207163" />
-            <Text style={{ color: "#207163", marginTop: 8 }}>
-              Memuat data pendeta...
-            </Text>
-          </View>
-        ) : error ? (
-          <Text style={{ color: "red", textAlign: "center" }}>
-            Gagal memuat data: {error}
-          </Text>
-        ) : pendeta.length === 0 ? (
-          <Text style={{ textAlign: "center", color: "#207163", marginTop: 10 }}>
+        {pendeta.length === 0 ? (
+          <Text
+            style={{ textAlign: "center", color: "#207163", marginTop: 10 }}
+          >
             Tidak ada data pendeta.
           </Text>
         ) : (
@@ -171,8 +276,8 @@ export default function ProfilGereja(): React.ReactElement {
               <TouchableOpacity
                 key={p.id}
                 style={styles.pendetaCard}
-                onPress={() => Linking.openURL(`tel:${p.kontak}`)}
-                onLongPress={() => salinTeks(p.kontak)}
+                onPress={() => Linking.openURL(`mailto:${p.email}`)}
+                onLongPress={() => salinTeksEmail(p.email)}
               >
                 <Image
                   source={
@@ -184,8 +289,16 @@ export default function ProfilGereja(): React.ReactElement {
                 />
                 <View style={styles.pendetaInfo}>
                   <Text style={styles.pendetaName}>{p.nama}</Text>
-                  <Text style={[styles.pendetaPhone, { textDecorationLine: "underline" }]}>
-                    {p.kontak || "Tidak ada kontak"}
+                  <Text
+                    style={[
+                      styles.pendetaEmail,
+                      { textDecorationLine: "underline" },
+                    ]}
+                  >
+                    {p.email}
+                  </Text>
+                  <Text style={styles.pendetaSejak}>
+                    Sejak: {p.sejakKapanAktif || "-"}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -252,8 +365,6 @@ const styles = StyleSheet.create({
   },
   socialIcons: { flexDirection: "row", alignItems: "center" },
   icon: { marginLeft: 10 },
-
-  // Pendeta
   pendetaList: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -289,8 +400,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
-  pendetaPhone: {
+  pendetaEmail: {
     color: "white",
     fontSize: 14,
+  },
+  pendetaSejak: {
+    color: "#d3f3e0",
+    fontSize: 13,
+    marginTop: 2,
   },
 });
