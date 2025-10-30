@@ -98,7 +98,7 @@ export default function JadwalIbadah(): React.ReactElement {
     fetchData();
   }, []);
 
-  // 🔹 Filter otomatis ketika tanggal atau pencarian berubah
+  //Filter otomatis ketika tanggal atau pencarian berubah
   useEffect(() => {
     const formatted = selectedDate.toISOString().split("T")[0];
     let data = jadwal.filter((item) => item.tanggal.startsWith(formatted));
