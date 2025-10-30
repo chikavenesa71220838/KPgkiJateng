@@ -98,24 +98,23 @@ export default function JadwalIbadah(): React.ReactElement {
     fetchData();
   }, []);
 
-  //Filter otomatis ketika tanggal atau pencarian berubah
-  useEffect(() => {
-    const formatted = selectedDate.toISOString().split("T")[0];
-    let data = jadwal.filter((item) => item.tanggal.startsWith(formatted));
+  // useEffect(() => {
+  //   const formatted = selectedDate.toISOString().split("T")[0];
+  //   let data = jadwal.filter((item) => item.tanggal.startsWith(formatted));
 
-    if (searchQuery.trim() !== "") {
-      const textData = searchQuery.toLowerCase();
-      data = data.filter(
-        (item) =>
-          item.topik?.toLowerCase().includes(textData) ||
-          item.detailIbadah.some((d) =>
-            d.pengkhotbah?.nama.toLowerCase().includes(textData)
-          )
-      );
-    }
+  //   if (searchQuery.trim() !== "") {
+  //     const textData = searchQuery.toLowerCase();
+  //     data = data.filter(
+  //       (item) =>
+  //         item.topik?.toLowerCase().includes(textData) ||
+  //         item.detailIbadah.some((d) =>
+  //           d.pengkhotbah?.nama.toLowerCase().includes(textData)
+  //         )
+  //     );
+  //   }
 
-    setFilteredData(data);
-  }, [searchQuery, selectedDate, jadwal]);
+  //   setFilteredData(data);
+  // }, [searchQuery, selectedDate, jadwal]);
 
   const handlePrevDate = () => {
     const newDate = new Date(selectedDate);
@@ -147,19 +146,23 @@ export default function JadwalIbadah(): React.ReactElement {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 50, paddingLeft:7, paddingRight:7, }}
+      showsVerticalScrollIndicator={false}
+    >
       <Text style={styles.title}>Jadwal Ibadah</Text>
 
-      <TextInput
+      {/* <TextInput
         placeholder="Cari berdasarkan topik atau pengkhotbah"
         style={styles.input}
         value={searchQuery}
         onChangeText={setSearchQuery}
-      />
+      /> */}
 
       <View style={styles.datePickerContainer}>
         <TouchableOpacity onPress={handlePrevDate}>
-          <Ionicons name="chevron-back" size={24} color="#207163ff" />
+          <Ionicons name="chevron-back" size={20} color="#207163" />
         </TouchableOpacity>
 
         <Text style={styles.dateText}>
@@ -167,31 +170,43 @@ export default function JadwalIbadah(): React.ReactElement {
         </Text>
 
         <TouchableOpacity onPress={handleNextDate}>
-          <Ionicons name="chevron-forward" size={24} color="#207163ff" />
+          <Ionicons name="chevron-forward" size={20} color="#207163" />
         </TouchableOpacity>
       </View>
 
       {filteredData.length > 0 ? (
         filteredData.map((item) =>
           item.detailIbadah.map((d) => (
-            <View key={d.id} style={styles.card}>
-              {d.banner?.url ? (
-                <Image
-                  source={{
-                    uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
-                  }}
-                  style={styles.banner}
-                />
-              ) : (
-                <View style={[styles.banner, { backgroundColor: "#000" }]} />
-              )}
-              <Text style={styles.topik}>{item.topik || "Tanpa Topik"}</Text>
-              <Text style={styles.text}>{formatDate(item.tanggal)}</Text>
-              <Text style={styles.text}>
-                <Text style={styles.text}>Pukul </Text>
-                {d.jam || "-"} WIB
-              </Text>
-              <Text style={styles.text}>{d.pengkhotbah?.nama || "-"}</Text>
+            <View key={d.id} style={styles.cardContainer}>
+              <View style={styles.cardRow}>
+                {/* Gambar kiri */}
+                <View style={styles.leftBox}>
+                  {d.banner?.url ? (
+                    <Image
+                      source={{
+                        uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
+                      }}
+                      style={styles.image}
+                    />
+                  ) : (
+                    <View style={styles.imagePlaceholder} />
+                  )}
+                </View>
+
+                {/* Informasi kanan */}
+                <View style={styles.rightBox}>
+                  <Text style={styles.category}>
+                    {item.topik || "Tanpa Topik"}
+                  </Text>
+                  <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
+                  <Text style={styles.isiCard}>
+                    {d.jam || "-"} WIB
+                  </Text>
+                  <Text style={styles.isiCard}>
+                    {d.pengkhotbah?.nama || "-"}
+                  </Text>
+                </View>
+              </View>
             </View>
           ))
         )
@@ -203,63 +218,96 @@ export default function JadwalIbadah(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#fff" },
+  container: { backgroundColor: "#fff", paddingHorizontal: 10 },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#207163ff",
-    marginBottom: 10,
+    color: "#207163",
+    marginVertical: 10,
   },
   input: {
-    backgroundColor: "#DDF2F2",
+    backgroundColor: "#E9F5F4",
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  emptyText: { textAlign: "center", color: "#666", marginTop: 20 },
-  card: {
-    backgroundColor: "#36c0c0ff",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 4,
-  },
-  banner: {
-    width: "100%",
-    height: 160,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  topik: {
-    fontWeight: "bold",
-    color: "#fff",
-    fontSize: 16,
-    marginBottom: 6,
-  },
-  text: {
-    color: "#fff",
-    fontSize: 14,
-    marginBottom: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    marginBottom: 12,
   },
   datePickerContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    gap: 8,
+    marginBottom: 14,
   },
   dateText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#000",
   },
+  cardContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    overflow: "hidden",
+    elevation: 2,
+  },
+  cardRow: {
+    flexDirection: "row",
+    height: 90,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  leftBox: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  rightBox: {
+    flex: 1.3,
+    backgroundColor: "#1A6969",
+    padding: 8,
+    justifyContent: "center",
+    position: "relative",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  imagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#000",
+  },
+  category: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 12,
+    marginBottom: 2,
+  },
+  judul: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  isiCard: {
+    color: "#fff",
+    fontSize: 11,
+  },
+  masaBerlaku: {
+    position: "absolute",
+    bottom: 6,
+    right: 8,
+    color: "#fff",
+    fontSize: 10,
+  },
+  emptyText: {
+    textAlign: "center",
+    color: "#666",
+    marginTop: 20,
+  },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

@@ -95,22 +95,22 @@ export default function Riwayat(): React.ReactElement {
     fetchRiwayat();
   }, []);
 
-  useEffect(() => {
-    if (searchQuery.trim() !== "") {
-      const textData = searchQuery.toLowerCase();
-      const filtered = riwayat.filter(
-        (item) =>
-          item.tanggal.toLowerCase().includes(textData) ||
-          item.topik?.toLowerCase().includes(textData) ||
-          item.detailIbadah.some((d) =>
-            d.pengkhotbah?.nama.toLowerCase().includes(textData)
-          )
-      );
-      setFilteredData(filtered);
-    } else {
-      setFilteredData(riwayat);
-    }
-  }, [searchQuery, riwayat]);
+  // useEffect(() => {
+  //   if (searchQuery.trim() !== "") {
+  //     const textData = searchQuery.toLowerCase();
+  //     const filtered = riwayat.filter(
+  //       (item) =>
+  //         item.tanggal.toLowerCase().includes(textData) ||
+  //         item.topik?.toLowerCase().includes(textData) ||
+  //         item.detailIbadah.some((d) =>
+  //           d.pengkhotbah?.nama.toLowerCase().includes(textData)
+  //         )
+  //     );
+  //     setFilteredData(filtered);
+  //   } else {
+  //     setFilteredData(riwayat);
+  //   }
+  // }, [searchQuery, riwayat]);
 
   if (loading) {
     return (
@@ -133,12 +133,12 @@ export default function Riwayat(): React.ReactElement {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Riwayat Ibadah</Text>
 
-      <TextInput
+      {/* <TextInput
         placeholder="Cari berdasarkan tanggal, topik, atau pengkhotbah"
         style={styles.input}
         value={searchQuery}
         onChangeText={setSearchQuery}
-      />
+      /> */}
 
       {filteredData.length > 0 ? (
         filteredData.map((item) =>
@@ -185,6 +185,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#207163ff",
+    marginTop: -6,
     marginBottom: 10,
   },
   input: {
@@ -198,7 +199,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   emptyText: { textAlign: "center", color: "#666", marginTop: 20 },
   card: {
-    backgroundColor: "#36c0c0ff",
+    backgroundColor: "#207163ff",
     borderRadius: 12,
     padding: 12,
     marginBottom: 20,

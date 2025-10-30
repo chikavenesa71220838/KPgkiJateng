@@ -315,10 +315,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", padding: 16 },
   center: { alignItems: "center", justifyContent: "center", marginVertical: 10 },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#207163",
-    marginVertical: 10,
+    marginTop: -6,
+    marginBottom: 10,
   },
   subTitle: {
     fontSize: 20,
