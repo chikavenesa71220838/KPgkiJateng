@@ -91,28 +91,28 @@ export default function Warta(): React.ReactElement {
     fetchWarta();
   }, []);
 
-  useEffect(() => {
-    const selectedMonth = selectedDate.getMonth();
-    const selectedYear = selectedDate.getFullYear();
+  // useEffect(() => {
+  //   const selectedMonth = selectedDate.getMonth();
+  //   const selectedYear = selectedDate.getFullYear();
 
-    let data = warta.filter((item) => {
-      if (!item.masaBerlaku) return false;
-      const d = new Date(item.masaBerlaku);
-      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
-    });
+  //   let data = warta.filter((item) => {
+  //     if (!item.masaBerlaku) return false;
+  //     const d = new Date(item.masaBerlaku);
+  //     return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+  //   });
 
-    if (searchQuery.trim() !== "") {
-      const textData = searchQuery.toLowerCase();
-      data = data.filter(
-        (item) =>
-          item.judul?.toLowerCase().includes(textData) ||
-          item.kategori?.nama?.toLowerCase().includes(textData) ||
-          item.isiWarta?.toLowerCase().includes(textData)
-      );
-    }
+  //   if (searchQuery.trim() !== "") {
+  //     const textData = searchQuery.toLowerCase();
+  //     data = data.filter(
+  //       (item) =>
+  //         item.judul?.toLowerCase().includes(textData) ||
+  //         item.kategori?.nama?.toLowerCase().includes(textData) ||
+  //         item.isiWarta?.toLowerCase().includes(textData)
+  //     );
+  //   }
 
-    setFilteredData(data);
-  }, [searchQuery, selectedDate, warta]);
+  //   setFilteredData(data);
+  // }, [searchQuery, selectedDate, warta]);
 
   const handlePrevMonth = () => {
     const newDate = new Date(selectedDate);
@@ -151,17 +151,17 @@ export default function Warta(): React.ReactElement {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: 50 }}
+      contentContainerStyle={{ paddingBottom: 50, paddingLeft:7, paddingRight:7, }}
       showsVerticalScrollIndicator={false}
     >
       <Text style={styles.title}>Warta</Text>
 
-      <TextInput
+      {/* <TextInput
         placeholder="Cari berdasarkan tanggal, topik, atau pengkhotbah"
         style={styles.input}
         value={searchQuery}
         onChangeText={setSearchQuery}
-      />
+      /> */}
 
       <View style={styles.datePickerContainer}>
         <TouchableOpacity onPress={handlePrevMonth}>
@@ -239,10 +239,10 @@ export default function Warta(): React.ReactElement {
 const styles = StyleSheet.create({
   container: { backgroundColor: "#fff", paddingHorizontal: 10 },
   title: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#207163",
-    marginVertical: 8,
+    marginVertical: 10,
   },
   input: {
     backgroundColor: "#E9F5F4",
