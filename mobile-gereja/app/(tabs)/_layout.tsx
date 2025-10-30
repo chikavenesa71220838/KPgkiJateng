@@ -98,18 +98,33 @@ export default function TabLayout() {
           },
           tabBarIcon: ({ focused, color }) => {
             const size = 24;
-            let iconName: keyof typeof Ionicons.glyphMap = "home";
+            if (route.name === "profil" && gereja?.logo?.url) {
+              return (
+                <Image
+                  source={{
+                    uri: `${API_URL.replace("/api/graphql", "")}${gereja.logo.url}`,
+                  }}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 6,
+                    opacity: focused ? 1 : 0.7,
+                    borderWidth: focused ? 2 : 0,
+                    borderColor: focused ? "#ffd000ff" : "transparent",
+                  }}
+                />
+              );
+            }
 
+            // Selain profil, tetap pakai Ionicons
+            let iconName: keyof typeof Ionicons.glyphMap = "home";
             if (route.name === "home") iconName = "home";
             else if (route.name === "jadwalIbadah") iconName = "calendar";
             else if (route.name === "warta") iconName = "newspaper";
             else if (route.name === "Riwayat") iconName = "time";
-            else if (route.name === "profil") iconName = "person";
 
             return (
-              <View style={{ alignItems: "center" }}>
-                <Ionicons name={iconName} size={size} color={color} />
-              </View>
+              <Ionicons name={iconName} size={size} color={color} />
             );
           },
         })}
