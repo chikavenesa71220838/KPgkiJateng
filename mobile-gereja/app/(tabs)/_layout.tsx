@@ -1,4 +1,4 @@
-import { withLayoutContext } from "expo-router";
+import { withLayoutContext, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,6 +8,8 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
+  Pressable,
 } from "react-native";
 import { API_URL } from "../../utils/api";
 
@@ -23,6 +25,8 @@ interface Gereja {
 export default function TabLayout() {
   const [gereja, setGereja] = useState<Gereja | null>(null);
   const [loading, setLoading] = useState(true);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const router = useRouter();
 
   const fetchGereja = async () => {
     try {
@@ -58,32 +62,77 @@ export default function TabLayout() {
     fetchGereja();
   }, []);
 
+  const handleLogout = () => {
+    setMenuVisible(false);
+    console.log("User logged out");
+    router.push("/login");
+  };
+
   return (
     <View style={{ flex: 1 }}>
       {/* Header */}
       <View style={styles.header}>
-        {loading ? (
-          <ActivityIndicator color="#207163ff" />
-        ) : (
-          <>
-            {gereja?.logo?.url ? (
-              <Image
-                source={{
-                  uri: `${API_URL.replace("/api/graphql", "")}${gereja.logo.url}`,
-                }}
-                style={styles.logo}
-              />
-            ) : (
-              <View style={[styles.logo, { backgroundColor: "#ccc" }]} />
-            )}
-            <Text style={styles.headerText}>
-              {gereja?.nama || "Nama Gereja"}
-            </Text>
-          </>
-        )}
+        {/* Logo + Nama Gereja */}
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          {loading ? (
+            <ActivityIndicator color="#207163ff" />
+          ) : (
+            <>
+              {gereja?.logo?.url ? (
+                <Image
+                  source={{
+                    uri: `${API_URL.replace("/api/graphql", "")}${gereja.logo.url}`,
+                  }}
+                  style={styles.logo}
+                />
+              ) : (
+                <View style={[styles.logo, { backgroundColor: "#ccc" }]} />
+              )}
+              <Text style={styles.headerText}>
+                {gereja?.nama || "Nama Gereja"}
+              </Text>
+            </>
+          )}
+        </View>
+
+        <View style={styles.rightButtons}>
+          <TouchableOpacity
+            onPress={() => router.push("../search")}
+            style={styles.iconButton}
+          >
+            <Ionicons name="search" size={24} color="#207163ff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setMenuVisible(!menuVisible)}
+            style={styles.iconButton}
+          >
+            <Ionicons name="menu" size={28} color="#207163ff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Tabs */}
+      {menuVisible && (
+        <View style={styles.dropdownMenu}>
+          <Pressable
+            style={styles.menuItem}
+            onPress={() => {
+              setMenuVisible(false);
+              // router.push("/akun");
+            }}
+          >
+            <Ionicons name="person-circle-outline" size={20} color="#207163" />
+            <Text style={styles.menuText}>Profil Akun</Text>
+          </Pressable>
+
+          <View style={styles.menuDivider} />
+
+          <Pressable style={styles.menuItem} onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={20} color="#d9534f" />
+            <Text style={[styles.menuText, { color: "#d9534f" }]}>Log Out</Text>
+          </Pressable>
+        </View>
+      )}
+
       <Tabs
         screenOptions={({ route }) => ({
           headerShown: false,
@@ -116,16 +165,14 @@ export default function TabLayout() {
               );
             }
 
-            // Selain profil, tetap pakai Ionicons
             let iconName: keyof typeof Ionicons.glyphMap = "home";
             if (route.name === "home") iconName = "home";
             else if (route.name === "jadwalIbadah") iconName = "calendar";
             else if (route.name === "warta") iconName = "newspaper";
             else if (route.name === "Riwayat") iconName = "time";
+            else if (route.name === "search") iconName = "search";
 
-            return (
-              <Ionicons name={iconName} size={size} color={color} />
-            );
+            return <Ionicons name={iconName} size={size} color={color} />;
           },
         })}
       >
@@ -143,7 +190,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: "#fff",
@@ -160,5 +207,43 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#207163ff",
+  },
+  rightButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconButton: {
+    padding: 6,
+    marginLeft: 8,
+  },
+  dropdownMenu: {
+    position: "absolute",
+    top: 60,
+    right: 10,
+    backgroundColor: "white",
+    borderRadius: 8,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    paddingVertical: 8,
+    width: 160,
+    zIndex: 99,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  menuText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: "#207163",
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: "#eee",
+    marginVertical: 4,
   },
 });
