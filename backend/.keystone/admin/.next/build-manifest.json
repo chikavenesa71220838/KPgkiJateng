@@ -22,20 +22,20 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/jadwal-ibadahs": [
+    "/wartas": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/jadwal-ibadahs.js"
+      "static/chunks/pages/wartas.js"
     ],
-    "/jadwal-ibadahs/[id]": [
+    "/wartas/[id]": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/jadwal-ibadahs/[id].js"
+      "static/chunks/pages/wartas/[id].js"
     ],
-    "/jadwal-ibadahs/create": [
+    "/wartas/create": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/jadwal-ibadahs/create.js"
+      "static/chunks/pages/wartas/create.js"
     ]
   },
   "ampFirstPages": []
