@@ -110,8 +110,8 @@ var Profile = (0, import_core2.list)({
       storage: "local_images",
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
-          const file2 = resolvedData.fotoProfil;
-          if (file2 && file2.mimetype !== "image/jpeg") {
+          const file = resolvedData.fotoProfil;
+          if (file && file.mimetype !== "image/jpeg") {
             addValidationError("Hanya file JPEG yang diperbolehkan.");
           }
         }
@@ -144,6 +144,7 @@ var KategoriWarta = (0, import_core3.list)({
 // schema/Warta.ts
 var import_core4 = require("@keystone-6/core");
 var import_fields4 = require("@keystone-6/core/fields");
+var import_fields_document = require("@keystone-6/fields-document");
 var allowAll4 = {
   operation: {
     query: () => true,
@@ -165,20 +166,33 @@ var Warta = (0, import_core4.list)({
     }),
     masaBerlaku: (0, import_fields4.calendarDay)(),
     tanggalPelaksanaan: (0, import_fields4.timestamp)(),
-    isiWarta: (0, import_fields4.text)({
-      ui: { displayMode: "textarea" },
-      validation: { isRequired: true }
+    isiWarta: (0, import_fields_document.document)({
+      formatting: {
+        inlineMarks: {
+          bold: true,
+          italic: true,
+          underline: true,
+          strikethrough: true,
+          code: true
+        },
+        listTypes: true,
+        alignment: true,
+        headingLevels: [1, 2, 3, 4, 5, 6]
+      },
+      links: true,
+      dividers: true,
+      layouts: [[1], [1, 1], [1, 1, 1]]
     }),
-    file: (0, import_fields4.file)({
-      storage: "local_files",
+    gambar: (0, import_fields4.image)({
+      storage: "local_images",
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
-          const file2 = resolvedData.file;
-          if (!file2 || !file2.mimetype) return;
-          const allowedTypes = ["image/jpeg", "image/jpg"];
-          if (!allowedTypes.includes(file2.mimetype)) {
+          const file = resolvedData.gambar;
+          if (!file || !file.filename) return;
+          const lower = file.filename.toLowerCase();
+          if (!(lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png"))) {
             addValidationError(
-              "Hanya file gambar JPG atau JPEG yang diperbolehkan untuk warta."
+              "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk gambar warta."
             );
           }
         }
@@ -212,9 +226,9 @@ var Pengkhotbah = (0, import_core5.list)({
       storage: "local_images",
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
-          const file2 = resolvedData.foto;
-          if (!file2 || !file2.filename) return;
-          const lower = file2.filename.toLowerCase();
+          const file = resolvedData.foto;
+          if (!file || !file.filename) return;
+          const lower = file.filename.toLowerCase();
           if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.endsWith(".png")) {
             addValidationError(
               "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk foto."
@@ -283,9 +297,9 @@ var DetailIbadah = (0, import_core7.list)({
       storage: "local_images",
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
-          const file2 = resolvedData.banner;
-          if (!file2 || !file2.filename) return;
-          const lower = file2.filename.toLowerCase();
+          const file = resolvedData.banner;
+          if (!file || !file.filename) return;
+          const lower = file.filename.toLowerCase();
           if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg")) {
             addValidationError("Hanya file JPEG yang diperbolehkan untuk banner.");
           }
@@ -340,9 +354,9 @@ var Pendeta = (0, import_core9.list)({
       storage: "local_images",
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
-          const file2 = resolvedData.foto;
-          if (!file2 || !file2.filename) return;
-          const lower = file2.filename.toLowerCase();
+          const file = resolvedData.foto;
+          if (!file || !file.filename) return;
+          const lower = file.filename.toLowerCase();
           if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.endsWith(".png")) {
             addValidationError(
               "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk foto."
@@ -390,9 +404,9 @@ var Gereja = (0, import_core10.list)({
       storage: "local_images",
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
-          const file2 = resolvedData.logo;
-          if (!file2 || !file2.filename) return;
-          const lower = file2.filename.toLowerCase();
+          const file = resolvedData.logo;
+          if (!file || !file.filename) return;
+          const lower = file.filename.toLowerCase();
           if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.endsWith(".png")) {
             addValidationError(
               "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk gambar gereja."
@@ -408,9 +422,9 @@ var Gereja = (0, import_core10.list)({
       storage: "local_images",
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
-          const file2 = resolvedData.gambar;
-          if (!file2 || !file2.filename) return;
-          const lower = file2.filename.toLowerCase();
+          const file = resolvedData.gambar;
+          if (!file || !file.filename) return;
+          const lower = file.filename.toLowerCase();
           if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.endsWith(".png")) {
             addValidationError(
               "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk gambar gereja."

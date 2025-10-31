@@ -11,18 +11,20 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  useWindowDimensions,
 } from "react-native";
 import { API_URL } from "../../utils/api";
 import { Ionicons } from "@expo/vector-icons";
+import RenderHTML from "react-native-render-html";
 
 interface WartaItem {
   id: string;
   judul: string;
-  isiWarta: string;
+  isiWarta: string | { document: any };
   masaBerlaku?: string;
   tanggalPelaksanaan?: string;
   kategori?: { nama: string };
-  file?: { url: string };
+  gambar?: { url: string };
 }
 
 const formatDate = (dateString?: string) => {
@@ -35,11 +37,54 @@ const formatDate = (dateString?: string) => {
   return new Date(dateString).toLocaleDateString("id-ID", options);
 };
 
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
+function keystoneDocumentToHtml(document: any[]): string {
+  if (!Array.isArray(document)) return "";
+
+  const serializeNode = (node: any): string => {
+    if (!node) return "";
+
+    // Kalau node punya children → proses recursive
+    if (node.children) {
+      const childrenHtml = node.children.map(serializeNode).join("");
+
+      switch (node.type) {
+        case "paragraph":
+          return `<p>${childrenHtml}</p>`;
+        case "heading":
+          return `<h${node.level || 2}>${childrenHtml}</h${node.level || 2}>`;
+        case "bulleted-list":
+          return `<ul>${childrenHtml}</ul>`;
+        case "numbered-list":
+          return `<ol>${childrenHtml}</ol>`;
+        case "list-item":
+          return `<li>${childrenHtml}</li>`;
+        default:
+          return childrenHtml;
+      }
+    }
+
+    // Kalau ini node teks → beri format sesuai style
+    let text = node.text || "";
+    if (node.bold) text = `<strong>${text}</strong>`;
+    if (node.italic) text = `<em>${text}</em>`;
+    if (node.underline) text = `<u>${text}</u>`;
+    if (node.strikethrough) text = `<s>${text}</s>`;
+    if (node.code) text = `<code>${text}</code>`;
+    return text;
+  };
+
+  return document.map(serializeNode).join("");
+}
+
 export default function Warta(): React.ReactElement {
+  const { width } = useWindowDimensions();
   const [searchQuery, setSearchQuery] = useState("");
   const [warta, setWarta] = useState<WartaItem[]>([]);
   const [filteredData, setFilteredData] = useState<WartaItem[]>([]);
@@ -60,11 +105,11 @@ export default function Warta(): React.ReactElement {
               wartas(orderBy: { masaBerlaku: desc }) {
                 id
                 judul
-                isiWarta
+                isiWarta { document }
                 masaBerlaku
                 tanggalPelaksanaan
                 kategori { nama }
-                file { url }
+                gambar { url }
               }
             }
           `,
@@ -151,7 +196,11 @@ export default function Warta(): React.ReactElement {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: 50, paddingLeft:7, paddingRight:7, }}
+      contentContainerStyle={{
+        paddingBottom: 50,
+        paddingLeft: 7,
+        paddingRight: 7,
+      }}
       showsVerticalScrollIndicator={false}
     >
       <Text style={styles.title}>Warta</Text>
@@ -188,10 +237,12 @@ export default function Warta(): React.ReactElement {
               {/* Bagian utama kartu */}
               <View style={styles.cardRow}>
                 <View style={styles.leftBox}>
-                  {item.file?.url ? (
+                  {item.gambar?.url ? (
                     <Image
                       source={{
-                        uri: `${API_URL.replace("/api/graphql", "")}${item.file.url}`,
+                        uri: `${API_URL.replace("/api/graphql", "")}${
+                          item.gambar.url
+                        }`,
                       }}
                       style={styles.image}
                     />
@@ -217,10 +268,46 @@ export default function Warta(): React.ReactElement {
               </View>
 
               {/* Bagian isi warta (expand) */}
-              {isExpanded && (
-                <Text style={styles.detail}>{item.isiWarta || "-"}</Text>
-              )}
+              {isExpanded && item.isiWarta && (
+                <View style={styles.detail}>
+                  <RenderHTML
+                    contentWidth={width}
+                    source={{
+                      html:
+                        typeof item.isiWarta === "object" &&
+                        Array.isArray(item.isiWarta.document)
+                          ? keystoneDocumentToHtml(item.isiWarta.document)
+                          : (item.isiWarta as string),
+                    }}
+                    tagsStyles={{
+                      p: { fontSize: 13, color: "#333", marginBottom: 6 },
+                      strong: { fontWeight: "bold" },
+                      em: { fontStyle: "italic" },
+                      u: { textDecorationLine: "underline" },
+                      li: { marginLeft: 16 },
 
+                      h1: {
+                        fontSize: 22,
+                        fontWeight: "bold",
+                        color: "#000000ff",
+                        marginVertical: 8,
+                      },
+                      h2: {
+                        fontSize: 20,
+                        fontWeight: "bold",
+                        color: "#000000ff",
+                        marginVertical: 6,
+                      },
+                      h3: {
+                        fontSize: 18,
+                        fontWeight: "600",
+                        color: "#000000ff",
+                        marginVertical: 4,
+                      },
+                    }}
+                  />
+                </View>
+              )}
               <TouchableOpacity onPress={() => toggleExpand(item.id)}>
                 <Text style={styles.expandToggle}>
                   {isExpanded ? "▲ Tutup" : "▼ Baca Selengkapnya"}

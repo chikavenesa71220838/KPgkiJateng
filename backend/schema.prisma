@@ -54,9 +54,12 @@ model Warta {
   judul              String         @default("")
   masaBerlaku        String?
   tanggalPelaksanaan DateTime?
-  isiWarta           String         @default("")
-  file_filesize      Int?
-  file_filename      String?
+  isiWarta           String         @default("[{\"type\":\"paragraph\",\"children\":[{\"text\":\"\"}]}]")
+  gambar_id          String?
+  gambar_filesize    Int?
+  gambar_width       Int?
+  gambar_height      Int?
+  gambar_extension   String?
   createdAt          DateTime?      @default(now())
 
   @@index([kategoriId])

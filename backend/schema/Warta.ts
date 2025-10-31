@@ -3,9 +3,10 @@ import {
   text,
   relationship,
   timestamp,
-  file,
   calendarDay,
+  image,
 } from "@keystone-6/core/fields";
+import { document } from "@keystone-6/fields-document";
 
 const allowAll = {
   operation: {
@@ -33,21 +34,41 @@ export const Warta = list({
 
     tanggalPelaksanaan: timestamp(),
 
-    isiWarta: text({
-      ui: { displayMode: "textarea" },
-      validation: { isRequired: true },
+    isiWarta: document({
+      formatting: {
+        inlineMarks: {
+          bold: true,
+          italic: true,
+          underline: true,
+          strikethrough: true,
+          code: true,
+        },
+        listTypes: true,
+        alignment: true,
+        headingLevels: [1, 2, 3, 4, 5, 6],
+      },
+      links: true,
+      dividers: true,
+      layouts: [[1], [1, 1], [1, 1, 1]],
     }),
 
-    file: file({
-      storage: "local_files",
+    gambar: image({
+      storage: "local_images",
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
-          const file = resolvedData.file;
-          if (!file || !file.mimetype) return;
-          const allowedTypes = ["image/jpeg", "image/jpg"];
-          if (!allowedTypes.includes(file.mimetype)) {
+          const file = resolvedData.gambar;
+          if (!file || !file.filename) return;
+
+          const lower = file.filename.toLowerCase();
+          if (
+            !(
+              lower.endsWith(".jpg") ||
+              lower.endsWith(".jpeg") ||
+              lower.endsWith(".png")
+            )
+          ) {
             addValidationError(
-              "Hanya file gambar JPG atau JPEG yang diperbolehkan untuk warta."
+              "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk gambar warta."
             );
           }
         },

@@ -321,8 +321,8 @@ type Warta {
   judul: String
   masaBerlaku: CalendarDay
   tanggalPelaksanaan: DateTime
-  isiWarta: String
-  file: FileFieldOutput
+  isiWarta: Warta_isiWarta_Document
+  gambar: ImageFieldOutput
   createdAt: DateTime
 }
 
@@ -330,10 +330,8 @@ scalar CalendarDay @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc3
 
 scalar DateTime @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc3339#section-5.6")
 
-type FileFieldOutput {
-  filename: String!
-  filesize: Int!
-  url: String!
+type Warta_isiWarta_Document {
+  document(hydrateRelationships: Boolean! = false): JSON!
 }
 
 input WartaWhereUniqueInput {
@@ -349,7 +347,6 @@ input WartaWhereInput {
   judul: StringFilter
   masaBerlaku: CalendarDayNullableFilter
   tanggalPelaksanaan: DateTimeNullableFilter
-  isiWarta: StringFilter
   createdAt: DateTimeNullableFilter
 }
 
@@ -380,7 +377,6 @@ input WartaOrderByInput {
   judul: OrderDirection
   masaBerlaku: OrderDirection
   tanggalPelaksanaan: OrderDirection
-  isiWarta: OrderDirection
   createdAt: OrderDirection
 }
 
@@ -389,8 +385,8 @@ input WartaUpdateInput {
   judul: String
   masaBerlaku: CalendarDay
   tanggalPelaksanaan: DateTime
-  isiWarta: String
-  file: FileFieldInput
+  isiWarta: JSON
+  gambar: ImageFieldInput
   createdAt: DateTime
 }
 
@@ -398,10 +394,6 @@ input KategoriWartaRelateToOneForUpdateInput {
   create: KategoriWartaCreateInput
   connect: KategoriWartaWhereUniqueInput
   disconnect: Boolean
-}
-
-input FileFieldInput {
-  upload: Upload!
 }
 
 input WartaUpdateArgs {
@@ -414,8 +406,8 @@ input WartaCreateInput {
   judul: String
   masaBerlaku: CalendarDay
   tanggalPelaksanaan: DateTime
-  isiWarta: String
-  file: FileFieldInput
+  isiWarta: JSON
+  gambar: ImageFieldInput
   createdAt: DateTime
 }
 
