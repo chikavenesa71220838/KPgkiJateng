@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   ScrollView,
   ActivityIndicator,
   Image,
@@ -35,7 +34,6 @@ const formatDate = (dateString: string) => {
 };
 
 export default function Riwayat(): React.ReactElement {
-  const [searchQuery, setSearchQuery] = useState("");
   const [riwayat, setRiwayat] = useState<Jadwal[]>([]);
   const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,23 +93,6 @@ export default function Riwayat(): React.ReactElement {
     fetchRiwayat();
   }, []);
 
-  // useEffect(() => {
-  //   if (searchQuery.trim() !== "") {
-  //     const textData = searchQuery.toLowerCase();
-  //     const filtered = riwayat.filter(
-  //       (item) =>
-  //         item.tanggal.toLowerCase().includes(textData) ||
-  //         item.topik?.toLowerCase().includes(textData) ||
-  //         item.detailIbadah.some((d) =>
-  //           d.pengkhotbah?.nama.toLowerCase().includes(textData)
-  //         )
-  //     );
-  //     setFilteredData(filtered);
-  //   } else {
-  //     setFilteredData(riwayat);
-  //   }
-  // }, [searchQuery, riwayat]);
-
   if (loading) {
     return (
       <View style={styles.center}>
@@ -130,45 +111,46 @@ export default function Riwayat(): React.ReactElement {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 50, paddingLeft: 7, paddingRight: 7 }}
+      showsVerticalScrollIndicator={false}
+    >
       <Text style={styles.title}>Riwayat Ibadah</Text>
-
-      {/* <TextInput
-        placeholder="Cari berdasarkan tanggal, topik, atau pengkhotbah"
-        style={styles.input}
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      /> */}
 
       {filteredData.length > 0 ? (
         filteredData.map((item) =>
           item.detailIbadah.map((d) => (
-            <View key={d.id} style={styles.card}>
-              {d.banner?.url ? (
-                <Image
-                  source={{
-                    uri: `${API_URL.replace("/api/graphql", "")}${
-                      d.banner.url
-                    }`,
-                  }}
-                  style={styles.banner}
-                />
-              ) : (
-                <View style={[styles.banner, { backgroundColor: "#000" }]} />
-              )}
-              <Text style={styles.topik}>{item.topik || "Tanpa Topik"}</Text>
-              <Text style={styles.text}>
-                <Text style={styles.label}>Hari/Tanggal: </Text>
-                {formatDate(item.tanggal)}
-              </Text>
-              <Text style={styles.text}>
-                <Text style={styles.label}>Pukul: </Text>
-                {d.jam || "-"}
-              </Text>
-              <Text style={styles.text}>
-                <Text style={styles.label}>Pengkhotbah: </Text>
-                {d.pengkhotbah?.nama || "-"}
-              </Text>
+            <View key={d.id} style={styles.cardContainer}>
+              <View style={styles.cardRow}>
+                {/* Gambar kiri */}
+                <View style={styles.leftBox}>
+                  {d.banner?.url ? (
+                    <Image
+                      source={{
+                        uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
+                      }}
+                      style={styles.image}
+                    />
+                  ) : (
+                    <View style={styles.imagePlaceholder} />
+                  )}
+                </View>
+
+                {/* Info kanan */}
+                <View style={styles.rightBox}>
+                  <Text style={styles.category}>
+                    {item.topik || "Tanpa Topik"}
+                  </Text>
+                  <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
+                  <Text style={styles.isiCard}>
+                    {d.jam || "-"} WIB
+                  </Text>
+                  <Text style={styles.isiCard}>
+                    {d.pengkhotbah?.nama || "-"}
+                  </Text>
+                </View>
+              </View>
             </View>
           ))
         )
@@ -180,54 +162,69 @@ export default function Riwayat(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#fff" },
+  container: { backgroundColor: "#fff", paddingHorizontal: 10 },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#207163ff",
-    marginTop: -6,
-    marginBottom: 10,
+    color: "#207163",
+    marginVertical: 10,
   },
-  input: {
-    backgroundColor: "#DDF2F2",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    marginBottom: 16,
+  cardContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    overflow: "hidden",
+    elevation: 2,
   },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  emptyText: { textAlign: "center", color: "#666", marginTop: 20 },
-  card: {
-    backgroundColor: "#207163ff",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 4,
+  cardRow: {
+    flexDirection: "row",
+    height: 90,
+    borderRadius: 10,
+    overflow: "hidden",
   },
-  banner: {
+  leftBox: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  rightBox: {
+    flex: 1.3,
+    backgroundColor: "#1A6969",
+    padding: 8,
+    justifyContent: "center",
+    position: "relative",
+  },
+  image: {
     width: "100%",
-    height: 160,
-    borderRadius: 8,
-    marginBottom: 10,
+    height: "100%",
+    resizeMode: "cover",
   },
-  topik: {
+  imagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#000",
+  },
+  category: {
+    color: "#fff",
     fontWeight: "bold",
-    color: "#fff",
-    fontSize: 16,
-    marginBottom: 6,
-  },
-  text: {
-    color: "#fff",
-    fontSize: 14,
+    fontSize: 12,
     marginBottom: 2,
   },
-  label: {
-    fontWeight: "bold",
+  judul: {
     color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 2,
   },
+  isiCard: {
+    color: "#fff",
+    fontSize: 11,
+  },
+  emptyText: {
+    textAlign: "center",
+    color: "#666",
+    marginTop: 20,
+  },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

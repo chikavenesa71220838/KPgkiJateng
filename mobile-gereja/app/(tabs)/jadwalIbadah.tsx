@@ -3,10 +3,10 @@ import {
   View,
   StyleSheet,
   Text,
-  TextInput,
   ScrollView,
   Image,
   ActivityIndicator,
+  ImageBackground,
 } from "react-native";
 import { API_URL } from "../../utils/api";
 import { Ionicons } from "@expo/vector-icons";
@@ -37,17 +37,24 @@ const formatDate = (dateString: string) => {
 };
 
 export default function JadwalIbadah(): React.ReactElement {
-  const [searchQuery, setSearchQuery] = useState("");
   const [jadwal, setJadwal] = useState<Jadwal[]>([]);
   const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const fetchData = async () => {
     try {
-      setLoading(true);
-      const now = new Date().toISOString().split("T")[0];
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - dayOfWeek); // Minggu ini (hari Minggu)
+      const endOfNextWeek = new Date(startOfWeek);
+      endOfNextWeek.setDate(startOfWeek.getDate() + 13); // Akhir minggu depan (Sabtu minggu depan)
+
+      // Format ke yyyy-mm-dd
+      const now = startOfWeek.toISOString().split("T")[0];
+      const next = endOfNextWeek.toISOString().split("T")[0];
 
       const res = await fetch(API_URL, {
         method: "POST",
@@ -56,7 +63,7 @@ export default function JadwalIbadah(): React.ReactElement {
           query: `
             query {
               jadwalIbadahs(
-                where: { tanggal: { gte: "${now}" } }
+                where: { tanggal: { gte: "${now}", lte: "${next}" } }
                 orderBy: { tanggal: asc }
               ) {
                 id
@@ -65,12 +72,8 @@ export default function JadwalIbadah(): React.ReactElement {
                 detailIbadah {
                   id
                   jam
-                  pengkhotbah {
-                    nama
-                  }
-                  banner {
-                    url
-                  }
+                  pengkhotbah { nama }
+                  banner { url }
                 }
               }
             }
@@ -83,8 +86,30 @@ export default function JadwalIbadah(): React.ReactElement {
         throw new Error(result.errors[0]?.message || "GraphQL Error");
 
       const data = result.data?.jadwalIbadahs || [];
+
       setJadwal(data);
       setFilteredData(data);
+
+      if (data.length > 0) {
+        const todayDate = new Date();
+        todayDate.setHours(0, 0, 0, 0);
+
+        // cari jadwal pertama yang tanggalnya >= hari ini
+        const nextUpcoming = data.find((item: Jadwal) => {
+          const itemDate = new Date(item.tanggal);
+          itemDate.setHours(0, 0, 0, 0);
+          return itemDate.getTime() >= todayDate.getTime();
+        });
+
+        if (nextUpcoming) {
+          setSelectedDate(new Date(nextUpcoming.tanggal));
+        } else {
+          setSelectedDate(new Date(data[data.length - 1].tanggal));
+        }
+      } else {
+        setSelectedDate(today);
+      }
+
       setError(null);
     } catch (err: any) {
       console.error("Fetch error:", err);
@@ -98,35 +123,50 @@ export default function JadwalIbadah(): React.ReactElement {
     fetchData();
   }, []);
 
-  // useEffect(() => {
-  //   const formatted = selectedDate.toISOString().split("T")[0];
-  //   let data = jadwal.filter((item) => item.tanggal.startsWith(formatted));
-
-  //   if (searchQuery.trim() !== "") {
-  //     const textData = searchQuery.toLowerCase();
-  //     data = data.filter(
-  //       (item) =>
-  //         item.topik?.toLowerCase().includes(textData) ||
-  //         item.detailIbadah.some((d) =>
-  //           d.pengkhotbah?.nama.toLowerCase().includes(textData)
-  //         )
-  //     );
-  //   }
-
-  //   setFilteredData(data);
-  // }, [searchQuery, selectedDate, jadwal]);
-
   const handlePrevDate = () => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(selectedDate.getDate() - 1);
-    setSelectedDate(newDate);
+    if (!selectedDate) return;
+    const prevDate = getAdjacentDate(selectedDate, -1);
+    if (!prevDate) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (prevDate.getTime() < today.getTime()) return;
+
+    setSelectedDate(prevDate);
   };
 
   const handleNextDate = () => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(selectedDate.getDate() + 1);
-    setSelectedDate(newDate);
+    if (!selectedDate) return;
+    const nextDate = getAdjacentDate(selectedDate, 1);
+    if (nextDate) setSelectedDate(nextDate);
   };
+
+  const getAdjacentDate = (
+    currentDate: Date,
+    direction: 1 | -1
+  ): Date | null => {
+    const sortedDates = jadwal
+      .map((j) => new Date(j.tanggal))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    const index = sortedDates.findIndex(
+      (d) => d.toDateString() === currentDate.toDateString()
+    );
+
+    const newIndex = index + direction;
+    if (newIndex >= 0 && newIndex < sortedDates.length) {
+      return sortedDates[newIndex];
+    }
+    return null;
+  };
+
+  const isPrevDisabled = (() => {
+    if (!selectedDate) return true;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return selectedDate.getTime() <= today.getTime();
+  })();
 
   if (loading) {
     return (
@@ -145,24 +185,39 @@ export default function JadwalIbadah(): React.ReactElement {
     );
   }
 
+  if (!selectedDate) {
+    return (
+      <View style={styles.center}>
+        <Text>Tidak ada jadwal untuk minggu ini.</Text>
+      </View>
+    );
+  }
+
+  const formattedSelected = selectedDate.toISOString().split("T")[0];
+  const selectedJadwal = filteredData.filter((item) =>
+    item.tanggal.startsWith(formattedSelected)
+  );
+
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: 50, paddingLeft:7, paddingRight:7, }}
+      contentContainerStyle={{
+        paddingBottom: 50,
+        paddingLeft: 7,
+        paddingRight: 7,
+      }}
       showsVerticalScrollIndicator={false}
     >
       <Text style={styles.title}>Jadwal Ibadah</Text>
 
-      {/* <TextInput
-        placeholder="Cari berdasarkan topik atau pengkhotbah"
-        style={styles.input}
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      /> */}
-
+      {/* Date Navigation */}
       <View style={styles.datePickerContainer}>
-        <TouchableOpacity onPress={handlePrevDate}>
-          <Ionicons name="chevron-back" size={20} color="#207163" />
+        <TouchableOpacity onPress={handlePrevDate} disabled={isPrevDisabled}>
+          <Ionicons
+            name="chevron-back"
+            size={20}
+            color={isPrevDisabled ? "#ccc" : "#207163"}
+          />
         </TouchableOpacity>
 
         <Text style={styles.dateText}>
@@ -174,24 +229,33 @@ export default function JadwalIbadah(): React.ReactElement {
         </TouchableOpacity>
       </View>
 
-      {filteredData.length > 0 ? (
-        filteredData.map((item) =>
+      {selectedJadwal.length > 0 ? (
+        selectedJadwal.map((item) =>
           item.detailIbadah.map((d) => (
             <View key={d.id} style={styles.cardContainer}>
               <View style={styles.cardRow}>
                 {/* Gambar kiri */}
                 <View style={styles.leftBox}>
-                  {d.banner?.url ? (
-                    <Image
-                      source={{
-                        uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
-                      }}
-                      style={styles.image}
-                    />
-                  ) : (
-                    <View style={styles.imagePlaceholder} />
-                  )}
-                </View>
+  {d.banner?.url ? (
+    <ImageBackground
+      source={{
+        uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
+      }}
+      style={styles.imageBackground}
+      blurRadius={12}
+    >
+      <Image
+        source={{
+          uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
+        }}
+        style={styles.imageForeground}
+      />
+    </ImageBackground>
+  ) : (
+    <View style={styles.imagePlaceholder} />
+  )}
+</View>
+
 
                 {/* Informasi kanan */}
                 <View style={styles.rightBox}>
@@ -199,9 +263,7 @@ export default function JadwalIbadah(): React.ReactElement {
                     {item.topik || "Tanpa Topik"}
                   </Text>
                   <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
-                  <Text style={styles.isiCard}>
-                    {d.jam || "-"} WIB
-                  </Text>
+                  <Text style={styles.isiCard}>{d.jam || "-"} WIB</Text>
                   <Text style={styles.isiCard}>
                     {d.pengkhotbah?.nama || "-"}
                   </Text>
@@ -211,7 +273,7 @@ export default function JadwalIbadah(): React.ReactElement {
           ))
         )
       ) : (
-        <Text style={styles.emptyText}>Tidak ada jadwal tersedia.</Text>
+        <Text style={styles.emptyText}>Tidak ada jadwal untuk hari ini.</Text>
       )}
     </ScrollView>
   );
@@ -224,14 +286,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#207163",
     marginVertical: 10,
-  },
-  input: {
-    backgroundColor: "#E9F5F4",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 13,
-    marginBottom: 12,
   },
   datePickerContainer: {
     flexDirection: "row",
@@ -256,9 +310,9 @@ const styles = StyleSheet.create({
   },
   cardRow: {
     flexDirection: "row",
-    height: 90,
     borderRadius: 10,
     overflow: "hidden",
+    alignItems: "stretch",
   },
   leftBox: {
     flex: 1,
@@ -273,8 +327,11 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: "100%",
+    height: undefined,
     resizeMode: "cover",
+    aspectRatio: 1.5,
+    maxHeight: 120,
+
   },
   imagePlaceholder: {
     width: "100%",
@@ -292,17 +349,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     marginBottom: 2,
+    flexShrink: 1,
   },
   isiCard: {
     color: "#fff",
     fontSize: 11,
-  },
-  masaBerlaku: {
-    position: "absolute",
-    bottom: 6,
-    right: 8,
-    color: "#fff",
-    fontSize: 10,
+    flexShrink: 1,
   },
   emptyText: {
     textAlign: "center",
@@ -310,4 +362,18 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  imageBackground: {
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+imageForeground: {
+  width: "100%",
+  aspectRatio: 1.5,
+  resizeMode: "cover",
+  borderTopLeftRadius: 10,
+  borderBottomLeftRadius: 10,
+},
+
 });

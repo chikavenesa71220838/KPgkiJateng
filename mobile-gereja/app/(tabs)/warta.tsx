@@ -136,15 +136,15 @@ export default function Warta(): React.ReactElement {
     fetchWarta();
   }, []);
 
-  // useEffect(() => {
-  //   const selectedMonth = selectedDate.getMonth();
-  //   const selectedYear = selectedDate.getFullYear();
+  useEffect(() => {
+    const selectedMonth = selectedDate.getMonth();
+    const selectedYear = selectedDate.getFullYear();
 
-  //   let data = warta.filter((item) => {
-  //     if (!item.masaBerlaku) return false;
-  //     const d = new Date(item.masaBerlaku);
-  //     return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
-  //   });
+    let data = warta.filter((item) => {
+      if (!item.masaBerlaku) return false;
+      const d = new Date(item.masaBerlaku);
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
 
   //   if (searchQuery.trim() !== "") {
   //     const textData = searchQuery.toLowerCase();
@@ -156,8 +156,8 @@ export default function Warta(): React.ReactElement {
   //     );
   //   }
 
-  //   setFilteredData(data);
-  // }, [searchQuery, selectedDate, warta]);
+    setFilteredData(data);
+  }, [ selectedDate, warta]);
 
   const handlePrevMonth = () => {
     const newDate = new Date(selectedDate);
