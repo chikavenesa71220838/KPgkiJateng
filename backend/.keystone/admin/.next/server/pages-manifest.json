@@ -2,8 +2,7 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/jadwal-ibadahs/create": "pages/jadwal-ibadahs/create.js",
+  "/": "pages/index.js",
   "/jadwal-ibadahs/[id]": "pages/jadwal-ibadahs/[id].js",
-  "/jadwal-ibadahs": "pages/jadwal-ibadahs.js",
-  "/": "pages/index.js"
+  "/jadwal-ibadahs": "pages/jadwal-ibadahs.js"
 }

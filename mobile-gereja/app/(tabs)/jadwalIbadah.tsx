@@ -193,10 +193,15 @@ export default function JadwalIbadah(): React.ReactElement {
     );
   }
 
-  const formattedSelected = selectedDate.toISOString().split("T")[0];
-  const selectedJadwal = filteredData.filter((item) =>
-    item.tanggal.startsWith(formattedSelected)
-  );
+const formattedSelected = selectedDate.toISOString().split("T")[0];
+  const selectedJadwal = filteredData
+    .filter((item) => item.tanggal.startsWith(formattedSelected))
+    .sort((a, b) => {
+      //ambil jam pertama dari detailIbadah
+      const jamA = a.detailIbadah[0]?.jam || "00:00";
+      const jamB = b.detailIbadah[0]?.jam || "00:00";
+      return jamA.localeCompare(jamB);
+    });
 
   return (
     <ScrollView
@@ -231,46 +236,52 @@ export default function JadwalIbadah(): React.ReactElement {
 
       {selectedJadwal.length > 0 ? (
         selectedJadwal.map((item) =>
-          item.detailIbadah.map((d) => (
-            <View key={d.id} style={styles.cardContainer}>
-              <View style={styles.cardRow}>
-                {/* Gambar kiri */}
-                <View style={styles.leftBox}>
-  {d.banner?.url ? (
-    <ImageBackground
-      source={{
-        uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
-      }}
-      style={styles.imageBackground}
-      blurRadius={12}
-    >
-      <Image
-        source={{
-          uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
-        }}
-        style={styles.imageForeground}
-      />
-    </ImageBackground>
-  ) : (
-    <View style={styles.imagePlaceholder} />
-  )}
-</View>
+          item.detailIbadah
+            .slice()
+            .sort((a, b) => a.jam.localeCompare(b.jam))
+            .map((d) => (
+              <View key={d.id} style={styles.cardContainer}>
+                <View style={styles.cardRow}>
+                  {/* Gambar kiri */}
+                  <View style={styles.leftBox}>
+                    {d.banner?.url ? (
+                      <ImageBackground
+                        source={{
+                          uri: `${API_URL.replace("/api/graphql", "")}${
+                            d.banner.url
+                          }`,
+                        }}
+                        style={styles.imageBackground}
+                        blurRadius={12}
+                      >
+                        <Image
+                          source={{
+                            uri: `${API_URL.replace("/api/graphql", "")}${
+                              d.banner.url
+                            }`,
+                          }}
+                          style={styles.imageForeground}
+                        />
+                      </ImageBackground>
+                    ) : (
+                      <View style={styles.imagePlaceholder} />
+                    )}
+                  </View>
 
-
-                {/* Informasi kanan */}
-                <View style={styles.rightBox}>
-                  <Text style={styles.category}>
-                    {item.topik || "Tanpa Topik"}
-                  </Text>
-                  <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
-                  <Text style={styles.isiCard}>{d.jam || "-"} WIB</Text>
-                  <Text style={styles.isiCard}>
-                    {d.pengkhotbah?.nama || "-"}
-                  </Text>
+                  {/* Informasi kanan */}
+                  <View style={styles.rightBox}>
+                    <Text style={styles.category}>
+                      {item.topik || "Tanpa Topik"}
+                    </Text>
+                    <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
+                    <Text style={styles.isiCard}>{d.jam || "-"} WIB</Text>
+                    <Text style={styles.isiCard}>
+                      {d.pengkhotbah?.nama || "-"}
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          ))
+            ))
         )
       ) : (
         <Text style={styles.emptyText}>Tidak ada jadwal untuk hari ini.</Text>
@@ -331,7 +342,6 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
     aspectRatio: 1.5,
     maxHeight: 120,
-
   },
   imagePlaceholder: {
     width: "100%",
@@ -363,17 +373,16 @@ const styles = StyleSheet.create({
   },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   imageBackground: {
-  flex: 1,
-  justifyContent: "center",
-  alignItems: "center",
-},
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-imageForeground: {
-  width: "100%",
-  aspectRatio: 1.5,
-  resizeMode: "cover",
-  borderTopLeftRadius: 10,
-  borderBottomLeftRadius: 10,
-},
-
+  imageForeground: {
+    width: "100%",
+    aspectRatio: 1.5,
+    resizeMode: "cover",
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
+  },
 });
