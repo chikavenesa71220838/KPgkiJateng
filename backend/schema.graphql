@@ -850,6 +850,127 @@ input PendetaRelateToManyForCreateInput {
   connect: [PendetaWhereUniqueInput!]
 }
 
+type jadwalRutin {
+  id: ID!
+  namaIbadah: String
+  nama: String
+  waktu(where: jamWhereInput! = {}, orderBy: [jamOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: jamWhereUniqueInput): [jam!]
+  waktuCount(where: jamWhereInput! = {}): Int
+}
+
+input jadwalRutinWhereUniqueInput {
+  id: ID
+}
+
+input jadwalRutinWhereInput {
+  AND: [jadwalRutinWhereInput!]
+  OR: [jadwalRutinWhereInput!]
+  NOT: [jadwalRutinWhereInput!]
+  id: IDFilter
+  namaIbadah: StringFilter
+  nama: StringFilter
+  waktu: jamManyRelationFilter
+}
+
+input jamManyRelationFilter {
+  every: jamWhereInput
+  some: jamWhereInput
+  none: jamWhereInput
+}
+
+input jadwalRutinOrderByInput {
+  id: OrderDirection
+  namaIbadah: OrderDirection
+  nama: OrderDirection
+}
+
+input jadwalRutinUpdateInput {
+  namaIbadah: String
+  nama: String
+  waktu: jamRelateToManyForUpdateInput
+}
+
+input jamRelateToManyForUpdateInput {
+  disconnect: [jamWhereUniqueInput!]
+  set: [jamWhereUniqueInput!]
+  create: [jamCreateInput!]
+  connect: [jamWhereUniqueInput!]
+}
+
+input jadwalRutinUpdateArgs {
+  where: jadwalRutinWhereUniqueInput!
+  data: jadwalRutinUpdateInput!
+}
+
+input jadwalRutinCreateInput {
+  namaIbadah: String
+  nama: String
+  waktu: jamRelateToManyForCreateInput
+}
+
+input jamRelateToManyForCreateInput {
+  create: [jamCreateInput!]
+  connect: [jamWhereUniqueInput!]
+}
+
+type jam {
+  id: ID!
+  jam: String
+  jadwalRutin(where: jadwalRutinWhereInput! = {}, orderBy: [jadwalRutinOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: jadwalRutinWhereUniqueInput): [jadwalRutin!]
+  jadwalRutinCount(where: jadwalRutinWhereInput! = {}): Int
+}
+
+input jamWhereUniqueInput {
+  id: ID
+}
+
+input jamWhereInput {
+  AND: [jamWhereInput!]
+  OR: [jamWhereInput!]
+  NOT: [jamWhereInput!]
+  id: IDFilter
+  jam: StringFilter
+  jadwalRutin: jadwalRutinManyRelationFilter
+}
+
+input jadwalRutinManyRelationFilter {
+  every: jadwalRutinWhereInput
+  some: jadwalRutinWhereInput
+  none: jadwalRutinWhereInput
+}
+
+input jamOrderByInput {
+  id: OrderDirection
+  jam: OrderDirection
+}
+
+input jamUpdateInput {
+  jam: String
+  jadwalRutin: jadwalRutinRelateToManyForUpdateInput
+}
+
+input jadwalRutinRelateToManyForUpdateInput {
+  disconnect: [jadwalRutinWhereUniqueInput!]
+  set: [jadwalRutinWhereUniqueInput!]
+  create: [jadwalRutinCreateInput!]
+  connect: [jadwalRutinWhereUniqueInput!]
+}
+
+input jamUpdateArgs {
+  where: jamWhereUniqueInput!
+  data: jamUpdateInput!
+}
+
+input jamCreateInput {
+  jam: String
+  jadwalRutin: jadwalRutinRelateToManyForCreateInput
+}
+
+input jadwalRutinRelateToManyForCreateInput {
+  create: [jadwalRutinCreateInput!]
+  connect: [jadwalRutinWhereUniqueInput!]
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -916,6 +1037,18 @@ type Mutation {
   updateGerejas(data: [GerejaUpdateArgs!]!): [Gereja]
   deleteGereja(where: GerejaWhereUniqueInput!): Gereja
   deleteGerejas(where: [GerejaWhereUniqueInput!]!): [Gereja]
+  createjadwalRutin(data: jadwalRutinCreateInput!): jadwalRutin
+  createJadwalRutins(data: [jadwalRutinCreateInput!]!): [jadwalRutin]
+  updatejadwalRutin(where: jadwalRutinWhereUniqueInput!, data: jadwalRutinUpdateInput!): jadwalRutin
+  updateJadwalRutins(data: [jadwalRutinUpdateArgs!]!): [jadwalRutin]
+  deletejadwalRutin(where: jadwalRutinWhereUniqueInput!): jadwalRutin
+  deleteJadwalRutins(where: [jadwalRutinWhereUniqueInput!]!): [jadwalRutin]
+  createjam(data: jamCreateInput!): jam
+  createJams(data: [jamCreateInput!]!): [jam]
+  updatejam(where: jamWhereUniqueInput!, data: jamUpdateInput!): jam
+  updateJams(data: [jamUpdateArgs!]!): [jam]
+  deletejam(where: jamWhereUniqueInput!): jam
+  deleteJams(where: [jamWhereUniqueInput!]!): [jam]
   endSession: Boolean!
 }
 
@@ -950,6 +1083,12 @@ type Query {
   gereja(where: GerejaWhereUniqueInput!): Gereja
   gerejas(where: GerejaWhereInput! = {}, orderBy: [GerejaOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: GerejaWhereUniqueInput): [Gereja!]
   gerejasCount(where: GerejaWhereInput! = {}): Int
+  jadwalRutin(where: jadwalRutinWhereUniqueInput!): jadwalRutin
+  jadwalRutins(where: jadwalRutinWhereInput! = {}, orderBy: [jadwalRutinOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: jadwalRutinWhereUniqueInput): [jadwalRutin!]
+  jadwalRutinsCount(where: jadwalRutinWhereInput! = {}): Int
+  jam(where: jamWhereUniqueInput!): jam
+  jams(where: jamWhereInput! = {}, orderBy: [jamOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: jamWhereUniqueInput): [jam!]
+  jamsCount(where: jamWhereInput! = {}): Int
   keystone: KeystoneMeta!
 }
 

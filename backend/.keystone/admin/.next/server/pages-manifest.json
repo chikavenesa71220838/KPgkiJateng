@@ -2,9 +2,8 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/jadwal-ibadahs": "pages/jadwal-ibadahs.js",
   "/jadwal-ibadahs/create": "pages/jadwal-ibadahs/create.js",
   "/jadwal-ibadahs/[id]": "pages/jadwal-ibadahs/[id].js",
-  "/ayat-harians": "pages/ayat-harians.js",
-  "/ayat-harians/[id]": "pages/ayat-harians/[id].js"
+  "/jadwal-ibadahs": "pages/jadwal-ibadahs.js",
+  "/": "pages/index.js"
 }
