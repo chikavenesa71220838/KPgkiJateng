@@ -33,10 +33,18 @@ interface AyatHarian {
   text: string;
 }
 
+interface JadwalRutin {
+  id: string;
+  namaIbadah: string;
+  nama: string; // hari
+  waktu: { id: string; jam: string }[];
+}
+
 export default function HomeScreen() {
   const navigation = useNavigation();
   const [jadwalIbadah, setJadwalIbadah] = useState<DetailIbadah[]>([]);
   const [ayat, setAyat] = useState<AyatHarian | null>(null);
+  const [jadwalRutin, setJadwalRutin] = useState<JadwalRutin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,7 +107,8 @@ export default function HomeScreen() {
       });
 
       const result = await res.json();
-      if (result.errors) throw new Error(result.errors[0]?.message || "GraphQL Error");
+      if (result.errors)
+        throw new Error(result.errors[0]?.message || "GraphQL Error");
       const data: Jadwal[] = result.data?.jadwalIbadahs || [];
       const allDetails = data.flatMap((item) => item.detailIbadah);
       setJadwalIbadah(allDetails);
@@ -109,23 +118,47 @@ export default function HomeScreen() {
     }
   };
 
+  // 🔹 Ambil data Jadwal Rutin dari Database
+  const fetchJadwalRutin = async () => {
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            query {
+              jadwalRutins(orderBy: { namaIbadah: asc }) {
+                id
+                namaIbadah
+                nama
+                waktu {
+                  id
+                  jam
+                }
+              }
+            }
+          `,
+        }),
+      });
+
+      const result = await res.json();
+      if (result.errors)
+        throw new Error(result.errors[0]?.message || "GraphQL Error");
+      setJadwalRutin(result.data?.jadwalRutins || []);
+    } catch (err: any) {
+      console.error("Fetch Jadwal Rutin error:", err);
+      setError("Gagal memuat jadwal rutin");
+    }
+  };
+
   useEffect(() => {
     const loadAll = async () => {
       setLoading(true);
-      await Promise.all([fetchAyatHarian(), fetchJadwal()]);
+      await Promise.all([fetchAyatHarian(), fetchJadwal(), fetchJadwalRutin()]);
       setLoading(false);
     };
     loadAll();
   }, []);
-
-  const ibadahRutin = [
-    { id: 1, nama: "Ibadah Umum", jadwal: "Sabtu, 17.30" },
-    { id: 2, nama: "Ibadah Umum", jadwal: "Minggu, 06.00" },
-    { id: 3, nama: "Ibadah Umum", jadwal: "Minggu, 09.30" },
-    { id: 4, nama: "Ibadah Umum", jadwal: "Minggu, 16.30" },
-    { id: 5, nama: "Ibadah Pra-Remaja", jadwal: "Minggu, 07.30" },
-    { id: 6, nama: "Ibadah Remaja", jadwal: "Minggu, 07.30" }
-  ];
 
   if (loading) {
     return (
@@ -166,7 +199,9 @@ export default function HomeScreen() {
       {/* 🔹 JADWAL IBADAH */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Jadwal Ibadah</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("jadwalIbadah" as never)}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("jadwalIbadah" as never)}
+        >
           <Ionicons name="arrow-forward" size={20} color="#207163ff" />
         </TouchableOpacity>
       </View>
@@ -182,12 +217,16 @@ export default function HomeScreen() {
               {item.banner?.url ? (
                 <Image
                   source={{
-                    uri: `${API_URL.replace("/api/graphql", "")}${item.banner.url}`,
+                    uri: `${API_URL.replace("/api/graphql", "")}${
+                      item.banner.url
+                    }`,
                   }}
                   style={styles.jadwalImage}
                 />
               ) : (
-                <View style={[styles.jadwalImage, { backgroundColor: "#000" }]} />
+                <View
+                  style={[styles.jadwalImage, { backgroundColor: "#000" }]}
+                />
               )}
               <View style={styles.jamContainer}>
                 <Text style={styles.jamText}>{item.jam || "-"}</Text>
@@ -203,12 +242,29 @@ export default function HomeScreen() {
       <Text style={styles.sectionTitle2}>Ibadah Rutin</Text>
 
       <View style={styles.rutinContainer}>
-        {ibadahRutin.map((item) => (
-          <View key={item.id} style={styles.rutinCard}>
-            <Text style={styles.rutinTitle}>{item.nama}</Text>
-            <Text style={styles.rutinSub}>{item.jadwal}</Text>
-          </View>
-        ))}
+        {jadwalRutin.length > 0 ? (
+          jadwalRutin.flatMap((item) =>
+            item.waktu.length > 0
+              ? item.waktu
+                  .sort((a, b) => a.jam.localeCompare(b.jam))
+                  .map((w) => (
+                    <View key={`${item.id}-${w.id}`} style={styles.rutinCard}>
+                      <Text style={styles.rutinTitle}>{item.namaIbadah}</Text>
+                      <Text style={styles.rutinSub}>
+                        {item.nama}, {w.jam}
+                      </Text>
+                    </View>
+                  ))
+              : [
+                  <View key={item.id} style={styles.rutinCard}>
+                    <Text style={styles.rutinTitle}>{item.namaIbadah}</Text>
+                    <Text style={styles.rutinSub}>{item.nama}, -</Text>
+                  </View>,
+                ]
+          )
+        ) : (
+          <Text style={styles.emptyText}>Tidak ada jadwal rutin tersedia.</Text>
+        )}
       </View>
     </ScrollView>
   );
