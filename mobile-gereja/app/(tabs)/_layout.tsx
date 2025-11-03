@@ -73,7 +73,11 @@ export default function TabLayout() {
       {/* Header */}
       <View style={styles.header}>
         {/* Logo + Nama Gereja */}
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <TouchableOpacity
+          style={{ flexDirection: "row", alignItems: "center" }}
+          onPress={() => router.push("../profil")}
+          activeOpacity={0.7}
+        >
           {loading ? (
             <ActivityIndicator color="#207163ff" />
           ) : (
@@ -93,7 +97,7 @@ export default function TabLayout() {
               </Text>
             </>
           )}
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.rightButtons}>
           <TouchableOpacity

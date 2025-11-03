@@ -33,11 +33,6 @@ self.__BUILD_MANIFEST = {
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/jadwal-ibadahs/[id].js"
-    ],
-    "/jadwal-ibadahs/create": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/jadwal-ibadahs/create.js"
     ]
   },
   "ampFirstPages": []
