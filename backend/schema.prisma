@@ -151,3 +151,16 @@ model Gereja {
   sejarah          String    @default("")
   pendeta          Pendeta[] @relation("Pendeta_gereja")
 }
+
+model jadwalRutin {
+  id         String @id @default(cuid())
+  namaIbadah String @default("")
+  nama       String
+  waktu      jam[]  @relation("jadwalRutin_waktu")
+}
+
+model jam {
+  id          String        @id @default(cuid())
+  jam         String        @default("")
+  jadwalRutin jadwalRutin[] @relation("jadwalRutin_waktu")
+}

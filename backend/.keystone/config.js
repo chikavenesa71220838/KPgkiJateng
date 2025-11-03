@@ -32,7 +32,7 @@ __export(keystone_exports, {
   default: () => keystone_default
 });
 module.exports = __toCommonJS(keystone_exports);
-var import_core11 = require("@keystone-6/core");
+var import_core13 = require("@keystone-6/core");
 var import_session = require("@keystone-6/core/session");
 var import_path = __toESM(require("path"));
 var import_express = __toESM(require("express"));
@@ -488,6 +488,74 @@ var Gereja = (0, import_core10.list)({
   }
 });
 
+// schema/jadwalRutin.ts
+var import_core11 = require("@keystone-6/core");
+var import_fields11 = require("@keystone-6/core/fields");
+var allowAll11 = {
+  operation: {
+    query: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true
+  }
+};
+var jadwalRutin = (0, import_core11.list)({
+  access: allowAll11,
+  fields: {
+    namaIbadah: (0, import_fields11.text)({
+      validation: { isRequired: true },
+      ui: {
+        description: "Masukkan nama ibadah"
+      }
+    }),
+    nama: (0, import_fields11.select)({
+      options: [
+        { label: "Senin", value: "Senin" },
+        { label: "Selasa", value: "Selasa" },
+        { label: "Rabu", value: "Rabu" },
+        { label: "Kamis", value: "Kamis" },
+        { label: "Jumat", value: "Jumat" },
+        { label: "Sabtu", value: "Sabtu" },
+        { label: "Minggu", value: "Minggu" }
+      ],
+      validation: { isRequired: true },
+      ui: { displayMode: "select" }
+    }),
+    waktu: (0, import_fields11.relationship)({
+      ref: "jam.jadwalRutin",
+      many: true,
+      ui: {
+        displayMode: "select",
+        labelField: "jam"
+      }
+    })
+  }
+});
+
+// schema/jam.ts
+var import_core12 = require("@keystone-6/core");
+var import_fields12 = require("@keystone-6/core/fields");
+var allowAll12 = {
+  operation: {
+    query: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true
+  }
+};
+var jam = (0, import_core12.list)({
+  access: allowAll12,
+  fields: {
+    jam: (0, import_fields12.text)({
+      validation: { isRequired: true }
+    }),
+    jadwalRutin: (0, import_fields12.relationship)({
+      ref: "jadwalRutin.waktu",
+      many: true
+    })
+  }
+});
+
 // schema/index.ts
 var lists = {
   User,
@@ -499,7 +567,9 @@ var lists = {
   DetailIbadah,
   AyatHarian,
   Pendeta,
-  Gereja
+  Gereja,
+  jadwalRutin,
+  jam
 };
 
 // services/aytService.js
@@ -715,7 +785,7 @@ var session = (0, import_session.statelessSessions)({
   maxAge: 60 * 60 * 24 * 30
   // 30 hari
 });
-var keystone_default = (0, import_core11.config)({
+var keystone_default = (0, import_core13.config)({
   db: {
     provider: "sqlite",
     url: process.env.DATABASE_URL || "file:./mobileGereja.db"

@@ -2,7 +2,10 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/wartas/[id]": "pages/wartas/[id].js",
-  "/wartas": "pages/wartas.js",
-  "/wartas/create": "pages/wartas/create.js"
+  "/jadwal-rutins": "pages/jadwal-rutins.js",
+  "/jams": "pages/jams.js",
+  "/jadwal-rutins/create": "pages/jadwal-rutins/create.js",
+  "/jams/create": "pages/jams/create.js",
+  "/jadwal-rutins/[id]": "pages/jadwal-rutins/[id].js",
+  "/jams/[id]": "pages/jams/[id].js"
 }

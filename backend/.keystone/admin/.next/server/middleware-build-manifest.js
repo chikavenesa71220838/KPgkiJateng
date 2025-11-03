@@ -19,20 +19,35 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/wartas": [
+    "/jadwal-rutins": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/wartas.js"
+      "static/chunks/pages/jadwal-rutins.js"
     ],
-    "/wartas/[id]": [
+    "/jadwal-rutins/[id]": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/wartas/[id].js"
+      "static/chunks/pages/jadwal-rutins/[id].js"
     ],
-    "/wartas/create": [
+    "/jadwal-rutins/create": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/wartas/create.js"
+      "static/chunks/pages/jadwal-rutins/create.js"
+    ],
+    "/jams": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/jams.js"
+    ],
+    "/jams/[id]": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/jams/[id].js"
+    ],
+    "/jams/create": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/jams/create.js"
     ]
   },
   "ampFirstPages": []
