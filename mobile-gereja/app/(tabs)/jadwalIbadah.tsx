@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   StyleSheet,
@@ -36,12 +36,33 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("id-ID", options);
 };
 
+// Format ke yyyy-mm-dd
+const formatYMD = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export default function JadwalIbadah(): React.ReactElement {
   const [jadwal, setJadwal] = useState<Jadwal[]>([]);
   const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  const uniqueSortedDates = React.useMemo(() => {
+    // 1. Ambil semua tanggal (termasuk duplikat)
+    const allDates = jadwal.map((j) => new Date(j.tanggal)); // 2. Setel jam ke 0 dan dapatkan timestamp (angka) unik
+
+    const uniqueDateTimes = [
+      ...new Set(allDates.map((d) => d.setHours(0, 0, 0, 0))),
+    ]; // 3. Ubah kembali ke Date object dan urutkan
+
+    return uniqueDateTimes
+      .map((t) => new Date(t))
+      .sort((a, b) => a.getTime() - b.getTime());
+  }, [jadwal]); // Ini hanya akan berjalan ulang saat 'jadwal' berubah
 
   const fetchData = async () => {
     try {
@@ -50,11 +71,10 @@ export default function JadwalIbadah(): React.ReactElement {
       const startOfWeek = new Date(today);
       startOfWeek.setDate(today.getDate() - dayOfWeek); // Minggu ini (hari Minggu)
       const endOfNextWeek = new Date(startOfWeek);
-      endOfNextWeek.setDate(startOfWeek.getDate() + 13); // Akhir minggu depan (Sabtu minggu depan)
+      endOfNextWeek.setDate(startOfWeek.getDate() + 14); // Akhir minggu depan (Sabtu minggu depan)
 
-      // Format ke yyyy-mm-dd
-      const now = startOfWeek.toISOString().split("T")[0];
-      const next = endOfNextWeek.toISOString().split("T")[0];
+      const now = formatYMD(startOfWeek);
+      const next = formatYMD(endOfNextWeek);
 
       const res = await fetch(API_URL, {
         method: "POST",
@@ -89,6 +109,7 @@ export default function JadwalIbadah(): React.ReactElement {
 
       setJadwal(data);
       setFilteredData(data);
+      console.log(result.data.jadwalIbadahs.map((j: Jadwal) => j.tanggal));
 
       if (data.length > 0) {
         const todayDate = new Date();
@@ -146,17 +167,14 @@ export default function JadwalIbadah(): React.ReactElement {
     currentDate: Date,
     direction: 1 | -1
   ): Date | null => {
-    const sortedDates = jadwal
-      .map((j) => new Date(j.tanggal))
-      .sort((a, b) => a.getTime() - b.getTime());
-
-    const index = sortedDates.findIndex(
+    // Langsung gunakan daftar unik yang sudah di-memoize
+    const index = uniqueSortedDates.findIndex(
       (d) => d.toDateString() === currentDate.toDateString()
     );
 
     const newIndex = index + direction;
-    if (newIndex >= 0 && newIndex < sortedDates.length) {
-      return sortedDates[newIndex];
+    if (newIndex >= 0 && newIndex < uniqueSortedDates.length) {
+      return uniqueSortedDates[newIndex]; // Kembalikan dari daftar unik
     }
     return null;
   };
@@ -193,7 +211,7 @@ export default function JadwalIbadah(): React.ReactElement {
     );
   }
 
-const formattedSelected = selectedDate.toISOString().split("T")[0];
+  const formattedSelected = formatYMD(selectedDate);
   const selectedJadwal = filteredData
     .filter((item) => item.tanggal.startsWith(formattedSelected))
     .sort((a, b) => {
