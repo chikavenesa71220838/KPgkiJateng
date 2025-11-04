@@ -138,7 +138,7 @@ export default function ProfilGereja(): React.ReactElement {
 
   return (
     <>
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
         <Text style={styles.sectionTitle}>Profil Gereja</Text>
 
         {/* Alamat + Foto Gereja */}
@@ -182,7 +182,7 @@ export default function ProfilGereja(): React.ReactElement {
             </Text>
           </TouchableOpacity>
         ) : null}
-
+        
         {/* Sosial Media */}
         <View style={styles.infoCard}>
           <View style={styles.socialHeader}>
@@ -312,8 +312,8 @@ export default function ProfilGereja(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
-  center: { alignItems: "center", justifyContent: "center", marginVertical: 10 },
+  container: { flex: 1, backgroundColor: "#fff", padding: 16},
+  center: { alignItems: "center", justifyContent: "center", marginVertical: 10, },
   sectionTitle: {
     fontSize: 24,
     fontWeight: "bold",
@@ -370,32 +370,42 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    gap: 10,
   },
   pendetaCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    overflow: "hidden",
-    width: "48%",
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  pendetaImg: {
-    width: "100%",
-    height: 120,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    backgroundColor: "#000",
-  },
-  pendetaInfo: {
-    backgroundColor: "#207163",
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-  },
+  backgroundColor: "#ffffff",
+  borderRadius: 16,
+  overflow: "hidden",
+  width: "48%",
+  marginBottom: 16,
+  elevation: 3,
+  shadowColor: "#000",
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+
+  flexGrow: 1,
+  alignSelf: "stretch",
+},
+
+pendetaImg: {
+  width: "100%",
+  height: 120,
+  borderTopLeftRadius: 16,
+  borderTopRightRadius: 16,
+  backgroundColor: "#000",
+},
+
+pendetaInfo: {
+  backgroundColor: "#207163",
+  paddingVertical: 10,
+  paddingHorizontal: 8,
+  borderBottomLeftRadius: 16,
+  borderBottomRightRadius: 16,
+  flexShrink: 1,
+  flex: 1,
+  justifyContent: "center",
+},
+
   pendetaName: {
     color: "white",
     fontWeight: "bold",

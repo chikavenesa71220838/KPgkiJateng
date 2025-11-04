@@ -24,40 +24,15 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/detail-ibadahs": [
+    "/pendetas": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/detail-ibadahs.js"
+      "static/chunks/pages/pendetas.js"
     ],
-    "/detail-ibadahs/[id]": [
+    "/pendetas/[id]": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/detail-ibadahs/[id].js"
-    ],
-    "/jadwal-ibadahs": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/jadwal-ibadahs.js"
-    ],
-    "/jadwal-ibadahs/[id]": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/jadwal-ibadahs/[id].js"
-    ],
-    "/jadwal-ibadahs/create": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/jadwal-ibadahs/create.js"
-    ],
-    "/kategori-wartas": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/kategori-wartas.js"
-    ],
-    "/pengkhotbahs": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/pengkhotbahs.js"
+      "static/chunks/pages/pendetas/[id].js"
     ]
   },
   "ampFirstPages": []
