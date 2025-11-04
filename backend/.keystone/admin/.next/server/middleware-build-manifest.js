@@ -24,6 +24,16 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
+    "/detail-ibadahs": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/detail-ibadahs.js"
+    ],
+    "/detail-ibadahs/[id]": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/detail-ibadahs/[id].js"
+    ],
     "/jadwal-ibadahs": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -33,6 +43,21 @@ self.__BUILD_MANIFEST = {
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/jadwal-ibadahs/[id].js"
+    ],
+    "/jadwal-ibadahs/create": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/jadwal-ibadahs/create.js"
+    ],
+    "/kategori-wartas": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/kategori-wartas.js"
+    ],
+    "/pengkhotbahs": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/pengkhotbahs.js"
     ]
   },
   "ampFirstPages": []
