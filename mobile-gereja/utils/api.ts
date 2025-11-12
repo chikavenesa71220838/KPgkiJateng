@@ -2,7 +2,7 @@ import Constants from "expo-constants";
 import { Platform } from "react-native"; // <-- Jangan lupa import ini
 
 function getApiUrl() {
-  const productionUrl = "http://172.16.52.221:3000/api/graphql";
+  const productionUrl = "https://uninvertible-mai-unmeandering.ngrok-free.dev/api/graphql";
 
   if (process.env.NODE_ENV === "production") {
     return productionUrl;
