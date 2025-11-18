@@ -687,7 +687,7 @@ async function getRandomVerse() {
   const maxAttempts = 3;
   while (attempts < maxAttempts) {
     try {
-      const res = await fetchWithTimeout(url, 7e3);
+      const res = await fetchWithTimeout(url, 15e3);
       if (!res.ok) throw new Error(`Error fetching verse: ${res.status} ${res.statusText}`);
       const data = await res.json();
       const contentVerses = data.data.verses.filter((v) => v.type === "content");

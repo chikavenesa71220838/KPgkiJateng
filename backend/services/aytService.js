@@ -51,7 +51,7 @@ export async function getRandomVerse() {
 
   while (attempts < maxAttempts) {
     try {
-      const res = await fetchWithTimeout(url, 7000); // timeout 7 detik
+      const res = await fetchWithTimeout(url, 15000); // timeout 7 detik
       if (!res.ok) throw new Error(`Error fetching verse: ${res.status} ${res.statusText}`);
 
       const data = await res.json();
