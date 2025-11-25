@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   },
   rightBox: {
     flex: 1.3,
-    backgroundColor: "#1A6969",
+    backgroundColor: "#207163ff",
     padding: 8,
     justifyContent: "center",
     position: "relative",

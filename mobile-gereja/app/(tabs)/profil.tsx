@@ -416,7 +416,7 @@ pendetaInfo: {
     fontSize: 14,
   },
   pendetaSejak: {
-    color: "#d3f3e0",
+    color: "white",
     fontSize: 13,
     marginTop: 2,
   },
