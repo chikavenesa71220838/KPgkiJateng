@@ -12,6 +12,8 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { API_URL } from "../../utils/api";
 import { useNavigation } from "@react-navigation/native";
+// IMPORT LENGKAP DARI THEME
+import { Colors, FontSize, Layout } from "../../constants/theme";
 
 interface DetailIbadah {
   id: string;
@@ -163,8 +165,8 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#207163ff" />
-        <Text>Memuat data...</Text>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={{ marginTop: 8, color: Colors.textMuted }}>Memuat data...</Text>
       </View>
     );
   }
@@ -172,7 +174,7 @@ export default function HomeScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: "red" }}>{error}</Text>
+        <Text style={{ color: Colors.danger }}>{error}</Text>
       </View>
     );
   }
@@ -202,7 +204,7 @@ export default function HomeScreen() {
         <TouchableOpacity
           onPress={() => navigation.navigate("jadwalIbadah" as never)}
         >
-          <Ionicons name="arrow-forward" size={20} color="#207163ff" />
+          <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -225,7 +227,7 @@ export default function HomeScreen() {
                 />
               ) : (
                 <View
-                  style={[styles.jadwalImage, { backgroundColor: "#000" }]}
+                  style={[styles.jadwalImage, { backgroundColor: Colors.black }]}
                 />
               )}
               <View style={styles.jamContainer}>
@@ -271,67 +273,122 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 16 },
+  container: { 
+    flex: 1, 
+    backgroundColor: Colors.background, 
+    paddingHorizontal: Layout.padding 
+  },
+  
   title: {
-    fontSize: 24,
+    fontSize: FontSize.h1, 
     fontWeight: "bold",
-    color: "#207163",
-    marginVertical: 10,
+    color: Colors.primary,
+    marginVertical: Layout.gap,
   },
+  
   verseBox: {
-    backgroundColor: "#207163",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
+    backgroundColor: Colors.primary,
+    borderRadius: Layout.radius,
+    padding: Layout.padding,
+    marginBottom: Layout.gap,
   },
-  verseTitle: { color: "#fff", fontWeight: "bold", marginBottom: 5 },
-  verseText: { color: "#fff", fontSize: 13, marginBottom: 5 },
-  verseRef: { color: "#fff", fontWeight: "bold" },
+  
+  verseTitle: { 
+    color: Colors.white, 
+    fontWeight: "bold", 
+    marginBottom: 5 
+  },
+  
+  verseText: { 
+    color: Colors.white, 
+    fontSize: FontSize.custom.titleCard, 
+    marginBottom: 5 
+  },
+  
+  verseRef: { 
+    color: Colors.white, 
+    fontWeight: "bold" 
+  },
+  
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: Layout.gap,
   },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#207163" },
+  
+  sectionTitle: { 
+    fontSize: FontSize.h3, 
+    fontWeight: "bold", 
+    color: Colors.primary 
+  },
+  
   jadwalCard: {
     width: 100,
     height: 100,
-    marginRight: 10,
-    borderRadius: 8,
-    backgroundColor: "#000",
+    marginRight: Layout.gap,
+    borderRadius: Layout.radius,
+    backgroundColor: Colors.black,
     overflow: "hidden",
   },
+  
   jadwalImage: {
     width: "100%",
     height: "70%",
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
+    borderTopLeftRadius: Layout.radius,
+    borderTopRightRadius: Layout.radius,
   },
+  
   jamContainer: {
-    backgroundColor: "#207163",
+    backgroundColor: Colors.primary,
     height: "30%",
     justifyContent: "center",
     alignItems: "center",
   },
-  jamText: { color: "#fff", fontWeight: "bold" },
-  sectionTitle2: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#207163",
-    marginVertical: 10,
+  
+  jamText: { 
+    color: Colors.white, 
+    fontWeight: "bold" 
   },
-  rutinContainer: { marginBottom: 30 },
+  
+  sectionTitle2: {
+    fontSize: FontSize.h3,
+    fontWeight: "bold",
+    color: Colors.primary,
+    marginVertical: Layout.gap,
+  },
+  
+  rutinContainer: { 
+    marginBottom: 30 
+  },
+  
   rutinCard: {
-    backgroundColor: "#f8f8f8",
-    borderRadius: 8,
+    backgroundColor: Colors.cardBackground,
+    borderRadius: Layout.radius,
     padding: 12,
     marginBottom: 8,
     borderLeftWidth: 5,
-    borderLeftColor: "#207163",
+    borderLeftColor: Colors.primary,
   },
-  rutinTitle: { fontWeight: "bold", color: "#000" },
-  rutinSub: { color: "#555" },
-  emptyText: { textAlign: "center", color: "#777", marginVertical: 10 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  
+  rutinTitle: { 
+    fontWeight: "bold", 
+    color: Colors.text 
+  },
+  
+  rutinSub: { 
+    color: Colors.textMuted 
+  },
+  
+  emptyText: { 
+    textAlign: "center", 
+    color: Colors.textMuted, 
+    marginVertical: Layout.gap 
+  },
+  
+  center: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center" 
+  },
 });

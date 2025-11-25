@@ -2,6 +2,7 @@ import { withLayoutContext, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { Colors } from "../../constants/theme";
 import {
   View,
   Image,
@@ -79,7 +80,7 @@ export default function TabLayout() {
           activeOpacity={0.7}
         >
           {loading ? (
-            <ActivityIndicator color="#207163ff" />
+            <ActivityIndicator color={Colors.primary} />
           ) : (
             <>
               {gereja?.logo?.url ? (
@@ -104,13 +105,13 @@ export default function TabLayout() {
             onPress={() => router.push("../search")}
             style={styles.iconButton}
           >
-            <Ionicons name="search" size={24} color="#207163ff" />
+            <Ionicons name="search" size={24} color={Colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setMenuVisible(!menuVisible)}
             style={styles.iconButton}
           >
-            <Ionicons name="menu" size={28} color="#207163ff" />
+            <Ionicons name="menu" size={28} color={Colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -124,15 +125,15 @@ export default function TabLayout() {
               // router.push("/akun");
             }}
           >
-            <Ionicons name="person-circle-outline" size={20} color="#207163" />
+            <Ionicons name="person-circle-outline" size={20} color={Colors.primary} />
             <Text style={styles.menuText}>Profil Akun</Text>
           </Pressable>
 
           <View style={styles.menuDivider} />
 
           <Pressable style={styles.menuItem} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={20} color="#d9534f" />
-            <Text style={[styles.menuText, { color: "#d9534f" }]}>Log Out</Text>
+            <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
+            <Text style={[styles.menuText, { color: Colors.danger }]}>Log Out</Text>
           </Pressable>
         </View>
       )}
@@ -140,12 +141,12 @@ export default function TabLayout() {
       <Tabs
         screenOptions={({ route }) => ({
           headerShown: false,
-          tabBarActiveTintColor: "#ffd000ff",
-          tabBarInactiveTintColor: "white",
+          tabBarActiveTintColor: Colors.accent,
+          tabBarInactiveTintColor: Colors.white,
           tabBarShowLabel: false,
           tabBarPosition: "bottom",
           tabBarStyle: {
-            backgroundColor: "#207163ff",
+            backgroundColor: Colors.primary,
             borderTopWidth: 0,
             elevation: 0,
           },
@@ -163,7 +164,7 @@ export default function TabLayout() {
                     borderRadius: 6,
                     opacity: focused ? 1 : 0.7,
                     borderWidth: focused ? 2 : 0,
-                    borderColor: focused ? "#ffd000ff" : "transparent",
+                    borderColor: focused ? Colors.accent : "transparent",
                   }}
                 />
               );
@@ -197,9 +198,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.white,
     borderBottomWidth: 1,
-    borderColor: "#ddd",
+    borderColor: Colors.border,
   },
   logo: {
     width: 40,
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#207163ff",
+    color: Colors.primary,
   },
   rightButtons: {
     flexDirection: "row",
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 60,
     right: 10,
-    backgroundColor: "white",
+    backgroundColor: Colors.white,
     borderRadius: 8,
     elevation: 5,
     shadowColor: "#000",
@@ -243,11 +244,11 @@ const styles = StyleSheet.create({
   menuText: {
     marginLeft: 8,
     fontSize: 16,
-    color: "#207163",
+    color: Colors.primary,
   },
   menuDivider: {
     height: 1,
-    backgroundColor: "#eee",
+    backgroundColor: Colors.divider,
     marginVertical: 4,
   },
 });
