@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { API_URL } from "@/utils/api";
+import { Colors, FontSize, Layout } from "../constants/theme";
 
 export default function SejarahGereja(): React.ReactElement {
   const navigation = useNavigation();
@@ -64,7 +65,7 @@ export default function SejarahGereja(): React.ReactElement {
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <Ionicons name="arrow-back" size={22} color="#207163" />
+            <Ionicons name="arrow-back" size={22} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Sejarah Gereja</Text>
         </View>
@@ -72,13 +73,19 @@ export default function SejarahGereja(): React.ReactElement {
         <ScrollView style={styles.scrollContainer}>
           {loading ? (
             <View style={{ alignItems: "center", marginTop: 20 }}>
-              <ActivityIndicator size="large" color="#207163" />
-              <Text style={{ color: "#207163", marginTop: 8 }}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={{ color: Colors.primary, marginTop: 8 }}>
                 Memuat sejarah gereja...
               </Text>
             </View>
           ) : error ? (
-            <Text style={{ color: "red", textAlign: "center", marginTop: 20 }}>
+            <Text
+              style={{
+                color: Colors.danger, 
+                textAlign: "center",
+                marginTop: 20,
+              }}
+            >
               {error}
             </Text>
           ) : (
@@ -99,30 +106,30 @@ export default function SejarahGereja(): React.ReactElement {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: Colors.background,
   },
   scrollContainer: {
-    paddingHorizontal: 18,
+    paddingHorizontal: Layout.padding,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 18,
+    paddingHorizontal: Layout.padding,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: Colors.divider,
   },
   backButton: {
     marginRight: 8,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: FontSize.h2,
     fontWeight: "bold",
-    color: "#207163",
+    color: Colors.primary,
   },
   paragraph: {
-    fontSize: 15,
-    color: "#333",
+    fontSize: FontSize.body,
+    color: Colors.text,
     lineHeight: 24,
     textAlign: "justify",
     marginBottom: 12,

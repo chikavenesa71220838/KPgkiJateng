@@ -16,6 +16,7 @@ import {
 import { API_URL } from "../../utils/api";
 import { Ionicons } from "@expo/vector-icons";
 import RenderHTML from "react-native-render-html";
+import { Colors, FontSize, Layout } from "../../constants/theme";
 
 interface WartaItem {
   id: string;
@@ -50,7 +51,6 @@ function keystoneDocumentToHtml(document: any[]): string {
   const serializeNode = (node: any): string => {
     if (!node) return "";
 
-    // Kalau node punya children → proses recursive
     if (node.children) {
       const childrenHtml = node.children.map(serializeNode).join("");
 
@@ -70,7 +70,6 @@ function keystoneDocumentToHtml(document: any[]): string {
       }
     }
 
-    // Kalau ini node teks → beri format sesuai style
     let text = node.text || "";
     if (node.bold) text = `<strong>${text}</strong>`;
     if (node.italic) text = `<em>${text}</em>`;
@@ -146,18 +145,8 @@ export default function Warta(): React.ReactElement {
       return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
     });
 
-  //   if (searchQuery.trim() !== "") {
-  //     const textData = searchQuery.toLowerCase();
-  //     data = data.filter(
-  //       (item) =>
-  //         item.judul?.toLowerCase().includes(textData) ||
-  //         item.kategori?.nama?.toLowerCase().includes(textData) ||
-  //         item.isiWarta?.toLowerCase().includes(textData)
-  //     );
-  //   }
-
     setFilteredData(data);
-  }, [ selectedDate, warta]);
+  }, [selectedDate, warta]);
 
   const handlePrevMonth = () => {
     const newDate = new Date(selectedDate);
@@ -179,8 +168,11 @@ export default function Warta(): React.ReactElement {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text>Memuat warta gereja...</Text>
+        {/* UBAH WARNA LOADING */}
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={{ marginTop: 8, color: Colors.textMuted }}>
+          Memuat warta gereja...
+        </Text>
       </View>
     );
   }
@@ -188,7 +180,7 @@ export default function Warta(): React.ReactElement {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: "red" }}>Gagal memuat data: {error}</Text>
+        <Text style={{ color: Colors.danger }}>Gagal memuat data: {error}</Text>
       </View>
     );
   }
@@ -198,23 +190,15 @@ export default function Warta(): React.ReactElement {
       style={styles.container}
       contentContainerStyle={{
         paddingBottom: 50,
-        paddingLeft: 7,
-        paddingRight: 7,
+        paddingHorizontal: Layout.paddingSmall,
       }}
       showsVerticalScrollIndicator={false}
     >
       <Text style={styles.title}>Warta</Text>
-
-      {/* <TextInput
-        placeholder="Cari berdasarkan tanggal, topik, atau pengkhotbah"
-        style={styles.input}
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      /> */}
-
+      
       <View style={styles.datePickerContainer}>
         <TouchableOpacity onPress={handlePrevMonth}>
-          <Ionicons name="chevron-back" size={20} color="#207163" />
+          <Ionicons name="chevron-back" size={20} color={Colors.primary} />
         </TouchableOpacity>
 
         <Text style={styles.dateText}>
@@ -225,7 +209,7 @@ export default function Warta(): React.ReactElement {
         </Text>
 
         <TouchableOpacity onPress={handleNextMonth}>
-          <Ionicons name="chevron-forward" size={20} color="#207163" />
+          <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -280,7 +264,11 @@ export default function Warta(): React.ReactElement {
                           : (item.isiWarta as string),
                     }}
                     tagsStyles={{
-                      p: { fontSize: 13, color: "#333", marginBottom: 6 },
+                      p: { 
+                        fontSize: 13, 
+                        color: Colors.text, 
+                        marginBottom: 6 
+                      },
                       strong: { fontWeight: "bold" },
                       em: { fontStyle: "italic" },
                       u: { textDecorationLine: "underline" },
@@ -289,19 +277,19 @@ export default function Warta(): React.ReactElement {
                       h1: {
                         fontSize: 22,
                         fontWeight: "bold",
-                        color: "#000000ff",
+                        color: Colors.black,
                         marginVertical: 8,
                       },
                       h2: {
                         fontSize: 20,
                         fontWeight: "bold",
-                        color: "#000000ff",
+                        color: Colors.black,
                         marginVertical: 6,
                       },
                       h3: {
                         fontSize: 18,
                         fontWeight: "600",
-                        color: "#000000ff",
+                        color: Colors.black,
                         marginVertical: 4,
                       },
                     }}
@@ -324,21 +312,27 @@ export default function Warta(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: "#fff", paddingHorizontal: 10 },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#207163",
-    marginVertical: 10,
+  container: { 
+    backgroundColor: Colors.background, 
+    paddingHorizontal: Layout.paddingSmall 
   },
+  
+  title: {
+    fontSize: FontSize.h1,
+    fontWeight: "bold",
+    color: Colors.primary,
+    marginVertical: Layout.gap,
+  },
+  
   input: {
-    backgroundColor: "#E9F5F4",
-    borderRadius: 8,
+    backgroundColor: Colors.inputBackground,
+    borderRadius: Layout.radius,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    fontSize: 13,
+    fontSize: FontSize.custom.titleCard,
     marginBottom: 12,
   },
+  
   datePickerContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -346,87 +340,104 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 14,
   },
+  
   dateText: {
-    fontSize: 14,
+    fontSize: FontSize.body,
     fontWeight: "bold",
-    color: "#000",
+    color: Colors.text,
   },
+
   cardContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    backgroundColor: Colors.white,
+    borderRadius: Layout.radiusLarge, 
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: Colors.border,
     overflow: "hidden",
     elevation: 2,
   },
+  
   cardRow: {
     flexDirection: "row",
     height: 90,
-    borderRadius: 10,
+    borderRadius: Layout.radiusLarge,
     overflow: "hidden",
   },
+  
   leftBox: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: Colors.black,
   },
+  
   rightBox: {
     flex: 1.3,
-    backgroundColor: "#1A6969",
-    padding: 8,
+    backgroundColor: Colors.primary, 
+    padding: Layout.paddingSmall,
     justifyContent: "center",
     position: "relative",
   },
+  
   image: {
     width: "100%",
     height: "100%",
     resizeMode: "cover",
   },
+  
   imagePlaceholder: {
     width: "100%",
     height: "100%",
-    backgroundColor: "#000",
+    backgroundColor: Colors.black,
   },
-  category: {
-    color: "#fff",
+  
+    category: {
+    color: Colors.white,
     fontWeight: "bold",
-    fontSize: 12,
+    fontSize: FontSize.small,
     marginBottom: 2,
   },
+  
   judul: {
-    color: "#fff",
-    fontSize: 13,
+    color: Colors.white,
+    fontSize: FontSize.custom.titleCard,
     fontWeight: "600",
     marginBottom: 2,
   },
+  
   tanggalPelaksanaan: {
-    color: "#fff",
-    fontSize: 11,
+    color: Colors.white,
+    fontSize: FontSize.custom.dateCard,
   },
+  
   masaBerlaku: {
     position: "absolute",
     bottom: 6,
     right: 8,
-    color: "#fff",
-    fontSize: 10,
+    color: Colors.white,
+    fontSize: FontSize.caption,
   },
+
   detail: {
     padding: 8,
-    fontSize: 12,
-    color: "#333",
-    backgroundColor: "#f8f8f8",
+    backgroundColor: Colors.cardBackground,
   },
+  
   expandToggle: {
-    color: "#207163",
+    color: Colors.primary,
     fontStyle: "italic",
-    fontSize: 12,
+    fontSize: FontSize.small,
     textAlign: "right",
     padding: 6,
   },
+  
   emptyText: {
     textAlign: "center",
-    color: "#666",
+    color: Colors.textMuted,
     marginTop: 20,
   },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  
+  center: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center" 
+  },
 });

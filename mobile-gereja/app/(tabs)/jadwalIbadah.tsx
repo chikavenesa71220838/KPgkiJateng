@@ -11,6 +11,7 @@ import {
 import { API_URL } from "../../utils/api";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import { Colors, FontSize, Layout } from "../../constants/theme";
 
 interface DetailIbadah {
   id: string;
@@ -52,26 +53,24 @@ export default function JadwalIbadah(): React.ReactElement {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const uniqueSortedDates = React.useMemo(() => {
-    // 1. Ambil semua tanggal (termasuk duplikat)
-    const allDates = jadwal.map((j) => new Date(j.tanggal)); // 2. Setel jam ke 0 dan dapatkan timestamp (angka) unik
-
+    const allDates = jadwal.map((j) => new Date(j.tanggal));
     const uniqueDateTimes = [
       ...new Set(allDates.map((d) => d.setHours(0, 0, 0, 0))),
-    ]; // 3. Ubah kembali ke Date object dan urutkan
+    ];
 
     return uniqueDateTimes
       .map((t) => new Date(t))
       .sort((a, b) => a.getTime() - b.getTime());
-  }, [jadwal]); // Ini hanya akan berjalan ulang saat 'jadwal' berubah
+  }, [jadwal]);
 
   const fetchData = async () => {
     try {
       const today = new Date();
       const dayOfWeek = today.getDay();
       const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - dayOfWeek); // Minggu ini (hari Minggu)
+      startOfWeek.setDate(today.getDate() - dayOfWeek);
       const endOfNextWeek = new Date(startOfWeek);
-      endOfNextWeek.setDate(startOfWeek.getDate() + 14); // Akhir minggu depan (Sabtu minggu depan)
+      endOfNextWeek.setDate(startOfWeek.getDate() + 14);
 
       const now = formatYMD(startOfWeek);
       const next = formatYMD(endOfNextWeek);
@@ -109,13 +108,11 @@ export default function JadwalIbadah(): React.ReactElement {
 
       setJadwal(data);
       setFilteredData(data);
-      console.log(result.data.jadwalIbadahs.map((j: Jadwal) => j.tanggal));
 
       if (data.length > 0) {
         const todayDate = new Date();
         todayDate.setHours(0, 0, 0, 0);
 
-        // cari jadwal pertama yang tanggalnya >= hari ini
         const nextUpcoming = data.find((item: Jadwal) => {
           const itemDate = new Date(item.tanggal);
           itemDate.setHours(0, 0, 0, 0);
@@ -167,14 +164,13 @@ export default function JadwalIbadah(): React.ReactElement {
     currentDate: Date,
     direction: 1 | -1
   ): Date | null => {
-    // Langsung gunakan daftar unik yang sudah di-memoize
     const index = uniqueSortedDates.findIndex(
       (d) => d.toDateString() === currentDate.toDateString()
     );
 
     const newIndex = index + direction;
     if (newIndex >= 0 && newIndex < uniqueSortedDates.length) {
-      return uniqueSortedDates[newIndex]; // Kembalikan dari daftar unik
+      return uniqueSortedDates[newIndex];
     }
     return null;
   };
@@ -189,8 +185,9 @@ export default function JadwalIbadah(): React.ReactElement {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text>Memuat jadwal ibadah...</Text>
+        {/* UBAH WARNA LOADING */}
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={{ marginTop: 8, color: Colors.textMuted }}>Memuat jadwal ibadah...</Text>
       </View>
     );
   }
@@ -198,7 +195,7 @@ export default function JadwalIbadah(): React.ReactElement {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: "red" }}>Gagal memuat data: {error}</Text>
+        <Text style={{ color: Colors.danger }}>Gagal memuat data: {error}</Text>
       </View>
     );
   }
@@ -206,7 +203,7 @@ export default function JadwalIbadah(): React.ReactElement {
   if (!selectedDate) {
     return (
       <View style={styles.center}>
-        <Text>Tidak ada jadwal untuk minggu ini.</Text>
+        <Text style={{ color: Colors.textMuted }}>Tidak ada jadwal untuk minggu ini.</Text>
       </View>
     );
   }
@@ -215,7 +212,6 @@ export default function JadwalIbadah(): React.ReactElement {
   const selectedJadwal = filteredData
     .filter((item) => item.tanggal.startsWith(formattedSelected))
     .sort((a, b) => {
-      //ambil jam pertama dari detailIbadah
       const jamA = a.detailIbadah[0]?.jam || "00:00";
       const jamB = b.detailIbadah[0]?.jam || "00:00";
       return jamA.localeCompare(jamB);
@@ -226,8 +222,7 @@ export default function JadwalIbadah(): React.ReactElement {
       style={styles.container}
       contentContainerStyle={{
         paddingBottom: 50,
-        paddingLeft: 7,
-        paddingRight: 7,
+        paddingHorizontal: Layout.paddingSmall,
       }}
       showsVerticalScrollIndicator={false}
     >
@@ -236,10 +231,11 @@ export default function JadwalIbadah(): React.ReactElement {
       {/* Date Navigation */}
       <View style={styles.datePickerContainer}>
         <TouchableOpacity onPress={handlePrevDate} disabled={isPrevDisabled}>
+          {/* UBAH WARNA ICON */}
           <Ionicons
             name="chevron-back"
             size={20}
-            color={isPrevDisabled ? "#ccc" : "#207163"}
+            color={isPrevDisabled ? Colors.placeholder : Colors.primary}
           />
         </TouchableOpacity>
 
@@ -248,7 +244,8 @@ export default function JadwalIbadah(): React.ReactElement {
         </Text>
 
         <TouchableOpacity onPress={handleNextDate}>
-          <Ionicons name="chevron-forward" size={20} color="#207163" />
+          {/* UBAH WARNA ICON */}
+          <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -309,13 +306,18 @@ export default function JadwalIbadah(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: "#fff", paddingHorizontal: 10 },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#207163",
-    marginVertical: 10,
+  container: { 
+    backgroundColor: Colors.background, 
+    paddingHorizontal: Layout.paddingSmall 
   },
+
+  title: {
+    fontSize: FontSize.h1,
+    fontWeight: "bold",
+    color: Colors.primary,
+    marginVertical: Layout.gap,
+  },
+
   datePickerContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -323,37 +325,43 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 14,
   },
+
   dateText: {
-    fontSize: 14,
+    fontSize: FontSize.body,
     fontWeight: "bold",
-    color: "#000",
+    color: Colors.text,
   },
+
   cardContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    backgroundColor: Colors.white,
+    borderRadius: Layout.radiusLarge,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: Colors.border,
     overflow: "hidden",
     elevation: 2,
   },
+
   cardRow: {
     flexDirection: "row",
-    borderRadius: 10,
+    borderRadius: Layout.radiusLarge,
     overflow: "hidden",
     alignItems: "stretch",
   },
+
   leftBox: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: Colors.black,
   },
+
   rightBox: {
     flex: 1.3,
-    backgroundColor: "#207163ff",
-    padding: 8,
+    backgroundColor: Colors.primary,
+    padding: Layout.paddingSmall,
     justifyContent: "center",
     position: "relative",
   },
+
   image: {
     width: "100%",
     height: undefined,
@@ -361,35 +369,46 @@ const styles = StyleSheet.create({
     aspectRatio: 1.5,
     maxHeight: 120,
   },
+
   imagePlaceholder: {
     width: "100%",
     height: "100%",
-    backgroundColor: "#000",
+    backgroundColor: Colors.black,
   },
+
   category: {
-    color: "#fff",
+    color: Colors.white,
     fontWeight: "bold",
-    fontSize: 12,
+    fontSize: FontSize.small,
     marginBottom: 2,
   },
+
   judul: {
-    color: "#fff",
-    fontSize: 13,
+    color: Colors.white,
+    fontSize: FontSize.custom.titleCard,
     fontWeight: "600",
     marginBottom: 2,
     flexShrink: 1,
   },
+
   isiCard: {
-    color: "#fff",
-    fontSize: 11,
+    color: Colors.white,
+    fontSize: FontSize.custom.dateCard,
     flexShrink: 1,
   },
+
   emptyText: {
     textAlign: "center",
-    color: "#666",
+    color: Colors.textMuted,
     marginTop: 20,
   },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  center: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center" 
+  },
+
   imageBackground: {
     flex: 1,
     justifyContent: "center",
@@ -400,7 +419,7 @@ const styles = StyleSheet.create({
     width: "100%",
     aspectRatio: 1.5,
     resizeMode: "cover",
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
+    borderTopLeftRadius: Layout.radiusLarge, 
+    borderBottomLeftRadius: Layout.radiusLarge,
   },
 });

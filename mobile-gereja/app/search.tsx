@@ -13,7 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack, useNavigation } from "expo-router";
 import { API_URL } from "../utils/api";
-import { HeaderShownContext } from "@react-navigation/elements";
+import { Colors, FontSize, Layout } from "../constants/theme";
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -25,11 +25,9 @@ export default function SearchScreen() {
   const [wartaData, setWartaData] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
 
-
   useEffect(() => {
     navigation.setOptions({ HeaderShown: false });
   }, [navigation]);
-
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -155,7 +153,7 @@ export default function SearchScreen() {
         {/* Header */}
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={22} color="#207163" />
+            <Ionicons name="arrow-back" size={22} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerText}>Pencarian</Text>
         </View>
@@ -166,7 +164,7 @@ export default function SearchScreen() {
             ref={inputRef}
             style={styles.input}
             placeholder="Cari jadwal dan warta"
-            placeholderTextColor="#7aa09f"
+            placeholderTextColor={Colors.textMuted} 
             value={searchQuery}
             onChangeText={setSearchQuery}
             returnKeyType="search"
@@ -176,8 +174,8 @@ export default function SearchScreen() {
         {/* Loading */}
         {loading && (
           <View style={styles.center}>
-            <ActivityIndicator size="large" color="#207163" />
-            <Text>Memuat data...</Text>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={{color: Colors.textMuted, marginTop: 8}}>Memuat data...</Text>
           </View>
         )}
 
@@ -262,8 +260,8 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 16,
+    backgroundColor: Colors.background, 
+    paddingHorizontal: Layout.padding, 
     paddingTop: 20,
   },
   headerContainer: {
@@ -275,44 +273,49 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   headerText: {
-    fontSize: 20,
+    fontSize: FontSize.h2, 
     fontWeight: "bold",
-    color: "#207163",
+    color: Colors.primary, 
   },
   searchContainer: {
-    backgroundColor: "#d2f2ee",
-    borderRadius: 6,
+    backgroundColor: Colors.inputBackground, 
+    borderRadius: Layout.radius, 
     paddingHorizontal: 10,
     paddingVertical: 3,
   },
   input: {
-    fontSize: 13,
-    color: "#000",
+    fontSize: FontSize.custom.titleCard, 
+    color: Colors.text, 
+    paddingVertical: 8, 
   },
-  center: { justifyContent: "center", alignItems: "center", marginTop: 30 },
+  center: { 
+    justifyContent: "center", 
+    alignItems: "center", 
+    marginTop: 30 
+  },
   cardContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    backgroundColor: Colors.white,
+    borderRadius: Layout.radiusLarge, 
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: Colors.border,
     overflow: "hidden",
     elevation: 2,
   },
   cardRow: {
     flexDirection: "row",
     height: 90,
-    borderRadius: 10,
+    borderRadius: Layout.radiusLarge,
     overflow: "hidden",
   },
   leftBox: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: Colors.black,
   },
   rightBox: {
     flex: 1.3,
-    backgroundColor: "#1A6969",
-    padding: 8,
+    backgroundColor: Colors.primary, 
+    padding: Layout.paddingSmall, 
     justifyContent: "center",
     position: "relative",
   },
@@ -324,34 +327,34 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     width: "100%",
     height: "100%",
-    backgroundColor: "#000",
+    backgroundColor: Colors.black,
   },
   category: {
-    color: "#fff",
+    color: Colors.white,
     fontWeight: "bold",
-    fontSize: 12,
+    fontSize: FontSize.small, // (12)
     marginBottom: 2,
   },
   judul: {
-    color: "#fff",
-    fontSize: 13,
+    color: Colors.white,
+    fontSize: FontSize.custom.titleCard, // (13)
     fontWeight: "600",
     marginBottom: 2,
   },
   isiCard: {
-    color: "#fff",
-    fontSize: 11,
+    color: Colors.white,
+    fontSize: FontSize.custom.dateCard, // (11)
   },
   masaBerlaku: {
     position: "absolute",
     bottom: 6,
     right: 8,
-    color: "#fff",
-    fontSize: 10,
+    color: Colors.white,
+    fontSize: FontSize.caption, // (10)
   },
   emptyText: {
     textAlign: "center",
-    color: "#666",
+    color: Colors.textMuted, // Gunakan textMuted
     marginTop: 20,
   },
 });

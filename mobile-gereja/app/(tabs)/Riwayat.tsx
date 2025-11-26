@@ -8,6 +8,7 @@ import {
   Image,
 } from "react-native";
 import { API_URL } from "../../utils/api";
+import { Colors, FontSize, Layout } from "../../constants/theme";
 
 interface DetailIbadah {
   id: string;
@@ -96,8 +97,8 @@ export default function Riwayat(): React.ReactElement {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text>Memuat riwayat ibadah...</Text>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={{ marginTop: 8, color: Colors.textMuted }}>Memuat riwayat ibadah...</Text>
       </View>
     );
   }
@@ -105,7 +106,7 @@ export default function Riwayat(): React.ReactElement {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: "red" }}>Gagal memuat data: {error}</Text>
+        <Text style={{ color: Colors.danger }}>Gagal memuat data: {error}</Text>
       </View>
     );
   }
@@ -113,7 +114,10 @@ export default function Riwayat(): React.ReactElement {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: 50, paddingLeft: 7, paddingRight: 7 }}
+      contentContainerStyle={{ 
+        paddingBottom: 50, 
+        paddingHorizontal: Layout.paddingSmall
+      }}
       showsVerticalScrollIndicator={false}
     >
       <Text style={styles.title}>Riwayat Ibadah</Text>
@@ -162,69 +166,88 @@ export default function Riwayat(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: "#fff", paddingHorizontal: 10 },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#207163",
-    marginVertical: 10,
+  container: { 
+    backgroundColor: Colors.background, 
+    paddingHorizontal: Layout.paddingSmall 
   },
+  
+  title: {
+    fontSize: FontSize.h1,
+    fontWeight: "bold",
+    color: Colors.primary,
+    marginVertical: Layout.gap,
+  },
+  
   cardContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    backgroundColor: Colors.white,
+    borderRadius: Layout.radiusLarge,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: Colors.border,
     overflow: "hidden",
     elevation: 2,
   },
+  
   cardRow: {
     flexDirection: "row",
     height: 90,
-    borderRadius: 10,
+    borderRadius: Layout.radiusLarge,
     overflow: "hidden",
   },
+  
   leftBox: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: Colors.black,
   },
+  
   rightBox: {
     flex: 1.3,
-    backgroundColor: "#207163ff",
-    padding: 8,
+    backgroundColor: Colors.primary,
+    padding: Layout.paddingSmall,
     justifyContent: "center",
     position: "relative",
   },
+  
   image: {
     width: "100%",
     height: "100%",
     resizeMode: "cover",
   },
+  
   imagePlaceholder: {
     width: "100%",
     height: "100%",
-    backgroundColor: "#000",
+    backgroundColor: Colors.black,
   },
+  
   category: {
-    color: "#fff",
+    color: Colors.white,
     fontWeight: "bold",
-    fontSize: 12,
+    fontSize: FontSize.small,
     marginBottom: 2,
   },
+  
   judul: {
-    color: "#fff",
-    fontSize: 13,
+    color: Colors.white,
+    fontSize: FontSize.custom.titleCard,
     fontWeight: "600",
     marginBottom: 2,
   },
+  
   isiCard: {
-    color: "#fff",
-    fontSize: 11,
+    color: Colors.white,
+    fontSize: FontSize.custom.dateCard,
   },
+  
   emptyText: {
     textAlign: "center",
-    color: "#666",
+    color: Colors.textMuted,
     marginTop: 20,
   },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  
+  center: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center" 
+  },
 });
