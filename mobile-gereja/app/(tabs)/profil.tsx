@@ -14,6 +14,7 @@ import * as Clipboard from "expo-clipboard";
 import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
 import { API_URL } from "@/utils/api";
+import { Colors, FontSize, Layout } from "../../constants/theme";
 
 export default function ProfilGereja(): React.ReactElement {
   const router = useRouter();
@@ -58,7 +59,7 @@ export default function ProfilGereja(): React.ReactElement {
         const dataGereja = jsonGereja.data.gerejas?.[0];
         setGereja(dataGereja);
 
-        // Ambil data pendeta (dari list Pendeta di Keystone)
+        // Ambil data pendeta
         const resPendeta = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -115,8 +116,8 @@ export default function ProfilGereja(): React.ReactElement {
   if (loading)
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#207163" />
-        <Text style={{ color: "#207163", marginTop: 8 }}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={{ color: Colors.primary, marginTop: 8 }}>
           Memuat data gereja...
         </Text>
       </View>
@@ -124,21 +125,24 @@ export default function ProfilGereja(): React.ReactElement {
 
   if (error)
     return (
-      <Text style={{ color: "red", textAlign: "center", marginTop: 20 }}>
+      <Text style={{ color: Colors.danger, textAlign: "center", marginTop: 20 }}>
         {error}
       </Text>
     );
 
   if (!gereja)
     return (
-      <Text style={{ color: "#207163", textAlign: "center", marginTop: 20 }}>
+      <Text style={{ color: Colors.primary, textAlign: "center", marginTop: 20 }}>
         Tidak ada data gereja.
       </Text>
     );
 
   return (
     <>
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      >
         <Text style={styles.sectionTitle}>Profil Gereja</Text>
 
         {/* Alamat + Foto Gereja */}
@@ -182,7 +186,7 @@ export default function ProfilGereja(): React.ReactElement {
             </Text>
           </TouchableOpacity>
         ) : null}
-        
+
         {/* Sosial Media */}
         <View style={styles.infoCard}>
           <View style={styles.socialHeader}>
@@ -195,7 +199,7 @@ export default function ProfilGereja(): React.ReactElement {
                   <FontAwesome
                     name="whatsapp"
                     size={24}
-                    color="white"
+                    color={Colors.white}
                     style={styles.icon}
                   />
                 </TouchableOpacity>
@@ -207,7 +211,7 @@ export default function ProfilGereja(): React.ReactElement {
                   <FontAwesome
                     name="instagram"
                     size={24}
-                    color="white"
+                    color={Colors.white}
                     style={styles.icon}
                   />
                 </TouchableOpacity>
@@ -219,7 +223,7 @@ export default function ProfilGereja(): React.ReactElement {
                   <Ionicons
                     name="mail"
                     size={24}
-                    color="white"
+                    color={Colors.white}
                     style={styles.icon}
                   />
                 </TouchableOpacity>
@@ -231,7 +235,7 @@ export default function ProfilGereja(): React.ReactElement {
                   <FontAwesome
                     name="youtube-play"
                     size={24}
-                    color="white"
+                    color={Colors.white}
                     style={styles.icon}
                   />
                 </TouchableOpacity>
@@ -243,7 +247,7 @@ export default function ProfilGereja(): React.ReactElement {
                   <FontAwesome
                     name="facebook"
                     size={24}
-                    color="white"
+                    color={Colors.white}
                     style={styles.icon}
                   />
                 </TouchableOpacity>
@@ -258,7 +262,7 @@ export default function ProfilGereja(): React.ReactElement {
           onPress={() => router.push("/sejarah")}
         >
           <Text style={styles.infoTitle}>Sejarah Gereja</Text>
-          <Ionicons name="arrow-forward" size={20} color="#fff" />
+          <Ionicons name="arrow-forward" size={20} color={Colors.white} />
         </TouchableOpacity>
 
         {/* Pendeta Gereja */}
@@ -266,7 +270,11 @@ export default function ProfilGereja(): React.ReactElement {
 
         {pendeta.length === 0 ? (
           <Text
-            style={{ textAlign: "center", color: "#207163", marginTop: 10 }}
+            style={{
+              textAlign: "center",
+              color: Colors.primary,
+              marginTop: 10,
+            }}
           >
             Tidak ada data pendeta.
           </Text>
@@ -312,47 +320,63 @@ export default function ProfilGereja(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 16},
-  center: { alignItems: "center", justifyContent: "center", marginVertical: 10, },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    padding: Layout.padding,
+  },
+  center: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
   sectionTitle: {
-    fontSize: 24,
+    fontSize: FontSize.h1,
     fontWeight: "bold",
-    color: "#207163",
+    color: Colors.primary,
     marginTop: -6,
     marginBottom: 10,
   },
   subTitle: {
-    fontSize: 20,
+    fontSize: FontSize.h2,
     fontWeight: "bold",
-    color: "#207163",
+    color: Colors.primary,
     marginTop: 15,
     marginBottom: 8,
   },
   infoCard: {
-    backgroundColor: "#207163",
-    borderRadius: 12,
+    backgroundColor: Colors.primary,
+    borderRadius: Layout.radiusLarge,
     padding: 12,
     marginBottom: 12,
   },
   infoCardGereja: {
-    backgroundColor: "#207163",
-    borderRadius: 12,
+    backgroundColor: Colors.primary,
+    borderRadius: Layout.radiusLarge,
     paddingLeft: 0,
     marginBottom: 12,
   },
   infoTitle: {
-    color: "white",
+    color: Colors.white,
     fontWeight: "bold",
     marginBottom: 4,
     fontSize: 16,
   },
-  infoText: { color: "white", fontSize: 14 },
-  flexRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  infoText: {
+    color: Colors.white,
+    fontSize: FontSize.body,
+  },
   gerejaImage: {
     width: 100,
     height: 100,
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
+    borderTopLeftRadius: Layout.radiusLarge,
+    borderBottomLeftRadius: Layout.radiusLarge,
+  },
+  
+  flexRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
   rowBetween: {
     flexDirection: "row",
@@ -370,53 +394,49 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    gap: 10,
+    gap: Layout.gap,
   },
   pendetaCard: {
-  backgroundColor: "#ffffff",
-  borderRadius: 16,
-  overflow: "hidden",
-  width: "48%",
-  marginBottom: 16,
-  elevation: 3,
-  shadowColor: "#000",
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-
-  flexGrow: 1,
-  alignSelf: "stretch",
-},
-
-pendetaImg: {
-  width: "100%",
-  height: 120,
-  borderTopLeftRadius: 16,
-  borderTopRightRadius: 16,
-  backgroundColor: "#000",
-},
-
-pendetaInfo: {
-  backgroundColor: "#207163",
-  paddingVertical: 10,
-  paddingHorizontal: 8,
-  borderBottomLeftRadius: 16,
-  borderBottomRightRadius: 16,
-  flexShrink: 1,
-  flex: 1,
-  justifyContent: "center",
-},
-
+    backgroundColor: Colors.white,
+    borderRadius: Layout.radiusXLarge,
+    overflow: "hidden",
+    width: "48%",
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: Colors.black,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    flexGrow: 1,
+    alignSelf: "stretch",
+  },
+  pendetaImg: {
+    width: "100%",
+    height: 120,
+    borderTopLeftRadius: Layout.radiusXLarge,
+    borderTopRightRadius: Layout.radiusXLarge,
+    backgroundColor: Colors.black,
+  },
+  pendetaInfo: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderBottomLeftRadius: Layout.radiusXLarge,
+    borderBottomRightRadius: Layout.radiusXLarge,
+    flexShrink: 1,
+    flex: 1,
+    justifyContent: "center",
+  },
   pendetaName: {
-    color: "white",
+    color: Colors.white,
     fontWeight: "bold",
     fontSize: 16,
   },
   pendetaEmail: {
-    color: "white",
-    fontSize: 14,
+    color: Colors.white,
+    fontSize: FontSize.body,
   },
   pendetaSejak: {
-    color: "white",
+    color: Colors.white,
     fontSize: 13,
     marginTop: 2,
   },
