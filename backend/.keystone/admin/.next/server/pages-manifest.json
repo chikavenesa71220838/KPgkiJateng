@@ -1,8 +1,1 @@
-{
-  "/_app": "pages/_app.js",
-  "/_document": "pages/_document.js",
-  "/_error": "pages/_error.js",
-  "/": "pages/index.js",
-  "/jadwal-ibadahs/[id]": "pages/jadwal-ibadahs/[id].js",
-  "/jadwal-ibadahs": "pages/jadwal-ibadahs.js"
-}
+{}
