@@ -2,7 +2,7 @@ import { withLayoutContext, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "../../constants/theme";
+import { Colors } from "../../constants/theme"; 
 import {
   View,
   Image,
@@ -11,8 +11,11 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Pressable,
+  Platform,
 } from "react-native";
-import { API_URL } from "../../utils/api";
+
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { API_URL } from "../../utils/api"; 
 
 const { Navigator } = createBottomTabNavigator();
 const Tabs = withLayoutContext(Navigator);
@@ -28,6 +31,7 @@ export default function TabLayout() {
   const [loading, setLoading] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const fetchGereja = async () => {
     try {
@@ -65,15 +69,13 @@ export default function TabLayout() {
 
   const handleLogout = () => {
     setMenuVisible(false);
-    console.log("User logged out");
     router.push("/login");
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: Colors.white }}>
       {/* Header */}
       <View style={styles.header}>
-        {/* Logo + Nama Gereja */}
         <TouchableOpacity
           style={{ flexDirection: "row", alignItems: "center" }}
           onPress={() => router.push("../profil")}
@@ -85,9 +87,7 @@ export default function TabLayout() {
             <>
               {gereja?.logo?.url ? (
                 <Image
-                  source={{
-                    uri: `${API_URL.replace("/api/graphql", "")}${gereja.logo.url}`,
-                  }}
+                  source={{ uri: `${API_URL.replace("/api/graphql", "")}${gereja.logo.url}` }}
                   style={styles.logo}
                 />
               ) : (
@@ -107,6 +107,7 @@ export default function TabLayout() {
           >
             <Ionicons name="search" size={24} color={Colors.primary} />
           </TouchableOpacity>
+
           <TouchableOpacity
             onPress={() => setMenuVisible(!menuVisible)}
             style={styles.iconButton}
@@ -116,13 +117,13 @@ export default function TabLayout() {
         </View>
       </View>
 
+      {/* Dropdown Menu */}
       {menuVisible && (
         <View style={styles.dropdownMenu}>
           <Pressable
             style={styles.menuItem}
             onPress={() => {
               setMenuVisible(false);
-              // router.push("/akun");
             }}
           >
             <Ionicons name="person-circle-outline" size={20} color={Colors.primary} />
@@ -138,55 +139,63 @@ export default function TabLayout() {
         </View>
       )}
 
-      <Tabs
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarActiveTintColor: Colors.accent,
-          tabBarInactiveTintColor: Colors.white,
-          tabBarShowLabel: false,
-          tabBarPosition: "bottom",
-          tabBarStyle: {
-            backgroundColor: Colors.primary,
-            borderTopWidth: 0,
-            elevation: 0,
-          },
-          tabBarIcon: ({ focused, color }) => {
-            const size = 24;
-            if (route.name === "profil" && gereja?.logo?.url) {
-              return (
-                <Image
-                  source={{
-                    uri: `${API_URL.replace("/api/graphql", "")}${gereja.logo.url}`,
-                  }}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 6,
-                    opacity: focused ? 1 : 0.7,
-                    borderWidth: focused ? 2 : 0,
-                    borderColor: focused ? Colors.accent : "transparent",
-                  }}
-                />
-              );
-            }
+      {/* Content & Tabs */}
+      <View style={{ flex: 1 }}>
+        <Tabs
+          screenOptions={({ route }) => ({
+            headerShown: false,
+            tabBarActiveTintColor: Colors.accent,
+            tabBarInactiveTintColor: Colors.white,
+            tabBarShowLabel: false,
+            tabBarHideOnKeyboard: true,
 
-            let iconName: keyof typeof Ionicons.glyphMap = "home";
-            if (route.name === "home") iconName = "home";
-            else if (route.name === "jadwalIbadah") iconName = "calendar";
-            else if (route.name === "warta") iconName = "newspaper";
-            else if (route.name === "Riwayat") iconName = "time";
-            else if (route.name === "search") iconName = "search";
+            tabBarStyle: {
+              backgroundColor: Colors.primary,
+              borderTopWidth: 0,
+              elevation: 0,
+              height: Platform.OS === "android" ? 60 : 90,
+              paddingBottom: Platform.OS === "android" ? 10 : 30,
+            },
 
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-        })}
-      >
-        <Tabs.Screen name="home" />
-        <Tabs.Screen name="jadwalIbadah" />
-        <Tabs.Screen name="warta" />
-        <Tabs.Screen name="Riwayat" />
-        <Tabs.Screen name="profil" />
-      </Tabs>
+            tabBarIcon: ({ focused, color }) => {
+              const size = 24;
+
+              if (route.name === "profil" && gereja?.logo?.url) {
+                return (
+                  <Image
+                    source={{
+                      uri: `${API_URL.replace("/api/graphql", "")}${gereja.logo.url}`,
+                    }}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 6,
+                      opacity: focused ? 1 : 0.7,
+                      borderWidth: focused ? 2 : 0,
+                      borderColor: focused ? Colors.accent : "transparent",
+                    }}
+                  />
+                );
+              }
+
+              let iconName: keyof typeof Ionicons.glyphMap = "home";
+              if (route.name === "home") iconName = "home";
+              else if (route.name === "jadwalIbadah") iconName = "calendar";
+              else if (route.name === "warta") iconName = "newspaper";
+              else if (route.name === "Riwayat") iconName = "time";
+              else if (route.name === "search") iconName = "search";
+
+              return <Ionicons name={iconName} size={size} color={color} />;
+            },
+          })}
+        >
+          <Tabs.Screen name="home" />
+          <Tabs.Screen name="jadwalIbadah" />
+          <Tabs.Screen name="warta" />
+          <Tabs.Screen name="Riwayat" />
+          <Tabs.Screen name="profil" />
+        </Tabs>
+      </View>
     </View>
   );
 }
@@ -201,6 +210,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
     borderColor: Colors.border,
+    paddingTop: Platform.OS === "android" ? 12 : 50,
   },
   logo: {
     width: 40,
@@ -223,14 +233,11 @@ const styles = StyleSheet.create({
   },
   dropdownMenu: {
     position: "absolute",
-    top: 60,
+    top: Platform.OS === "android" ? 60 : 100,
     right: 10,
     backgroundColor: Colors.white,
     borderRadius: 8,
     elevation: 5,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     paddingVertical: 8,
     width: 160,
     zIndex: 99,

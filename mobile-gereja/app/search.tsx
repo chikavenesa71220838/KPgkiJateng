@@ -64,11 +64,11 @@ export default function SearchScreen() {
               wartas(orderBy: { masaBerlaku: desc }) {
                 id
                 judul
-                isiWarta
+                isiWarta { document } 
                 masaBerlaku
                 tanggalPelaksanaan
                 kategori { nama }
-                file { url }
+                gambar { url }
               }
             }
           `,
@@ -89,7 +89,6 @@ export default function SearchScreen() {
     fetchData();
   }, []);
 
-  // filter realtime
   useEffect(() => {
     if (searchQuery.trim() === "") {
       setResults([]);
@@ -100,11 +99,14 @@ export default function SearchScreen() {
 
     const jadwalFiltered = jadwalData.flatMap((item) =>
       item.detailIbadah
-        .filter(
-          (d: any) =>
-            item.topik.toLowerCase().includes(text) ||
-            d.pengkhotbah?.nama?.toLowerCase().includes(text)
-        )
+          .filter((d: any) => {
+          const topik = item.topik ? item.topik.toLowerCase() : "";
+          const pengkhotbah = d.pengkhotbah?.nama
+            ? d.pengkhotbah.nama.toLowerCase()
+            : "";
+
+          return topik.includes(text) || pengkhotbah.includes(text);
+        })
         .map((d: any) => ({
           type: "jadwal",
           id: d.id,
@@ -117,12 +119,14 @@ export default function SearchScreen() {
     );
 
     const wartaFiltered = wartaData
-      .filter(
-        (item) =>
-          item.judul?.toLowerCase().includes(text) ||
-          item.kategori?.nama?.toLowerCase().includes(text) ||
-          item.isiWarta?.toLowerCase().includes(text)
-      )
+      .filter((item) => {
+        const judul = item.judul ? item.judul.toLowerCase() : "";
+        const kategori = item.kategori?.nama
+          ? item.kategori.nama.toLowerCase()
+          : "";
+
+        return judul.includes(text) || kategori.includes(text);
+      })
       .map((item) => ({
         type: "warta",
         id: item.id,
@@ -130,13 +134,14 @@ export default function SearchScreen() {
         kategori: item.kategori?.nama,
         masaBerlaku: item.masaBerlaku,
         tanggalPelaksanaan: item.tanggalPelaksanaan,
-        file: item.file?.url,
+        file: item.gambar?.url, 
       }));
 
     setResults([...jadwalFiltered, ...wartaFiltered]);
   }, [searchQuery, jadwalData, wartaData]);
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return "-";
     const options: Intl.DateTimeFormatOptions = {
       weekday: "long",
       year: "numeric",
@@ -150,7 +155,6 @@ export default function SearchScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
-        {/* Header */}
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <Ionicons name="arrow-back" size={22} color={Colors.primary} />
@@ -158,50 +162,54 @@ export default function SearchScreen() {
           <Text style={styles.headerText}>Pencarian</Text>
         </View>
 
-        {/* Search Input */}
         <View style={styles.searchContainer}>
           <TextInput
             ref={inputRef}
             style={styles.input}
             placeholder="Cari jadwal dan warta"
-            placeholderTextColor={Colors.textMuted} 
+            placeholderTextColor={Colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
             returnKeyType="search"
           />
         </View>
 
-        {/* Loading */}
         {loading && (
           <View style={styles.center}>
             <ActivityIndicator size="large" color={Colors.primary} />
-            <Text style={{color: Colors.textMuted, marginTop: 8}}>Memuat data...</Text>
+            <Text style={{ color: Colors.textMuted, marginTop: 8 }}>
+              Memuat data...
+            </Text>
           </View>
         )}
 
-        {/* Hasil Pencarian */}
         {!loading && (
           <ScrollView
             style={{ marginTop: 14 }}
             showsVerticalScrollIndicator={false}
           >
             {results.length > 0 ? (
-              results.map((item) => (
-                <View key={item.id} style={styles.cardContainer}>
+              results.map((item, index) => (
+                <View key={`${item.type}-${item.id}-${index}`} style={styles.cardContainer}>
                   <View style={styles.cardRow}>
-                    {/* Gambar */}
                     <View style={styles.leftBox}>
                       {item.type === "jadwal" && item.banner ? (
                         <Image
                           source={{
-                            uri: `${API_URL.replace("/api/graphql", "")}${item.banner}`,
+                            uri: `${API_URL.replace(
+                              "/api/graphql",
+                              ""
+                            )}${item.banner}`,
                           }}
                           style={styles.image}
                         />
                       ) : item.type === "warta" && item.file ? (
                         <Image
                           source={{
-                            uri: `${API_URL.replace("/api/graphql", "")}${item.file}`,
+                            uri: `${API_URL.replace(
+                              "/api/graphql",
+                              ""
+                            )}${item.file}`,
                           }}
                           style={styles.image}
                         />
@@ -210,7 +218,6 @@ export default function SearchScreen() {
                       )}
                     </View>
 
-                    {/* Isi */}
                     <View style={styles.rightBox}>
                       {item.type === "jadwal" ? (
                         <>
@@ -220,9 +227,7 @@ export default function SearchScreen() {
                           <Text style={styles.judul}>
                             {formatDate(item.tanggal)}
                           </Text>
-                          <Text style={styles.isiCard}>
-                            {item.jam} WIB
-                          </Text>
+                          <Text style={styles.isiCard}>{item.jam} WIB</Text>
                           <Text style={styles.isiCard}>
                             {item.pengkhotbah}
                           </Text>
@@ -232,14 +237,12 @@ export default function SearchScreen() {
                           <Text style={styles.category}>
                             {item.kategori || "Umum"}
                           </Text>
-                          <Text style={styles.judul}>
-                            {item.judul}
-                          </Text>
+                          <Text style={styles.judul}>{item.judul}</Text>
                           <Text style={styles.isiCard}>
-                            {formatDate(item.tanggalPelaksanaan)}
+                            Pelaksanaan: {formatDate(item.tanggalPelaksanaan)}
                           </Text>
                           <Text style={styles.masaBerlaku}>
-                            {formatDate(item.masaBerlaku)}
+                            Berlaku s/d {formatDate(item.masaBerlaku)}
                           </Text>
                         </>
                       )}
@@ -260,8 +263,8 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background, 
-    paddingHorizontal: Layout.padding, 
+    backgroundColor: Colors.background,
+    paddingHorizontal: Layout.padding,
     paddingTop: 20,
   },
   headerContainer: {
@@ -273,29 +276,29 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   headerText: {
-    fontSize: FontSize.h2, 
+    fontSize: FontSize.h2,
     fontWeight: "bold",
-    color: Colors.primary, 
+    color: Colors.primary,
   },
   searchContainer: {
-    backgroundColor: Colors.inputBackground, 
-    borderRadius: Layout.radius, 
+    backgroundColor: Colors.inputBackground,
+    borderRadius: Layout.radius,
     paddingHorizontal: 10,
     paddingVertical: 3,
   },
   input: {
-    fontSize: FontSize.custom.titleCard, 
-    color: Colors.text, 
-    paddingVertical: 8, 
+    fontSize: FontSize.custom.titleCard,
+    color: Colors.text,
+    paddingVertical: 8,
   },
-  center: { 
-    justifyContent: "center", 
-    alignItems: "center", 
-    marginTop: 30 
+  center: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 30,
   },
   cardContainer: {
     backgroundColor: Colors.white,
-    borderRadius: Layout.radiusLarge, 
+    borderRadius: Layout.radiusLarge,
     marginBottom: 14,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -314,8 +317,8 @@ const styles = StyleSheet.create({
   },
   rightBox: {
     flex: 1.3,
-    backgroundColor: Colors.primary, 
-    padding: Layout.paddingSmall, 
+    backgroundColor: Colors.primary,
+    padding: Layout.paddingSmall,
     justifyContent: "center",
     position: "relative",
   },
@@ -332,29 +335,29 @@ const styles = StyleSheet.create({
   category: {
     color: Colors.white,
     fontWeight: "bold",
-    fontSize: FontSize.small, // (12)
+    fontSize: FontSize.small,
     marginBottom: 2,
   },
   judul: {
     color: Colors.white,
-    fontSize: FontSize.custom.titleCard, // (13)
+    fontSize: FontSize.custom.titleCard,
     fontWeight: "600",
     marginBottom: 2,
   },
   isiCard: {
     color: Colors.white,
-    fontSize: FontSize.custom.dateCard, // (11)
+    fontSize: FontSize.custom.dateCard,
   },
   masaBerlaku: {
     position: "absolute",
     bottom: 6,
     right: 8,
     color: Colors.white,
-    fontSize: FontSize.caption, // (10)
+    fontSize: FontSize.caption,
   },
   emptyText: {
     textAlign: "center",
-    color: Colors.textMuted, // Gunakan textMuted
+    color: Colors.textMuted,
     marginTop: 20,
   },
 });
