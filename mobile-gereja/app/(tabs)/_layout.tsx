@@ -1,8 +1,9 @@
 import { withLayoutContext, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import * as SplashScreen from "expo-splash-screen";
+import React, { useCallback, useEffect, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "../../constants/theme"; 
+import { Colors } from "../../constants/theme";
 import {
   View,
   Image,
@@ -15,7 +16,7 @@ import {
 } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { API_URL } from "../../utils/api"; 
+import { API_URL } from "../../utils/api";
 
 const { Navigator } = createBottomTabNavigator();
 const Tabs = withLayoutContext(Navigator);
@@ -25,6 +26,8 @@ interface Gereja {
   nama: string;
   logo?: { url: string };
 }
+
+SplashScreen.preventAutoHideAsync();
 
 export default function TabLayout() {
   const [gereja, setGereja] = useState<Gereja | null>(null);
@@ -67,13 +70,24 @@ export default function TabLayout() {
     fetchGereja();
   }, []);
 
+  const onLayoutRootView = useCallback(async () => {
+    if (!loading) {
+      await SplashScreen.hideAsync();
+    }
+  }, [loading]);
+
   const handleLogout = () => {
     setMenuVisible(false);
     router.push("/login");
   };
 
+  if (loading) {
+    return null;
+  }
+
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.white }}>
+    <View style={{ flex: 1, backgroundColor: Colors.white }}
+      onLayout={onLayoutRootView}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -87,7 +101,11 @@ export default function TabLayout() {
             <>
               {gereja?.logo?.url ? (
                 <Image
-                  source={{ uri: `${API_URL.replace("/api/graphql", "")}${gereja.logo.url}` }}
+                  source={{
+                    uri: `${API_URL.replace("/api/graphql", "")}${
+                      gereja.logo.url
+                    }`,
+                  }}
                   style={styles.logo}
                 />
               ) : (
@@ -126,7 +144,11 @@ export default function TabLayout() {
               setMenuVisible(false);
             }}
           >
-            <Ionicons name="person-circle-outline" size={20} color={Colors.primary} />
+            <Ionicons
+              name="person-circle-outline"
+              size={20}
+              color={Colors.primary}
+            />
             <Text style={styles.menuText}>Profil Akun</Text>
           </Pressable>
 
@@ -134,7 +156,9 @@ export default function TabLayout() {
 
           <Pressable style={styles.menuItem} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
-            <Text style={[styles.menuText, { color: Colors.danger }]}>Log Out</Text>
+            <Text style={[styles.menuText, { color: Colors.danger }]}>
+              Log Out
+            </Text>
           </Pressable>
         </View>
       )}
@@ -164,7 +188,9 @@ export default function TabLayout() {
                 return (
                   <Image
                     source={{
-                      uri: `${API_URL.replace("/api/graphql", "")}${gereja.logo.url}`,
+                      uri: `${API_URL.replace("/api/graphql", "")}${
+                        gereja.logo.url
+                      }`,
                     }}
                     style={{
                       width: 28,
