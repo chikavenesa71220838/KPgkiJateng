@@ -51,6 +51,10 @@ function keystoneDocumentToHtml(document: any[]): string {
   const serializeNode = (node: any): string => {
     if (!node) return "";
 
+    if (node.type === "divider") {
+      return "<hr />";
+    }
+
     if (node.children) {
       const childrenHtml = node.children.map(serializeNode).join("");
 
@@ -59,12 +63,18 @@ function keystoneDocumentToHtml(document: any[]): string {
           return `<p>${childrenHtml}</p>`;
         case "heading":
           return `<h${node.level || 2}>${childrenHtml}</h${node.level || 2}>`;
-        case "bulleted-list":
-          return `<ul>${childrenHtml}</ul>`;
         case "numbered-list":
+        case "ordered-list":
           return `<ol>${childrenHtml}</ol>`;
+        case "bulleted-list":
+        case "unordered-list":
+          return `<ul>${childrenHtml}</ul>`;
         case "list-item":
           return `<li>${childrenHtml}</li>`;
+        case "list-item-content":
+          return childrenHtml;
+        case "link":
+          return `<a href="${node.href}">${childrenHtml}</a>`;
         default:
           return childrenHtml;
       }
@@ -195,7 +205,7 @@ export default function Warta(): React.ReactElement {
       showsVerticalScrollIndicator={false}
     >
       <Text style={styles.title}>Warta</Text>
-      
+
       <View style={styles.datePickerContainer}>
         <TouchableOpacity onPress={handlePrevMonth}>
           <Ionicons name="chevron-back" size={20} color={Colors.primary} />
@@ -264,15 +274,38 @@ export default function Warta(): React.ReactElement {
                           : (item.isiWarta as string),
                     }}
                     tagsStyles={{
-                      p: { 
-                        fontSize: 13, 
-                        color: Colors.text, 
-                        marginBottom: 6 
+                      a: {
+                        color: Colors.primary, 
+                        textDecorationLine: "underline",
+                        fontWeight: "bold",
+                      },
+                      hr: {
+                        backgroundColor: Colors.border,
+                        height: 1,
+                        marginVertical: 10,
+                        width: "100%",
+                      },
+                      p: {
+                        fontSize: 13,
+                        color: Colors.text,
+                        marginBottom: 6,
                       },
                       strong: { fontWeight: "bold" },
                       em: { fontStyle: "italic" },
                       u: { textDecorationLine: "underline" },
-                      li: { marginLeft: 16 },
+                      ol: {
+                        paddingLeft: 20,
+                        marginBottom: 10,
+                      },
+                      ul: {
+                        paddingLeft: 20,
+                        marginBottom: 10,
+                      },
+                      li: {
+                        marginBottom: 4,
+                        fontSize: 13,
+                        color: Colors.text,
+                      },
 
                       h1: {
                         fontSize: 22,
@@ -312,18 +345,18 @@ export default function Warta(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    backgroundColor: Colors.background, 
-    paddingHorizontal: Layout.paddingSmall 
+  container: {
+    backgroundColor: Colors.background,
+    paddingHorizontal: Layout.paddingSmall,
   },
-  
+
   title: {
     fontSize: FontSize.h1,
     fontWeight: "bold",
     color: Colors.primary,
     marginVertical: Layout.gap,
   },
-  
+
   input: {
     backgroundColor: Colors.inputBackground,
     borderRadius: Layout.radius,
@@ -332,7 +365,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.custom.titleCard,
     marginBottom: 12,
   },
-  
+
   datePickerContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -340,7 +373,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 14,
   },
-  
+
   dateText: {
     fontSize: FontSize.body,
     fontWeight: "bold",
@@ -349,65 +382,65 @@ const styles = StyleSheet.create({
 
   cardContainer: {
     backgroundColor: Colors.white,
-    borderRadius: Layout.radiusLarge, 
+    borderRadius: Layout.radiusLarge,
     marginBottom: 14,
     borderWidth: 1,
     borderColor: Colors.border,
     overflow: "hidden",
     elevation: 2,
   },
-  
+
   cardRow: {
     flexDirection: "row",
     height: 90,
     borderRadius: Layout.radiusLarge,
     overflow: "hidden",
   },
-  
+
   leftBox: {
     flex: 1,
     backgroundColor: Colors.black,
   },
-  
+
   rightBox: {
     flex: 1.3,
-    backgroundColor: Colors.primary, 
+    backgroundColor: Colors.primary,
     padding: Layout.paddingSmall,
     justifyContent: "center",
     position: "relative",
   },
-  
+
   image: {
     width: "100%",
     height: "100%",
     resizeMode: "cover",
   },
-  
+
   imagePlaceholder: {
     width: "100%",
     height: "100%",
     backgroundColor: Colors.black,
   },
-  
-    category: {
+
+  category: {
     color: Colors.white,
     fontWeight: "bold",
     fontSize: FontSize.small,
     marginBottom: 2,
   },
-  
+
   judul: {
     color: Colors.white,
     fontSize: FontSize.custom.titleCard,
     fontWeight: "600",
     marginBottom: 2,
   },
-  
+
   tanggalPelaksanaan: {
     color: Colors.white,
     fontSize: FontSize.custom.dateCard,
   },
-  
+
   masaBerlaku: {
     position: "absolute",
     bottom: 6,
@@ -420,7 +453,7 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: Colors.cardBackground,
   },
-  
+
   expandToggle: {
     color: Colors.primary,
     fontStyle: "italic",
@@ -428,16 +461,16 @@ const styles = StyleSheet.create({
     textAlign: "right",
     padding: 6,
   },
-  
+
   emptyText: {
     textAlign: "center",
     color: Colors.textMuted,
     marginTop: 20,
   },
-  
-  center: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center" 
+
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
