@@ -52,12 +52,12 @@ export const Colors = {
     tabIconSelected: palette.warnaUtama,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: '#fff',
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: '#fff',
+    text: palette.black,
+    background: palette.white,
+    tint: palette.warnaUtama,
+    icon: palette.secondaryText,
+    tabIconDefault: palette.secondaryText,
+    tabIconSelected: palette.warnaUtama,
   },
 };
 
