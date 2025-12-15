@@ -393,7 +393,8 @@ const styles = StyleSheet.create({
   pendetaList: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    // justifyContent: "space-between",
+    justifyContent: "flex-start",
     gap: Layout.gap,
   },
   pendetaCard: {
@@ -406,8 +407,8 @@ const styles = StyleSheet.create({
     shadowColor: Colors.black,
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    flexGrow: 1,
-    alignSelf: "stretch",
+    // flexGrow: 1,
+    // alignSelf: "stretch",
   },
   pendetaImg: {
     width: "100%",
