@@ -82,5 +82,10 @@ export const Warta = list({
         itemView: { fieldMode: "hidden" },
       },
     }),
+
+    gereja: relationship({
+      ref: "Gereja.warta",
+      ui: { displayMode: "select" },
+    }),
   },
 });

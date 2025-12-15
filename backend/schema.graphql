@@ -324,6 +324,7 @@ type Warta {
   isiWarta: Warta_isiWarta_Document
   gambar: ImageFieldOutput
   createdAt: DateTime
+  gereja: Gereja
 }
 
 scalar CalendarDay @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc3339#section-5.6")
@@ -348,6 +349,7 @@ input WartaWhereInput {
   masaBerlaku: CalendarDayNullableFilter
   tanggalPelaksanaan: DateTimeNullableFilter
   createdAt: DateTimeNullableFilter
+  gereja: GerejaWhereInput
 }
 
 input CalendarDayNullableFilter {
@@ -388,11 +390,18 @@ input WartaUpdateInput {
   isiWarta: JSON
   gambar: ImageFieldInput
   createdAt: DateTime
+  gereja: GerejaRelateToOneForUpdateInput
 }
 
 input KategoriWartaRelateToOneForUpdateInput {
   create: KategoriWartaCreateInput
   connect: KategoriWartaWhereUniqueInput
+  disconnect: Boolean
+}
+
+input GerejaRelateToOneForUpdateInput {
+  create: GerejaCreateInput
+  connect: GerejaWhereUniqueInput
   disconnect: Boolean
 }
 
@@ -409,11 +418,17 @@ input WartaCreateInput {
   isiWarta: JSON
   gambar: ImageFieldInput
   createdAt: DateTime
+  gereja: GerejaRelateToOneForCreateInput
 }
 
 input KategoriWartaRelateToOneForCreateInput {
   create: KategoriWartaCreateInput
   connect: KategoriWartaWhereUniqueInput
+}
+
+input GerejaRelateToOneForCreateInput {
+  create: GerejaCreateInput
+  connect: GerejaWhereUniqueInput
 }
 
 type Pengkhotbah {
@@ -488,6 +503,7 @@ type JadwalIbadah {
   topik: String
   detailIbadah(where: DetailIbadahWhereInput! = {}, orderBy: [DetailIbadahOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DetailIbadahWhereUniqueInput): [DetailIbadah!]
   detailIbadahCount(where: DetailIbadahWhereInput! = {}): Int
+  gereja: Gereja
 }
 
 input JadwalIbadahWhereUniqueInput {
@@ -502,6 +518,7 @@ input JadwalIbadahWhereInput {
   tanggal: CalendarDayFilter
   topik: StringFilter
   detailIbadah: DetailIbadahManyRelationFilter
+  gereja: GerejaWhereInput
 }
 
 input CalendarDayFilter {
@@ -525,6 +542,7 @@ input JadwalIbadahUpdateInput {
   tanggal: CalendarDay
   topik: String
   detailIbadah: DetailIbadahRelateToManyForUpdateInput
+  gereja: GerejaRelateToOneForUpdateInput
 }
 
 input JadwalIbadahUpdateArgs {
@@ -536,6 +554,7 @@ input JadwalIbadahCreateInput {
   tanggal: CalendarDay
   topik: String
   detailIbadah: DetailIbadahRelateToManyForCreateInput
+  gereja: GerejaRelateToOneForCreateInput
 }
 
 type DetailIbadah {
@@ -716,12 +735,6 @@ input PendetaUpdateInput {
   gereja: GerejaRelateToOneForUpdateInput
 }
 
-input GerejaRelateToOneForUpdateInput {
-  create: GerejaCreateInput
-  connect: GerejaWhereUniqueInput
-  disconnect: Boolean
-}
-
 input PendetaUpdateArgs {
   where: PendetaWhereUniqueInput!
   data: PendetaUpdateInput!
@@ -734,11 +747,6 @@ input PendetaCreateInput {
   kontak: String
   sejakKapanAktif: CalendarDay
   gereja: GerejaRelateToOneForCreateInput
-}
-
-input GerejaRelateToOneForCreateInput {
-  create: GerejaCreateInput
-  connect: GerejaWhereUniqueInput
 }
 
 type Gereja {
@@ -757,6 +765,12 @@ type Gereja {
   sejarah: String
   pendeta(where: PendetaWhereInput! = {}, orderBy: [PendetaOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PendetaWhereUniqueInput): [Pendeta!]
   pendetaCount(where: PendetaWhereInput! = {}): Int
+  jadwalRutin(where: jadwalRutinWhereInput! = {}, orderBy: [jadwalRutinOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: jadwalRutinWhereUniqueInput): [jadwalRutin!]
+  jadwalRutinCount(where: jadwalRutinWhereInput! = {}): Int
+  jadwalIbadah(where: JadwalIbadahWhereInput! = {}, orderBy: [JadwalIbadahOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: JadwalIbadahWhereUniqueInput): [JadwalIbadah!]
+  jadwalIbadahCount(where: JadwalIbadahWhereInput! = {}): Int
+  warta(where: WartaWhereInput! = {}, orderBy: [WartaOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: WartaWhereUniqueInput): [Warta!]
+  wartaCount(where: WartaWhereInput! = {}): Int
 }
 
 input GerejaWhereUniqueInput {
@@ -779,12 +793,27 @@ input GerejaWhereInput {
   linkEmail: StringFilter
   sejarah: StringFilter
   pendeta: PendetaManyRelationFilter
+  jadwalRutin: jadwalRutinManyRelationFilter
+  jadwalIbadah: JadwalIbadahManyRelationFilter
+  warta: WartaManyRelationFilter
 }
 
 input PendetaManyRelationFilter {
   every: PendetaWhereInput
   some: PendetaWhereInput
   none: PendetaWhereInput
+}
+
+input jadwalRutinManyRelationFilter {
+  every: jadwalRutinWhereInput
+  some: jadwalRutinWhereInput
+  none: jadwalRutinWhereInput
+}
+
+input JadwalIbadahManyRelationFilter {
+  every: JadwalIbadahWhereInput
+  some: JadwalIbadahWhereInput
+  none: JadwalIbadahWhereInput
 }
 
 input GerejaOrderByInput {
@@ -815,6 +844,9 @@ input GerejaUpdateInput {
   linkEmail: String
   sejarah: String
   pendeta: PendetaRelateToManyForUpdateInput
+  jadwalRutin: jadwalRutinRelateToManyForUpdateInput
+  jadwalIbadah: JadwalIbadahRelateToManyForUpdateInput
+  warta: WartaRelateToManyForUpdateInput
 }
 
 input PendetaRelateToManyForUpdateInput {
@@ -822,6 +854,20 @@ input PendetaRelateToManyForUpdateInput {
   set: [PendetaWhereUniqueInput!]
   create: [PendetaCreateInput!]
   connect: [PendetaWhereUniqueInput!]
+}
+
+input jadwalRutinRelateToManyForUpdateInput {
+  disconnect: [jadwalRutinWhereUniqueInput!]
+  set: [jadwalRutinWhereUniqueInput!]
+  create: [jadwalRutinCreateInput!]
+  connect: [jadwalRutinWhereUniqueInput!]
+}
+
+input JadwalIbadahRelateToManyForUpdateInput {
+  disconnect: [JadwalIbadahWhereUniqueInput!]
+  set: [JadwalIbadahWhereUniqueInput!]
+  create: [JadwalIbadahCreateInput!]
+  connect: [JadwalIbadahWhereUniqueInput!]
 }
 
 input GerejaUpdateArgs {
@@ -843,11 +889,24 @@ input GerejaCreateInput {
   linkEmail: String
   sejarah: String
   pendeta: PendetaRelateToManyForCreateInput
+  jadwalRutin: jadwalRutinRelateToManyForCreateInput
+  jadwalIbadah: JadwalIbadahRelateToManyForCreateInput
+  warta: WartaRelateToManyForCreateInput
 }
 
 input PendetaRelateToManyForCreateInput {
   create: [PendetaCreateInput!]
   connect: [PendetaWhereUniqueInput!]
+}
+
+input jadwalRutinRelateToManyForCreateInput {
+  create: [jadwalRutinCreateInput!]
+  connect: [jadwalRutinWhereUniqueInput!]
+}
+
+input JadwalIbadahRelateToManyForCreateInput {
+  create: [JadwalIbadahCreateInput!]
+  connect: [JadwalIbadahWhereUniqueInput!]
 }
 
 type jadwalRutin {
@@ -856,6 +915,7 @@ type jadwalRutin {
   nama: String
   waktu(where: jamWhereInput! = {}, orderBy: [jamOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: jamWhereUniqueInput): [jam!]
   waktuCount(where: jamWhereInput! = {}): Int
+  gereja: Gereja
 }
 
 input jadwalRutinWhereUniqueInput {
@@ -870,6 +930,7 @@ input jadwalRutinWhereInput {
   namaIbadah: StringFilter
   nama: StringFilter
   waktu: jamManyRelationFilter
+  gereja: GerejaWhereInput
 }
 
 input jamManyRelationFilter {
@@ -888,6 +949,7 @@ input jadwalRutinUpdateInput {
   namaIbadah: String
   nama: String
   waktu: jamRelateToManyForUpdateInput
+  gereja: GerejaRelateToOneForUpdateInput
 }
 
 input jamRelateToManyForUpdateInput {
@@ -906,6 +968,7 @@ input jadwalRutinCreateInput {
   namaIbadah: String
   nama: String
   waktu: jamRelateToManyForCreateInput
+  gereja: GerejaRelateToOneForCreateInput
 }
 
 input jamRelateToManyForCreateInput {
@@ -933,12 +996,6 @@ input jamWhereInput {
   jadwalRutin: jadwalRutinManyRelationFilter
 }
 
-input jadwalRutinManyRelationFilter {
-  every: jadwalRutinWhereInput
-  some: jadwalRutinWhereInput
-  none: jadwalRutinWhereInput
-}
-
 input jamOrderByInput {
   id: OrderDirection
   jam: OrderDirection
@@ -949,13 +1006,6 @@ input jamUpdateInput {
   jadwalRutin: jadwalRutinRelateToManyForUpdateInput
 }
 
-input jadwalRutinRelateToManyForUpdateInput {
-  disconnect: [jadwalRutinWhereUniqueInput!]
-  set: [jadwalRutinWhereUniqueInput!]
-  create: [jadwalRutinCreateInput!]
-  connect: [jadwalRutinWhereUniqueInput!]
-}
-
 input jamUpdateArgs {
   where: jamWhereUniqueInput!
   data: jamUpdateInput!
@@ -964,11 +1014,6 @@ input jamUpdateArgs {
 input jamCreateInput {
   jam: String
   jadwalRutin: jadwalRutinRelateToManyForCreateInput
-}
-
-input jadwalRutinRelateToManyForCreateInput {
-  create: [jadwalRutinCreateInput!]
-  connect: [jadwalRutinWhereUniqueInput!]
 }
 
 """

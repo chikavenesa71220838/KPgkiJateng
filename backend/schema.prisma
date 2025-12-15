@@ -61,8 +61,11 @@ model Warta {
   gambar_height      Int?
   gambar_extension   String?
   createdAt          DateTime?      @default(now())
+  gereja             Gereja?        @relation("Warta_gereja", fields: [gerejaId], references: [id])
+  gerejaId           String?        @map("gereja")
 
   @@index([kategoriId])
+  @@index([gerejaId])
 }
 
 model Pengkhotbah {
@@ -82,6 +85,10 @@ model JadwalIbadah {
   tanggal      String
   topik        String         @default("")
   detailIbadah DetailIbadah[] @relation("DetailIbadah_jadwal")
+  gereja       Gereja?        @relation("JadwalIbadah_gereja", fields: [gerejaId], references: [id])
+  gerejaId     String?        @map("gereja")
+
+  @@index([gerejaId])
 }
 
 model DetailIbadah {
@@ -128,7 +135,7 @@ model Pendeta {
 }
 
 model Gereja {
-  id               String    @id @default(cuid())
+  id               String         @id @default(cuid())
   logo_id          String?
   logo_filesize    Int?
   logo_width       Int?
@@ -139,24 +146,31 @@ model Gereja {
   gambar_width     Int?
   gambar_height    Int?
   gambar_extension String?
-  nama             String    @default("")
-  alamat           String    @default("")
-  hari             String    @default("")
-  telepon          String    @default("")
-  linkWhatsapp     String    @default("")
-  linkInstagram    String    @default("")
-  linkYoutube      String    @default("")
-  linkFacebook     String    @default("")
-  linkEmail        String    @default("")
-  sejarah          String    @default("")
-  pendeta          Pendeta[] @relation("Pendeta_gereja")
+  nama             String         @default("")
+  alamat           String         @default("")
+  hari             String         @default("")
+  telepon          String         @default("")
+  linkWhatsapp     String         @default("")
+  linkInstagram    String         @default("")
+  linkYoutube      String         @default("")
+  linkFacebook     String         @default("")
+  linkEmail        String         @default("")
+  sejarah          String         @default("")
+  pendeta          Pendeta[]      @relation("Pendeta_gereja")
+  jadwalRutin      jadwalRutin[]  @relation("jadwalRutin_gereja")
+  jadwalIbadah     JadwalIbadah[] @relation("JadwalIbadah_gereja")
+  warta            Warta[]        @relation("Warta_gereja")
 }
 
 model jadwalRutin {
-  id         String @id @default(cuid())
-  namaIbadah String @default("")
+  id         String  @id @default(cuid())
+  namaIbadah String  @default("")
   nama       String
-  waktu      jam[]  @relation("jadwalRutin_waktu")
+  waktu      jam[]   @relation("jadwalRutin_waktu")
+  gereja     Gereja? @relation("jadwalRutin_gereja", fields: [gerejaId], references: [id])
+  gerejaId   String? @map("gereja")
+
+  @@index([gerejaId])
 }
 
 model jam {

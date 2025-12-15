@@ -25,6 +25,10 @@ export const JadwalIbadah = list({
         inlineEdit: { fields: ["jam", "pengkhotbah", "banner"] },
       },
     }),
+    gereja: relationship({
+      ref: "Gereja.jadwalIbadah",
+      ui: { displayMode: "select" },
+    }),
   },
   ui: { labelField: "topik" },
 });
