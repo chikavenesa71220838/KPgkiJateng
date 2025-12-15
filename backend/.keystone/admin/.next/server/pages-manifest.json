@@ -3,7 +3,7 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/wartas": "pages/wartas.js",
-  "/wartas/create": "pages/wartas/create.js",
   "/wartas/[id]": "pages/wartas/[id].js",
-  "/kategori-wartas": "pages/kategori-wartas.js"
+  "/": "pages/index.js",
+  "/kategori-wartas/[id]": "pages/kategori-wartas/[id].js"
 }
