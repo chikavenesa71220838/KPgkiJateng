@@ -204,6 +204,10 @@ var Warta = (0, import_core4.list)({
         createView: { fieldMode: "hidden" },
         itemView: { fieldMode: "hidden" }
       }
+    }),
+    gereja: (0, import_fields4.relationship)({
+      ref: "Gereja.warta",
+      ui: { displayMode: "select" }
     })
   }
 });
@@ -269,6 +273,10 @@ var JadwalIbadah = (0, import_core6.list)({
         inlineCreate: { fields: ["jam", "pengkhotbah", "banner"] },
         inlineEdit: { fields: ["jam", "pengkhotbah", "banner"] }
       }
+    }),
+    gereja: (0, import_fields6.relationship)({
+      ref: "Gereja.jadwalIbadah",
+      ui: { displayMode: "select" }
     })
   },
   ui: { labelField: "topik" }
@@ -400,114 +408,61 @@ var allowAll10 = {
 var Gereja = (0, import_core10.list)({
   access: allowAll10,
   fields: {
-    logo: (0, import_fields10.image)({
-      storage: "local_images",
-      hooks: {
-        validateInput: async ({ resolvedData, addValidationError }) => {
-          const file = resolvedData.logo;
-          if (!file || !file.filename) return;
-          const lower = file.filename.toLowerCase();
-          if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.endsWith(".png")) {
-            addValidationError(
-              "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk gambar gereja."
-            );
-          }
-        }
-      },
-      ui: {
-        description: "logo gereja"
-      }
-    }),
-    gambar: (0, import_fields10.image)({
-      storage: "local_images",
-      hooks: {
-        validateInput: async ({ resolvedData, addValidationError }) => {
-          const file = resolvedData.gambar;
-          if (!file || !file.filename) return;
-          const lower = file.filename.toLowerCase();
-          if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.endsWith(".png")) {
-            addValidationError(
-              "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk gambar gereja."
-            );
-          }
-        }
-      },
-      ui: {
-        description: "Foto atau banner utama gereja"
-      }
-    }),
+    logo: (0, import_fields10.image)({ storage: "local_images" }),
+    gambar: (0, import_fields10.image)({ storage: "local_images" }),
     nama: (0, import_fields10.text)({ validation: { isRequired: true } }),
     alamat: (0, import_fields10.text)({
       validation: { isRequired: true },
-      ui: { displayMode: "textarea", description: "Alamat lengkap gereja" }
+      ui: { displayMode: "textarea" }
     }),
     hari: (0, import_fields10.text)({
-      validation: { isRequired: true },
-      ui: {
-        displayMode: "textarea",
-        description: "Hari operasional gereja (contoh: Senin - Minggu)"
-      }
+      validation: { isRequired: true }
     }),
-    telepon: (0, import_fields10.text)({
-      ui: { description: "Nomor telepon gereja" }
-    }),
-    linkWhatsapp: (0, import_fields10.text)({
-      ui: { description: "Tautan WhatsApp gereja" }
-    }),
-    linkInstagram: (0, import_fields10.text)({
-      ui: { description: "Tautan Instagram gereja" }
-    }),
-    linkYoutube: (0, import_fields10.text)({
-      ui: { description: "Tautan YouTube gereja" }
-    }),
-    linkFacebook: (0, import_fields10.text)({
-      ui: { description: "Tautan Facebook gereja" }
-    }),
-    linkEmail: (0, import_fields10.text)({
-      ui: { description: "Alamat email resmi gereja" }
-    }),
+    telepon: (0, import_fields10.text)(),
+    linkWhatsapp: (0, import_fields10.text)(),
+    linkInstagram: (0, import_fields10.text)(),
+    linkYoutube: (0, import_fields10.text)(),
+    linkFacebook: (0, import_fields10.text)(),
+    linkEmail: (0, import_fields10.text)(),
     sejarah: (0, import_fields10.text)({
-      ui: {
-        displayMode: "textarea",
-        description: "Sejarah singkat gereja ini"
-      }
+      ui: { displayMode: "textarea" }
     }),
     pendeta: (0, import_fields10.relationship)({
       ref: "Pendeta.gereja",
-      many: true,
-      ui: {
-        description: "Daftar pendeta yang aktif di gereja ini"
-      }
+      many: true
+    }),
+    jadwalRutin: (0, import_fields10.relationship)({
+      ref: "jadwalRutin.gereja",
+      many: true
+    }),
+    jadwalIbadah: (0, import_fields10.relationship)({
+      ref: "JadwalIbadah.gereja",
+      many: true
+    }),
+    warta: (0, import_fields10.relationship)({
+      ref: "Warta.gereja",
+      many: true
     })
   },
   ui: {
-    labelField: "nama",
-    listView: {
-      initialColumns: ["nama", "alamat", "hari", "jamBuka", "jamTutup"]
-    }
+    labelField: "nama"
   }
 });
 
 // schema/jadwalRutin.ts
 var import_core11 = require("@keystone-6/core");
 var import_fields11 = require("@keystone-6/core/fields");
-var allowAll11 = {
-  operation: {
-    query: () => true,
-    create: () => true,
-    update: () => true,
-    delete: () => true
-  }
-};
 var jadwalRutin = (0, import_core11.list)({
-  access: allowAll11,
+  access: {
+    operation: {
+      query: () => true,
+      create: () => true,
+      update: () => true,
+      delete: () => true
+    }
+  },
   fields: {
-    namaIbadah: (0, import_fields11.text)({
-      validation: { isRequired: true },
-      ui: {
-        description: "Masukkan nama ibadah"
-      }
-    }),
+    namaIbadah: (0, import_fields11.text)({ validation: { isRequired: true } }),
     nama: (0, import_fields11.select)({
       options: [
         { label: "Senin", value: "Senin" },
@@ -518,16 +473,15 @@ var jadwalRutin = (0, import_core11.list)({
         { label: "Sabtu", value: "Sabtu" },
         { label: "Minggu", value: "Minggu" }
       ],
-      validation: { isRequired: true },
-      ui: { displayMode: "select" }
+      validation: { isRequired: true }
     }),
     waktu: (0, import_fields11.relationship)({
       ref: "jam.jadwalRutin",
-      many: true,
-      ui: {
-        displayMode: "select",
-        labelField: "jam"
-      }
+      many: true
+    }),
+    gereja: (0, import_fields11.relationship)({
+      ref: "Gereja.jadwalRutin",
+      ui: { displayMode: "select" }
     })
   }
 });
@@ -535,7 +489,7 @@ var jadwalRutin = (0, import_core11.list)({
 // schema/jam.ts
 var import_core12 = require("@keystone-6/core");
 var import_fields12 = require("@keystone-6/core/fields");
-var allowAll12 = {
+var allowAll11 = {
   operation: {
     query: () => true,
     create: () => true,
@@ -544,7 +498,7 @@ var allowAll12 = {
   }
 };
 var jam = (0, import_core12.list)({
-  access: allowAll12,
+  access: allowAll11,
   fields: {
     jam: (0, import_fields12.text)({
       validation: { isRequired: true }

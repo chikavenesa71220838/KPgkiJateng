@@ -13,112 +13,54 @@ const allowAll = {
 export const Gereja = list({
   access: allowAll,
   fields: {
-    logo: image({
-      storage: "local_images",
-      hooks: {
-        validateInput: async ({ resolvedData, addValidationError }) => {
-          const file = resolvedData.logo;
-          if (!file || !file.filename) return;
-
-          const lower = file.filename.toLowerCase();
-          if (
-            !lower.endsWith(".jpg") &&
-            !lower.endsWith(".jpeg") &&
-            !lower.endsWith(".png")
-          ) {
-            addValidationError(
-              "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk gambar gereja."
-            );
-          }
-        },
-      },
-      ui: {
-        description: "logo gereja",
-      },
-    }),
-    gambar: image({
-      storage: "local_images",
-      hooks: {
-        validateInput: async ({ resolvedData, addValidationError }) => {
-          const file = resolvedData.gambar;
-          if (!file || !file.filename) return;
-
-          const lower = file.filename.toLowerCase();
-          if (
-            !lower.endsWith(".jpg") &&
-            !lower.endsWith(".jpeg") &&
-            !lower.endsWith(".png")
-          ) {
-            addValidationError(
-              "Hanya file JPG, JPEG, atau PNG yang diperbolehkan untuk gambar gereja."
-            );
-          }
-        },
-      },
-      ui: {
-        description: "Foto atau banner utama gereja",
-      },
-    }),
+    logo: image({ storage: "local_images" }),
+    gambar: image({ storage: "local_images" }),
 
     nama: text({ validation: { isRequired: true } }),
 
     alamat: text({
       validation: { isRequired: true },
-      ui: { displayMode: "textarea", description: "Alamat lengkap gereja" },
+      ui: { displayMode: "textarea" },
     }),
 
     hari: text({
       validation: { isRequired: true },
-      ui: {
-        displayMode: "textarea",
-        description: "Hari operasional gereja (contoh: Senin - Minggu)",
-      },
     }),
 
-    telepon: text({
-      ui: { description: "Nomor telepon gereja" },
-    }),
+    telepon: text(),
 
-    linkWhatsapp: text({
-      ui: { description: "Tautan WhatsApp gereja" },
-    }),
-
-    linkInstagram: text({
-      ui: { description: "Tautan Instagram gereja" },
-    }),
-
-    linkYoutube: text({
-      ui: { description: "Tautan YouTube gereja" },
-    }),
-
-    linkFacebook: text({
-      ui: { description: "Tautan Facebook gereja" },
-    }),
-
-    linkEmail: text({
-      ui: { description: "Alamat email resmi gereja" },
-    }),
+    linkWhatsapp: text(),
+    linkInstagram: text(),
+    linkYoutube: text(),
+    linkFacebook: text(),
+    linkEmail: text(),
 
     sejarah: text({
-      ui: {
-        displayMode: "textarea",
-        description: "Sejarah singkat gereja ini",
-      },
+      ui: { displayMode: "textarea" },
     }),
 
     pendeta: relationship({
       ref: "Pendeta.gereja",
       many: true,
-      ui: {
-        description: "Daftar pendeta yang aktif di gereja ini",
-      },
+    }),
+
+    jadwalRutin: relationship({
+      ref: "jadwalRutin.gereja",
+      many: true,
+    }),
+
+    jadwalIbadah: relationship({
+      ref: "JadwalIbadah.gereja",
+      many: true,
+    }),
+
+    warta: relationship({
+      ref: "Warta.gereja",
+      many: true,
     }),
   },
 
   ui: {
     labelField: "nama",
-    listView: {
-      initialColumns: ["nama", "alamat", "hari", "jamBuka", "jamTutup"],
-    },
   },
 });

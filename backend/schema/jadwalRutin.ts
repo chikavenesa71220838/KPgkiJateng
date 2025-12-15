@@ -1,31 +1,18 @@
 import { list } from "@keystone-6/core";
-import {
-  text,
-  relationship,
-  timestamp,
-  calendarDay,
-  image,
-  select,
-} from "@keystone-6/core/fields";
-
-const allowAll = {
-  operation: {
-    query: () => true,
-    create: () => true,
-    update: () => true,
-    delete: () => true,
-  },
-};
+import { text, relationship, select } from "@keystone-6/core/fields";
 
 export const jadwalRutin = list({
-  access: allowAll,
+  access: {
+    operation: {
+      query: () => true,
+      create: () => true,
+      update: () => true,
+      delete: () => true,
+    },
+  },
   fields: {
-    namaIbadah: text({
-      validation: { isRequired: true },
-      ui: {
-        description: "Masukkan nama ibadah",
-      },
-    }),
+    namaIbadah: text({ validation: { isRequired: true } }),
+
     nama: select({
       options: [
         { label: "Senin", value: "Senin" },
@@ -37,15 +24,16 @@ export const jadwalRutin = list({
         { label: "Minggu", value: "Minggu" },
       ],
       validation: { isRequired: true },
-      ui: { displayMode: "select" },
     }),
+
     waktu: relationship({
       ref: "jam.jadwalRutin",
       many: true,
-      ui: {
-        displayMode: "select",
-        labelField: "jam",
-      },
+    }),
+
+    gereja: relationship({
+      ref: "Gereja.jadwalRutin",
+      ui: { displayMode: "select" },
     }),
   },
 });
