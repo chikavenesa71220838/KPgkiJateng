@@ -2,13 +2,6 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/": "pages/index.js",
-  "/jadwal-ibadahs": "pages/jadwal-ibadahs.js",
-  "/jadwal-ibadahs/[id]": "pages/jadwal-ibadahs/[id].js",
-  "/wartas": "pages/wartas.js",
-  "/wartas/[id]": "pages/wartas/[id].js",
-  "/detail-ibadahs": "pages/detail-ibadahs.js",
-  "/detail-ibadahs/[id]": "pages/detail-ibadahs/[id].js",
-  "/jadwal-rutins": "pages/jadwal-rutins.js",
-  "/jadwal-rutins/[id]": "pages/jadwal-rutins/[id].js"
+  "/users": "pages/users.js",
+  "/": "pages/index.js"
 }
