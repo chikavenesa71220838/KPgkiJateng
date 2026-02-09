@@ -36,7 +36,6 @@ export default config({
     extendExpressApp: (app, context) => {
       app.use(express.json());
 
-      //`context` di sini sudah merupakan Keystone context, tidak perlu dipanggil
       const sudoContext = context.sudo();
       ayatHarianRoute(app, sudoContext);
       startAyatScheduler(sudoContext);

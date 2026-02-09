@@ -5,6 +5,9 @@ import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 import * as AuthSession from "expo-auth-session";
 
+// 1. Tambahkan import ini
+import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
+
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
@@ -19,12 +22,10 @@ export default function LoginScreen() {
     }),
   });
 
-  // Handler ketika login selesai
   useEffect(() => {
     const handleResponse = async () => {
       if (response?.type === "success" && response.authentication?.accessToken) {
         try {
-          // Ambil data user dari Google
           const userInfoResponse = await fetch("https://www.googleapis.com/userinfo/v2/me", {
             headers: { Authorization: `Bearer ${response.authentication.accessToken}` },
           });
@@ -37,13 +38,10 @@ export default function LoginScreen() {
           if (err instanceof Error) {
             console.error("Error ambil data user:", err.message);
             Alert.alert("Error", err.message);
-          } else {
-            console.error("Unknown error:", err);
           }
         }
       } else if (response?.type === "error") {
         Alert.alert("Login Gagal", "Terjadi kesalahan saat login. Coba lagi nanti.");
-        console.error("Response error:", response);
       }
     };
 
@@ -55,10 +53,7 @@ export default function LoginScreen() {
       await promptAsync();
     } catch (err) {
       if (err instanceof Error) {
-        console.error("Login error:", err.message);
         Alert.alert("Login Gagal", err.message);
-      } else {
-        console.error("Unknown error:", err);
       }
     }
   };
@@ -70,14 +65,16 @@ export default function LoginScreen() {
   return (
     <View style={style.container}>
       <Text style={style.title}>Masuk</Text>
+      
       <View style={style.buttonContainer}>
-        <TouchableOpacity
-          style={[style.googleButton, !request && { opacity: 0.6 }]}
+        {/* 2. Gunakan GoogleSigninButton di sini */}
+        <GoogleSigninButton
+          size={GoogleSigninButton.Size.Wide}
+          color={GoogleSigninButton.Color.Dark}
           onPress={handleGoogleLogin}
           disabled={!request}
-        >
-          <Text style={style.googleButtonText}>Masuk dengan Google</Text>
-        </TouchableOpacity>
+          style={{ width: '80%', height: 48, marginBottom: 20 }} // Sesuaikan ukuran
+        />
 
         <TouchableOpacity style={style.guestButton} onPress={handleGuestLogin}>
           <Text style={style.guestButtonText}>Masuk sebagai Tamu</Text>
@@ -97,17 +94,7 @@ const style = StyleSheet.create({
   },
   title: { fontSize: 24, fontWeight: "bold", marginBottom: 40 },
   buttonContainer: { alignItems: "center", width: "100%" },
-  googleButton: {
-    backgroundColor: "#6A8BFF",
-    paddingVertical: 15,
-    borderRadius: 25,
-    width: "80%",
-    marginBottom: 20,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  googleButtonText: { color: "#FFF", fontWeight: "bold", fontSize: 16 },
+  // Style googleButton lama dihapus karena sudah pakai komponen native
   guestButton: {
     backgroundColor: "#E0E0E0",
     paddingVertical: 15,
