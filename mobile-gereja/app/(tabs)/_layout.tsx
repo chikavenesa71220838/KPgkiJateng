@@ -141,6 +141,7 @@ export default function TabLayout() {
           <Pressable
             style={styles.menuItem}
             onPress={() => {
+              router.push("../login");
               setMenuVisible(false);
             }}
           >
