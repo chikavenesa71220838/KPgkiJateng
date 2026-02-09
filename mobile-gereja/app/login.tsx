@@ -1,12 +1,10 @@
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Image } from "react-native";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 import * as AuthSession from "expo-auth-session";
-
-// 1. Tambahkan import ini
-import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
+import { AntDesign } from '@expo/vector-icons'; // Kita pake icon dari Expo aja
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -30,53 +28,38 @@ export default function LoginScreen() {
             headers: { Authorization: `Bearer ${response.authentication.accessToken}` },
           });
           const user = await userInfoResponse.json();
-          console.log("User info:", user);
-
+          
           Alert.alert("Login Berhasil!", `Halo, ${user.name}`);
           router.push("/jadwalIbadah");
         } catch (err) {
           if (err instanceof Error) {
-            console.error("Error ambil data user:", err.message);
             Alert.alert("Error", err.message);
           }
         }
       } else if (response?.type === "error") {
-        Alert.alert("Login Gagal", "Terjadi kesalahan saat login. Coba lagi nanti.");
+        Alert.alert("Login Gagal", "Terjadi kesalahan saat login.");
       }
     };
 
     handleResponse();
   }, [response]);
 
-  const handleGoogleLogin = async () => {
-    try {
-      await promptAsync();
-    } catch (err) {
-      if (err instanceof Error) {
-        Alert.alert("Login Gagal", err.message);
-      }
-    }
-  };
-
-  const handleGuestLogin = () => {
-    router.push("/jadwalIbadah");
-  };
-
   return (
     <View style={style.container}>
       <Text style={style.title}>Masuk</Text>
       
       <View style={style.buttonContainer}>
-        {/* 2. Gunakan GoogleSigninButton di sini */}
-        <GoogleSigninButton
-          size={GoogleSigninButton.Size.Wide}
-          color={GoogleSigninButton.Color.Dark}
-          onPress={handleGoogleLogin}
+        {/* Tombol Google Manual (Aman buat Expo Go) */}
+        <TouchableOpacity 
+          style={[style.googleButton, !request && style.buttonDisabled]} 
+          onPress={() => promptAsync()}
           disabled={!request}
-          style={{ width: '80%', height: 48, marginBottom: 20 }} // Sesuaikan ukuran
-        />
+        >
+          <AntDesign name="google" size={24} color="white" style={style.icon} />
+          <Text style={style.googleButtonText}>Masuk dengan Google</Text>
+        </TouchableOpacity>
 
-        <TouchableOpacity style={style.guestButton} onPress={handleGuestLogin}>
+        <TouchableOpacity style={style.guestButton} onPress={() => router.push("/jadwalIbadah")}>
           <Text style={style.guestButtonText}>Masuk sebagai Tamu</Text>
         </TouchableOpacity>
       </View>
@@ -94,7 +77,36 @@ const style = StyleSheet.create({
   },
   title: { fontSize: 24, fontWeight: "bold", marginBottom: 40 },
   buttonContainer: { alignItems: "center", width: "100%" },
-  // Style googleButton lama dihapus karena sudah pakai komponen native
+  
+  // Style baru buat tombol Google manual
+  googleButton: {
+    flexDirection: "row",
+    backgroundColor: "#DB4437", // Warna merah Google
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "80%",
+    marginBottom: 20,
+    elevation: 2, // Shadow android
+    shadowColor: "#000", // Shadow iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  buttonDisabled: {
+    backgroundColor: "#E57373", // Warna pudar kalau loading
+  },
+  googleButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  icon: {
+    marginRight: 5,
+  },
   guestButton: {
     backgroundColor: "#E0E0E0",
     paddingVertical: 15,
