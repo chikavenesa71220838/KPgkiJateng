@@ -5,14 +5,8 @@ type User {
   id: ID!
   namaUser: String
   emailUser: String
-  password: PasswordState
   googleId: String
-  role: String
   profile: Profile
-}
-
-type PasswordState {
-  isSet: Boolean!
 }
 
 input UserWhereUniqueInput {
@@ -29,9 +23,7 @@ input UserWhereInput {
   id: IDFilter
   namaUser: StringFilter
   emailUser: StringFilter
-  password: PasswordFilter
   googleId: StringFilter
-  role: StringNullableFilter
   profile: ProfileWhereInput
 }
 
@@ -74,30 +66,11 @@ input NestedStringFilter {
   not: NestedStringFilter
 }
 
-input PasswordFilter {
-  isSet: Boolean!
-}
-
-input StringNullableFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  not: StringNullableFilter
-}
-
 input UserOrderByInput {
   id: OrderDirection
   namaUser: OrderDirection
   emailUser: OrderDirection
   googleId: OrderDirection
-  role: OrderDirection
 }
 
 enum OrderDirection {
@@ -108,9 +81,7 @@ enum OrderDirection {
 input UserUpdateInput {
   namaUser: String
   emailUser: String
-  password: String
   googleId: String
-  role: String
   profile: ProfileRelateToOneForUpdateInput
 }
 
@@ -128,9 +99,7 @@ input UserUpdateArgs {
 input UserCreateInput {
   namaUser: String
   emailUser: String
-  password: String
   googleId: String
-  role: String
   profile: ProfileRelateToOneForCreateInput
 }
 
@@ -190,6 +159,20 @@ input ProfileWhereInput {
   domisili: StringFilter
   statusKeanggotaan: StringNullableFilter
   user: UserWhereInput
+}
+
+input StringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  not: StringNullableFilter
 }
 
 input ProfileOrderByInput {

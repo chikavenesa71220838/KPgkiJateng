@@ -54,16 +54,7 @@ var User = (0, import_core.list)({
   fields: {
     namaUser: (0, import_fields.text)({ validation: { isRequired: true } }),
     emailUser: (0, import_fields.text)({ validation: { isRequired: true }, isIndexed: "unique" }),
-    password: (0, import_fields.password)(),
     googleId: (0, import_fields.text)({ isIndexed: "unique" }),
-    role: (0, import_fields.select)({
-      options: [
-        { label: "Admin", value: "admin" },
-        { label: "Jemaat", value: "jemaat" }
-      ],
-      defaultValue: "jemaat",
-      ui: { displayMode: "segmented-control" }
-    }),
     profile: (0, import_fields.relationship)({ ref: "Profile.user", many: false })
   }
 });
