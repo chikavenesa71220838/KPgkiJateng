@@ -15,16 +15,7 @@ export const User = list({
   fields: {
     namaUser: text({ validation: { isRequired: true } }),
     emailUser: text({ validation: { isRequired: true }, isIndexed: "unique" }),
-    password: password(),
     googleId: text({ isIndexed: "unique" }),
-    role: select({
-      options: [
-        { label: "Admin", value: "admin" },
-        { label: "Jemaat", value: "jemaat" },
-      ],
-      defaultValue: "jemaat",
-      ui: { displayMode: "segmented-control" },
-    }),
     profile: relationship({ ref: "Profile.user", many: false }),
   },
 });

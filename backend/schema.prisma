@@ -15,9 +15,7 @@ model User {
   id        String   @id @default(cuid())
   namaUser  String   @default("")
   emailUser String   @unique @default("")
-  password  String?
   googleId  String   @unique @default("")
-  role      String?  @default("jemaat")
   profile   Profile? @relation("Profile_user")
 }
 

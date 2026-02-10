@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "848782878807",
+    "project_id": "mobile-gereja",
+    "storage_bucket": "mobile-gereja.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:848782878807:android:18f367f6425ab48f529b12",
+        "android_client_info": {
+          "package_name": "com.dwiyanbagus.mobilegereja"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "848782878807-jmcg7f65sj586hde2isabmdjtd28rqj7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYfPrOzABVtkgf7kmJBWZm8A91KQmCLr0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "848782878807-jmcg7f65sj586hde2isabmdjtd28rqj7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
