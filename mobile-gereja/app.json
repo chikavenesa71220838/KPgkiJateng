@@ -10,7 +10,8 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.dwiyanbagus.mobilegereja",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "package": "com.dwiyanbagus.mobilegereja",
@@ -29,6 +30,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./withModularHeaders",
       "expo-router",
       "@react-native-google-signin/google-signin",
       "@react-native-firebase/app",
@@ -45,7 +47,16 @@
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+      "expo-build-properties",
+      {
+          "ios": {
+            "useFrameworks": "static",
+            "deploymentTarget": "15.1"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
