@@ -13,10 +13,15 @@ import {
   TouchableOpacity,
   Pressable,
   Platform,
+  Alert,
 } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { API_URL } from "../../utils/api";
+
+// Import Firebase Auth
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const { Navigator } = createBottomTabNavigator();
 const Tabs = withLayoutContext(Navigator);
@@ -33,8 +38,19 @@ export default function TabLayout() {
   const [gereja, setGereja] = useState<Gereja | null>(null);
   const [loading, setLoading] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
+  // State untuk menyimpan data user login
+  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+  
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  // 1. Observer untuk memantau status login Firebase
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+    });
+    return subscriber; // unsubscribe saat unmount
+  }, []);
 
   const fetchGereja = async () => {
     try {
@@ -47,9 +63,7 @@ export default function TabLayout() {
               gerejas {
                 id
                 nama
-                logo {
-                  url
-                }
+                logo { url }
               }
             }
           `,
@@ -78,58 +92,63 @@ export default function TabLayout() {
 
   const handleLogout = () => {
     setMenuVisible(false);
-    router.push("/login");
+    
+    Alert.alert(
+      "Konfirmasi Keluar",
+      "Apakah Anda yakin ingin keluar?",
+      [
+        { text: "Batal", style: "cancel" },
+        { 
+          text: "Ya, Keluar", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await auth().signOut();
+              await GoogleSignin.signOut();
+              router.replace("/home");
+            } catch (error) {
+              console.error("Logout Error:", error);
+              router.replace("/home");
+            }
+          }
+        }
+      ]
+    );
   };
 
-  if (loading) {
-    return null;
-  }
+  if (loading) return null;
 
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.white }}
-      onLayout={onLayoutRootView}>
+    <View style={{ flex: 1, backgroundColor: Colors.white }} onLayout={onLayoutRootView}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={{ flexDirection: "row", alignItems: "center" }}
-          onPress={() => router.push("../profil")}
+          // Jika login ke Profil, jika tidak ke Login
+          onPress={() => router.push(user ? "/profil" : "/login")}
           activeOpacity={0.7}
         >
-          {loading ? (
-            <ActivityIndicator color={Colors.primary} />
+          {gereja?.logo?.url ? (
+            <Image
+              source={{ uri: `${API_URL.replace("/api/graphql", "")}${gereja.logo.url}` }}
+              style={styles.logo}
+            />
           ) : (
-            <>
-              {gereja?.logo?.url ? (
-                <Image
-                  source={{
-                    uri: `${API_URL.replace("/api/graphql", "")}${
-                      gereja.logo.url
-                    }`,
-                  }}
-                  style={styles.logo}
-                />
-              ) : (
-                <View style={[styles.logo, { backgroundColor: "#ccc" }]} />
-              )}
-              <Text style={styles.headerText}>
-                {gereja?.nama || "Nama Gereja"}
-              </Text>
-            </>
+            <View style={[styles.logo, { backgroundColor: "#ccc" }]} />
           )}
+          <View>
+            <Text style={styles.headerText}>{gereja?.nama || "Nama Gereja"}</Text>
+            {user && (
+               <Text style={styles.userGreet}>Halo, {user.displayName?.split(' ')[0]}</Text>
+            )}
+          </View>
         </TouchableOpacity>
 
         <View style={styles.rightButtons}>
-          <TouchableOpacity
-            onPress={() => router.push("../search")}
-            style={styles.iconButton}
-          >
+          <TouchableOpacity onPress={() => router.push("../search")} style={styles.iconButton}>
             <Ionicons name="search" size={24} color={Colors.primary} />
           </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setMenuVisible(!menuVisible)}
-            style={styles.iconButton}
-          >
+          <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)} style={styles.iconButton}>
             <Ionicons name="menu" size={28} color={Colors.primary} />
           </TouchableOpacity>
         </View>
@@ -141,26 +160,27 @@ export default function TabLayout() {
           <Pressable
             style={styles.menuItem}
             onPress={() => {
-              router.push("../login");
+              if (user) {
+                router.push("/profile");
+              } else {
+                router.push("/login");
+              }
               setMenuVisible(false);
             }}
           >
-            <Ionicons
-              name="person-circle-outline"
-              size={20}
-              color={Colors.primary}
-            />
-            <Text style={styles.menuText}>Profil Akun</Text>
+            <Ionicons name="person-circle-outline" size={20} color={Colors.primary} />
+            <Text style={styles.menuText}>{user ? "Profil Akun" : "Masuk / Login"}</Text>
           </Pressable>
-
-          <View style={styles.menuDivider} />
-
-          <Pressable style={styles.menuItem} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
-            <Text style={[styles.menuText, { color: Colors.danger }]}>
-              Log Out
-            </Text>
-          </Pressable>
+          
+          {user && (
+            <>
+              <View style={styles.menuDivider} />
+              <Pressable style={styles.menuItem} onPress={handleLogout}>
+                <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
+                <Text style={[styles.menuText, { color: Colors.danger }]}>Log Out</Text>
+              </Pressable>
+            </>
+          )}
         </View>
       )}
 
@@ -173,46 +193,21 @@ export default function TabLayout() {
             tabBarInactiveTintColor: Colors.white,
             tabBarShowLabel: false,
             tabBarHideOnKeyboard: true,
-
             tabBarStyle: {
               backgroundColor: Colors.primary,
               borderTopWidth: 0,
-              elevation: 0,
               height: Platform.OS === "android" ? 60 : 90,
               paddingBottom: Platform.OS === "android" ? 10 : 30,
             },
-
             tabBarIcon: ({ focused, color }) => {
-              const size = 24;
-
-              if (route.name === "profil" && gereja?.logo?.url) {
-                return (
-                  <Image
-                    source={{
-                      uri: `${API_URL.replace("/api/graphql", "")}${
-                        gereja.logo.url
-                      }`,
-                    }}
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 6,
-                      opacity: focused ? 1 : 0.7,
-                      borderWidth: focused ? 2 : 0,
-                      borderColor: focused ? Colors.accent : "transparent",
-                    }}
-                  />
-                );
-              }
-
               let iconName: keyof typeof Ionicons.glyphMap = "home";
               if (route.name === "home") iconName = "home";
               else if (route.name === "jadwalIbadah") iconName = "calendar";
               else if (route.name === "warta") iconName = "newspaper";
               else if (route.name === "Riwayat") iconName = "time";
-              else if (route.name === "search") iconName = "search";
+              else if (route.name === "profil") iconName = user ? "person" : "log-in";
 
-              return <Ionicons name={iconName} size={size} color={color} />;
+              return <Ionicons name={iconName} size={24} color={color} />;
             },
           })}
         >
@@ -239,25 +234,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     paddingTop: Platform.OS === "android" ? 12 : 50,
   },
-  logo: {
-    width: 40,
-    height: 40,
-    marginRight: 10,
-    borderRadius: 8,
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: Colors.primary,
-  },
-  rightButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  iconButton: {
-    padding: 6,
-    marginLeft: 8,
-  },
+  logo: { width: 40, height: 40, marginRight: 10, borderRadius: 8 },
+  headerText: { fontSize: 18, fontWeight: "bold", color: Colors.primary },
+  userGreet: { fontSize: 12, color: Colors.primary, marginTop: -2 },
+  rightButtons: { flexDirection: "row", alignItems: "center" },
+  iconButton: { padding: 6, marginLeft: 8 },
   dropdownMenu: {
     position: "absolute",
     top: Platform.OS === "android" ? 60 : 100,
@@ -269,20 +250,7 @@ const styles = StyleSheet.create({
     width: 160,
     zIndex: 99,
   },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  menuText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: Colors.primary,
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: Colors.divider,
-    marginVertical: 4,
-  },
+  menuItem: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 12 },
+  menuText: { marginLeft: 8, fontSize: 16, color: Colors.primary },
+  menuDivider: { height: 1, backgroundColor: "#eee", marginVertical: 4 },
 });
