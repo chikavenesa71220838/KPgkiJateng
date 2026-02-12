@@ -8,6 +8,7 @@ import { Platform } from 'react-native';
 
 const palette = {
   warnaUtama: '#207163ff',
+  warnaMuda: '#a3d8d1ff',
   warnaTambahan: '#ffd000ff',
   warnaError: '#d9534f',
   warnaAccordion: '#f8f8f8',
@@ -27,6 +28,7 @@ const palette = {
 export const Colors = {
 
   primary: palette.warnaUtama,
+  muda: palette.warnaMuda,
   accent: palette.warnaTambahan,
   danger: palette.warnaError,
   primaryDark: palette.warnaUtama,
