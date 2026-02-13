@@ -196,8 +196,9 @@ export default function TabLayout() {
             tabBarStyle: {
               backgroundColor: Colors.primary,
               borderTopWidth: 0,
-              height: Platform.OS === "android" ? 60 : 90,
-              paddingBottom: Platform.OS === "android" ? 10 : 30,
+              height: Platform.OS === "android" ? 60 : 60,
+              paddingBottom: Platform.OS === "android" ? 10 : 10,
+              paddingTop:10
             },
             tabBarIcon: ({ focused, color }) => {
               let iconName: keyof typeof Ionicons.glyphMap = "home";
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
     borderColor: Colors.border,
-    paddingTop: Platform.OS === "android" ? 12 : 50,
+    paddingTop: Platform.OS === "android" ? 12 : 12,
   },
   logo: { width: 40, height: 40, marginRight: 10, borderRadius: 8 },
   headerText: { fontSize: 18, fontWeight: "bold", color: Colors.primary },
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
   iconButton: { padding: 6, marginLeft: 8 },
   dropdownMenu: {
     position: "absolute",
-    top: Platform.OS === "android" ? 60 : 100,
+    top: Platform.OS === "android" ? 60 : 60,
     right: 10,
     backgroundColor: Colors.white,
     borderRadius: 8,
