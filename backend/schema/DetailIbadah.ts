@@ -13,6 +13,7 @@ const allowAll = {
 export const DetailIbadah = list({
   access: allowAll,
   fields: {
+    url: text(),
     jam: text({ validation: { isRequired: true } }),
     pengkhotbah: relationship({
       ref: "Pengkhotbah.detailIbadah",

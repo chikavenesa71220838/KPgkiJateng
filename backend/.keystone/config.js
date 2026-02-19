@@ -287,6 +287,7 @@ var allowAll7 = {
 var DetailIbadah = (0, import_core7.list)({
   access: allowAll7,
   fields: {
+    url: (0, import_fields7.text)(),
     jam: (0, import_fields7.text)({ validation: { isRequired: true } }),
     pengkhotbah: (0, import_fields7.relationship)({
       ref: "Pengkhotbah.detailIbadah",
