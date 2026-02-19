@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { API_URL } from "@/utils/api"; 
 import { useRouter } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, Layout } from "../constants/theme";
@@ -30,6 +31,68 @@ const LoginScreen = () => {
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
       const userCredential = await auth().signInWithCredential(googleCredential);
       const user = userCredential.user;
+
+      console.log('Firebase Login Sukses:', user.email);
+
+      // 3. Logika SSO: Cek apakah user sudah ada di KeystoneJS
+      const CHECK_USER_QUERY = {
+        query: `
+          query GetUser($googleId: String!) {
+            users(where: { googleId: { equals: $googleId } }) {
+              id
+              namaUser
+            }
+          }
+        `,
+        variables: { googleId: user.uid },
+      };
+
+      const checkRes = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(CHECK_USER_QUERY),
+      });
+
+      const checkData = await checkRes.json();
+      const existingUser = checkData.data?.users?.[0];
+
+      if (existingUser) {
+        // Jika user ditemukan, langsung lanjut tanpa membuat data baru
+        console.log("User lama terdeteksi (SSO Berhasil):", existingUser.namaUser);
+      } else {
+        // Jika user tidak ditemukan, buat data user baru di KeystoneJS
+        const CREATE_USER_MUTATION = {
+          query: `
+            mutation SyncUser($data: UserCreateInput!) {
+              createUser(data: $data) {
+                id
+                namaUser
+                emailUser
+              }
+            }
+          `,
+          variables: {
+            data: {
+              namaUser: user.displayName ?? "User GKI",
+              emailUser: user.email,
+              googleId: user.uid,
+            },
+          },
+        };
+
+        const createRes = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(CREATE_USER_MUTATION),
+        });
+
+        const createResult = await createRes.json();
+        
+        if (createResult.errors) {
+          throw new Error(createResult.errors[0].message);
+        }
+        console.log("User baru berhasil dibuat di Keystone:", createResult.data.createUser);
+      }
 
       Alert.alert("Sukses", `Selamat datang, ${user.displayName}`);
       router.replace("/home");
