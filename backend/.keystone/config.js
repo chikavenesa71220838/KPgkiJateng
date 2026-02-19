@@ -262,7 +262,7 @@ var JadwalIbadah = (0, import_core6.list)({
         displayMode: "cards",
         cardFields: ["jam", "pengkhotbah", "banner"],
         inlineCreate: { fields: ["jam", "pengkhotbah", "banner"] },
-        inlineEdit: { fields: ["jam", "pengkhotbah", "banner"] }
+        inlineEdit: { fields: ["jam", "pengkhotbah", "banner", "url"] }
       }
     }),
     gereja: (0, import_fields6.relationship)({

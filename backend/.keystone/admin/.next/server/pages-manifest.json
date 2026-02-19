@@ -1,6 +1,9 @@
 {
   "/_app": "pages/_app.js",
-  "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/users": "pages/users.js"
+  "/_error": "pages/_error.js",
+  "/detail-ibadahs/[id]": "pages/detail-ibadahs/[id].js",
+  "/jadwal-ibadahs/[id]": "pages/jadwal-ibadahs/[id].js",
+  "/detail-ibadahs": "pages/detail-ibadahs.js",
+  "/jadwal-ibadahs": "pages/jadwal-ibadahs.js"
 }
