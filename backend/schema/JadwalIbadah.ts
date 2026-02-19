@@ -22,7 +22,7 @@ export const JadwalIbadah = list({
         displayMode: "cards",
         cardFields: ["jam", "pengkhotbah", "banner"],
         inlineCreate: { fields: ["jam", "pengkhotbah", "banner"] },
-        inlineEdit: { fields: ["jam", "pengkhotbah", "banner"] },
+        inlineEdit: { fields: ["jam", "pengkhotbah", "banner", "url"] },
       },
     }),
     gereja: relationship({

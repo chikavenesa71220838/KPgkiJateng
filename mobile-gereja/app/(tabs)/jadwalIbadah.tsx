@@ -7,6 +7,7 @@ import {
   Image,
   ActivityIndicator,
   ImageBackground,
+  Linking,
 } from "react-native";
 import { API_URL } from "../../utils/api";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,6 +19,7 @@ interface DetailIbadah {
   jam: string;
   pengkhotbah?: { nama: string };
   banner?: { url: string };
+  url?: string;
 }
 
 interface Jadwal {
@@ -91,6 +93,7 @@ export default function JadwalIbadah(): React.ReactElement {
                 detailIbadah {
                   id
                   jam
+                  url
                   pengkhotbah { nama }
                   banner { url }
                 }
@@ -255,47 +258,58 @@ export default function JadwalIbadah(): React.ReactElement {
             .slice()
             .sort((a, b) => a.jam.localeCompare(b.jam))
             .map((d) => (
-              <View key={d.id} style={styles.cardContainer}>
-                <View style={styles.cardRow}>
-                  {/* Gambar kiri */}
-                  <View style={styles.leftBox}>
-                    {d.banner?.url ? (
-                      <ImageBackground
-                        source={{
-                          uri: `${API_URL.replace("/api/graphql", "")}${
-                            d.banner.url
-                          }`,
-                        }}
-                        style={styles.imageBackground}
-                        blurRadius={12}
-                      >
-                        <Image
+              <TouchableOpacity
+                key={d.id}
+                activeOpacity={0.7}
+                onPress={async () => {
+                  if (d.url) {
+                    const supported = await Linking.canOpenURL(d.url);
+                    if (supported) {
+                      await Linking.openURL(d.url);
+                    } 
+                  }
+                }}
+              >
+                <View style={styles.cardContainer}>
+                  <View style={styles.cardRow}>
+                    {/* Gambar kiri */}
+                    <View style={styles.leftBox}>
+                      {d.banner?.url ? (
+                        <ImageBackground
                           source={{
-                            uri: `${API_URL.replace("/api/graphql", "")}${
-                              d.banner.url
-                            }`,
+                            uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url
+                              }`,
                           }}
-                          style={styles.imageForeground}
-                        />
-                      </ImageBackground>
-                    ) : (
-                      <View style={styles.imagePlaceholder} />
-                    )}
-                  </View>
+                          style={styles.imageBackground}
+                          blurRadius={12}
+                        >
+                          <Image
+                            source={{
+                              uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url
+                                }`,
+                            }}
+                            style={styles.imageForeground}
+                          />
+                        </ImageBackground>
+                      ) : (
+                        <View style={styles.imagePlaceholder} />
+                      )}
+                    </View>
 
-                  {/* Informasi kanan */}
-                  <View style={styles.rightBox}>
-                    <Text style={styles.category}>
-                      {item.topik || "Tanpa Topik"}
-                    </Text>
-                    <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
-                    <Text style={styles.isiCard}>{d.jam || "-"} WIB</Text>
-                    <Text style={styles.isiCard}>
-                      {d.pengkhotbah?.nama || "-"}
-                    </Text>
+                    {/* Informasi kanan */}
+                    <View style={styles.rightBox}>
+                      <Text style={styles.category}>
+                        {item.topik || "Tanpa Topik"}
+                      </Text>
+                      <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
+                      <Text style={styles.isiCard}>{d.jam || "-"} WIB</Text>
+                      <Text style={styles.isiCard}>
+                        {d.pengkhotbah?.nama || "-"}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))
         )
       ) : (
@@ -306,9 +320,9 @@ export default function JadwalIbadah(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    backgroundColor: Colors.background, 
-    paddingHorizontal: Layout.paddingSmall 
+  container: {
+    backgroundColor: Colors.background,
+    paddingHorizontal: Layout.paddingSmall
   },
 
   title: {
@@ -403,10 +417,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 
-  center: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center" 
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
   },
 
   imageBackground: {
@@ -419,7 +433,7 @@ const styles = StyleSheet.create({
     width: "100%",
     aspectRatio: 1.5,
     resizeMode: "cover",
-    borderTopLeftRadius: Layout.radiusLarge, 
+    borderTopLeftRadius: Layout.radiusLarge,
     borderBottomLeftRadius: Layout.radiusLarge,
   },
 });

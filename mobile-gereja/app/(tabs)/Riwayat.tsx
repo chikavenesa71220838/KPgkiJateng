@@ -6,7 +6,9 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Linking,
 } from "react-native";
+import { TouchableOpacity } from "react-native-gesture-handler";
 import { API_URL } from "../../utils/api";
 import { Colors, FontSize, Layout } from "../../constants/theme";
 
@@ -15,6 +17,7 @@ interface DetailIbadah {
   jam: string;
   pengkhotbah?: { nama: string };
   banner?: { url: string };
+  url?: string;
 }
 
 interface Jadwal {
@@ -61,6 +64,7 @@ export default function Riwayat(): React.ReactElement {
                 detailIbadah {
                   id
                   jam
+                  url
                   pengkhotbah {
                     nama
                   }
@@ -114,8 +118,8 @@ export default function Riwayat(): React.ReactElement {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ 
-        paddingBottom: 50, 
+      contentContainerStyle={{
+        paddingBottom: 50,
         paddingHorizontal: Layout.paddingSmall
       }}
       showsVerticalScrollIndicator={false}
@@ -125,37 +129,50 @@ export default function Riwayat(): React.ReactElement {
       {filteredData.length > 0 ? (
         filteredData.map((item) =>
           item.detailIbadah.map((d) => (
-            <View key={d.id} style={styles.cardContainer}>
-              <View style={styles.cardRow}>
-                {/* Gambar kiri */}
-                <View style={styles.leftBox}>
-                  {d.banner?.url ? (
-                    <Image
-                      source={{
-                        uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
-                      }}
-                      style={styles.image}
-                    />
-                  ) : (
-                    <View style={styles.imagePlaceholder} />
-                  )}
-                </View>
+           <TouchableOpacity
+              key={d.id}
+              activeOpacity={0.7}
+              onPress={async () => {
+                if (d.url) {
+                  const supported = await Linking.canOpenURL(d.url);
+                  if (supported) {
+                    await Linking.openURL(d.url);
+                  }
+                }
+              }}
+            >
+              <View style={styles.cardContainer}>
+                <View style={styles.cardRow}>
+                  {/* Gambar kiri */}
+                  <View style={styles.leftBox}>
+                    {d.banner?.url ? (
+                      <Image
+                        source={{
+                          uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
+                        }}
+                        style={styles.image}
+                      />
+                    ) : (
+                      <View style={styles.imagePlaceholder} />
+                    )}
+                  </View>
 
-                {/* Info kanan */}
-                <View style={styles.rightBox}>
-                  <Text style={styles.category}>
-                    {item.topik || "Tanpa Topik"}
-                  </Text>
-                  <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
-                  <Text style={styles.isiCard}>
-                    {d.jam || "-"} WIB
-                  </Text>
-                  <Text style={styles.isiCard}>
-                    {d.pengkhotbah?.nama || "-"}
-                  </Text>
+                  {/* Info kanan */}
+                  <View style={styles.rightBox}>
+                    <Text style={styles.category}>
+                      {item.topik || "Tanpa Topik"}
+                    </Text>
+                    <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
+                    <Text style={styles.isiCard}>
+                      {d.jam || "-"} WIB
+                    </Text>
+                    <Text style={styles.isiCard}>
+                      {d.pengkhotbah?.nama || "-"}
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           ))
         )
       ) : (
@@ -166,18 +183,18 @@ export default function Riwayat(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    backgroundColor: Colors.background, 
-    paddingHorizontal: Layout.paddingSmall 
+  container: {
+    backgroundColor: Colors.background,
+    paddingHorizontal: Layout.paddingSmall
   },
-  
+
   title: {
     fontSize: FontSize.h1,
     fontWeight: "bold",
     color: Colors.primary,
     marginVertical: Layout.gap,
   },
-  
+
   cardContainer: {
     backgroundColor: Colors.white,
     borderRadius: Layout.radiusLarge,
@@ -187,19 +204,19 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     elevation: 2,
   },
-  
+
   cardRow: {
     flexDirection: "row",
     height: 90,
     borderRadius: Layout.radiusLarge,
     overflow: "hidden",
   },
-  
+
   leftBox: {
     flex: 1,
     backgroundColor: Colors.black,
   },
-  
+
   rightBox: {
     flex: 1.3,
     backgroundColor: Colors.primary,
@@ -207,47 +224,47 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     position: "relative",
   },
-  
+
   image: {
     width: "100%",
     height: "100%",
     resizeMode: "cover",
   },
-  
+
   imagePlaceholder: {
     width: "100%",
     height: "100%",
     backgroundColor: Colors.black,
   },
-  
+
   category: {
     color: Colors.white,
     fontWeight: "bold",
     fontSize: FontSize.small,
     marginBottom: 2,
   },
-  
+
   judul: {
     color: Colors.white,
     fontSize: FontSize.custom.titleCard,
     fontWeight: "600",
     marginBottom: 2,
   },
-  
+
   isiCard: {
     color: Colors.white,
     fontSize: FontSize.custom.dateCard,
   },
-  
+
   emptyText: {
     textAlign: "center",
     color: Colors.textMuted,
     marginTop: 20,
   },
-  
-  center: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center" 
+
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
   },
 });
