@@ -542,6 +542,7 @@ input JadwalIbadahCreateInput {
 
 type DetailIbadah {
   id: ID!
+  url: String
   jam: String
   pengkhotbah: Pengkhotbah
   banner: ImageFieldOutput
@@ -557,6 +558,7 @@ input DetailIbadahWhereInput {
   OR: [DetailIbadahWhereInput!]
   NOT: [DetailIbadahWhereInput!]
   id: IDFilter
+  url: StringFilter
   jam: StringFilter
   pengkhotbah: PengkhotbahWhereInput
   jadwal: JadwalIbadahWhereInput
@@ -564,10 +566,12 @@ input DetailIbadahWhereInput {
 
 input DetailIbadahOrderByInput {
   id: OrderDirection
+  url: OrderDirection
   jam: OrderDirection
 }
 
 input DetailIbadahUpdateInput {
+  url: String
   jam: String
   pengkhotbah: PengkhotbahRelateToOneForUpdateInput
   banner: ImageFieldInput
@@ -592,6 +596,7 @@ input DetailIbadahUpdateArgs {
 }
 
 input DetailIbadahCreateInput {
+  url: String
   jam: String
   pengkhotbah: PengkhotbahRelateToOneForCreateInput
   banner: ImageFieldInput

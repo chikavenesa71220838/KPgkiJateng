@@ -91,6 +91,7 @@ model JadwalIbadah {
 
 model DetailIbadah {
   id               String        @id @default(cuid())
+  url              String        @default("")
   jam              String        @default("")
   pengkhotbah      Pengkhotbah?  @relation("DetailIbadah_pengkhotbah", fields: [pengkhotbahId], references: [id])
   pengkhotbahId    String?       @map("pengkhotbah")
