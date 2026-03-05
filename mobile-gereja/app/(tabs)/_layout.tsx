@@ -1,4 +1,4 @@
-import { withLayoutContext, useRouter } from "expo-router";
+import { withLayoutContext, useRouter, Href } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useCallback, useEffect, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -14,6 +14,7 @@ import {
   Pressable,
   Platform,
   Alert,
+  useWindowDimensions,
 } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -44,8 +45,16 @@ export default function TabLayout() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  const {width} = useWindowDimensions();
+  const isDesktop = width >= 768;
+
   // 1. Observer untuk memantau status login Firebase
   useEffect(() => {
+    if (Platform.OS === 'web') {
+    setLoading(false); // Langsung set false agar loading kelar
+    return;
+  }
+
     const subscriber = auth().onAuthStateChanged((currentUser) => {
       setUser(currentUser);
     });
@@ -103,8 +112,12 @@ export default function TabLayout() {
           style: "destructive",
           onPress: async () => {
             try {
-              await auth().signOut();
-              await GoogleSignin.signOut();
+              if (Platform.OS !== 'web') {
+               await auth().signOut();
+               await GoogleSignin.signOut();
+            }
+              // await auth().signOut();
+              // await GoogleSignin.signOut();
               router.replace("/home");
             } catch (error) {
               console.error("Logout Error:", error);
@@ -117,6 +130,16 @@ export default function TabLayout() {
   };
 
   if (loading) return null;
+
+  const SidebarItem = ({ name, icon, route }: { name: string, icon: keyof typeof Ionicons.glyphMap, route: Href }) => (
+    <TouchableOpacity 
+      style={styles.sidebarItem} 
+      onPress={() => router.replace(route)}
+    >
+      <Ionicons name={icon} size={24} color={Colors.primary} />
+      <Text style={styles.sidebarText}>{name}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.white }} onLayout={onLayoutRootView}>
@@ -254,4 +277,26 @@ const styles = StyleSheet.create({
   menuItem: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 12 },
   menuText: { marginLeft: 8, fontSize: 16, color: Colors.primary },
   menuDivider: { height: 1, backgroundColor: "#eee", marginVertical: 4 },
+
+  sidebarContainer: {
+    width: 250, // Lebar sidebar
+    backgroundColor: Colors.white,
+    borderRightWidth: 1,
+    borderColor: Colors.border,
+    paddingTop: 20,
+  },
+  sidebarItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  sidebarText: {
+    marginLeft: 15,
+    fontSize: 16,
+    color: Colors.primary,
+    fontWeight: '500',
+  }
 });
