@@ -7,12 +7,22 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
+import { useEffect } from "react";
+import * as ScreenOrientation from "expo-screen-orientation";
+
 export const unstable_settings = {
   anchor: "(tabs)",
 };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    async function unlockRotation() {
+      await ScreenOrientation.unlockAsync(); 
+    }
+    unlockRotation();
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
