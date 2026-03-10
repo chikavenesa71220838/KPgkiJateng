@@ -3,7 +3,7 @@
     "name": "Mobile GKI Gejayan",
     "slug": "mobile-gereja",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/logoAPLIKASI.png",
     "scheme": "mobilegereja",
     "userInterfaceStyle": "automatic",
@@ -14,6 +14,8 @@
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
+      "requireFullScreen": false,
+      "softwareKeyboardLayoutMode": "pan",
       "package": "com.dwiyanbagus.mobilegereja",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
