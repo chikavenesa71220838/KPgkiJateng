@@ -37,6 +37,7 @@ var import_session = require("@keystone-6/core/session");
 var import_path = __toESM(require("path"));
 var import_express = __toESM(require("express"));
 var import_config = require("dotenv/config");
+var import_firebase_admin = __toESM(require("firebase-admin"));
 
 // schema/User.ts
 var import_core = require("@keystone-6/core");
@@ -218344,14 +218345,27 @@ function startAyatScheduler(context) {
 }
 
 // keystone.ts
+var serviceAccountPath = import_path.default.resolve(process.cwd(), "serviceAccountKey.json");
+if (!import_firebase_admin.default.apps.length) {
+  try {
+    import_firebase_admin.default.initializeApp({
+      credential: import_firebase_admin.default.credential.cert(serviceAccountPath)
+    });
+    console.log("\u{1F525} Firebase Admin Initialized \u2705");
+  } catch (error) {
+    console.error("\u{1F6A8} Gagal membaca isi file JSON Firebase:", error.message);
+    process.exit(1);
+  }
+}
 var sessionSecret = process.env.SESSION_SECRET || "supersecret";
 var session = (0, import_session.statelessSessions)({
   secret: sessionSecret,
   maxAge: 60 * 60 * 24 * 30
-  // 30 hari
+  // Durasi sesi 30 hari
 });
 var keystone_default = (0, import_core13.config)({
   db: {
+    // Menggunakan SQLite sesuai dengan spesifikasi kebutuhan software
     provider: "sqlite",
     url: process.env.DATABASE_URL || "file:./mobileGereja.db"
   },
@@ -218368,11 +218382,40 @@ var keystone_default = (0, import_core13.config)({
     options: { host: "0.0.0.0" },
     extendExpressApp: (app, context) => {
       app.use(import_express.default.json());
+      app.use("/api/graphql", async (req, res, next) => {
+        if (req.body?.operationName === "IntrospectionQuery") {
+          return next();
+        }
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith("Bearer ")) {
+          const token = authHeader.split("Bearer ")[1];
+          try {
+            const decodedToken = await import_firebase_admin.default.auth().verifyIdToken(token);
+            req.user = decodedToken;
+            return next();
+          } catch (error) {
+            console.error("Token Verification Failed", error.message);
+            return res.status(401).json({
+              errors: [{ message: `Sesi tidak valid: ${error.message}` }]
+            });
+          }
+        }
+        if (process.env.NODE_ENV === "development" && !authHeader) {
+          return next();
+        }
+        return res.status(401).json({
+          errors: [{ message: "Akses ditolak. Token autentikasi diperlukan." }]
+        });
+      });
       const sudoContext = context.sudo();
       ayatHarianRoute(app, sudoContext);
       startAyatScheduler(sudoContext);
       app.get("/api/status", (req, res) => {
-        res.json({ status: "API is running \u2705" });
+        res.json({
+          status: "API is running",
+          security: "Firebase Admin Active",
+          time: (/* @__PURE__ */ new Date()).toISOString()
+        });
       });
     }
   },
@@ -218393,6 +218436,7 @@ var keystone_default = (0, import_core13.config)({
     }
   },
   ui: {
+    // Proteksi antarmuka admin untuk kepentingan akademis secara online
     isAccessAllowed: (context) => {
       if (process.env.NODE_ENV === "development") return true;
       return !!context.session?.data && context.session.data.role === "admin";
