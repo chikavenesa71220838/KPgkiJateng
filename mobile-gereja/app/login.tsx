@@ -1,11 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import auth from "@react-native-firebase/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { API_URL } from "@/utils/api";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../constants/theme";
+import { useState } from "react";
 
 // Konfigurasi Google Sign-In menggunakan Web Client ID dari Firebase Console
 GoogleSignin.configure({
@@ -14,8 +15,10 @@ GoogleSignin.configure({
 
 const LoginScreen = () => {
   const router = useRouter();
+  const [isLoading, setIsLoading] = React.useState(false);
 
   async function onGoogleButtonPress() {
+    setIsLoading(true);
     try {
       // 1. Inisialisasi Google Sign-In dan perolehan ID Token
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
@@ -37,21 +40,30 @@ const LoginScreen = () => {
       // 4. Logika SSO: Cek user berdasarkan googleId ATAU emailUser [cite: 185]
       // Pengecekan emailUser bertujuan mencegah error Unique Constraint pada database
       const CHECK_USER_QUERY = {
+        // query: `
+        //   query GetUser($googleId: String!, $email: String!) {
+        //     users(where: { 
+        //       OR: [
+        //         { googleId: { equals: $googleId } },
+        //         { emailUser: { equals: $email } }
+        //       ]
+        //     }) {
+        //       id
+        //       googleId
+        //       namaUser
+        //     }
+        //   }
+        // `,
+        // variables: { googleId: user.uid, email: user.email },
         query: `
-          query GetUser($googleId: String!, $email: String!) {
-            users(where: { 
-              OR: [
-                { googleId: { equals: $googleId } },
-                { emailUser: { equals: $email } }
-              ]
-            }) {
+          query GetUser($googleId: String!) {
+            users(where: { googleId: { equals: $googleId } }) {
               id
-              googleId
               namaUser
             }
           }
         `,
-        variables: { googleId: user.uid, email: user.email },
+        variables: { googleId: user.uid },
       };
 
       const checkRes = await fetch(API_URL, {
@@ -101,6 +113,8 @@ const LoginScreen = () => {
           if (!updateRes.ok || updateData.errors) throw new Error("Gagal menghubungkan akun.");
           console.log("Akun berhasil dihubungkan.");
         }
+        // Alert.alert("Sukses", `Selamat datang kembali, ${user.displayName}`);
+        router.replace("/home");
       } else {
         // SKENARIO B: Registrasi Otomatis Jemaat Baru
         const CREATE_USER_MUTATION = {
@@ -129,20 +143,35 @@ const LoginScreen = () => {
           body: JSON.stringify(CREATE_USER_MUTATION),
         });
 
-        const createData = await createRes.json();
-        if (!createRes.ok || createData.errors) throw new Error("Gagal membuat data jemaat baru.");
-        console.log("User baru berhasil dibuat.");
+        const createResult = await createRes.json();
+
+        if (createResult.errors) {
+          throw new Error(createResult.errors[0].message);
+        }
+        console.log("User baru berhasil dibuat di Keystone:", createResult.data.createUser);
+        
+        // Arahkan user baru ke halaman isi form profil
+        // Alert.alert("Halo!", `Selamat datang, ${user.displayName}. Silakan lengkapi profil Anda terlebih dahulu.`);
+        router.replace("/profile");
+
+        // const createData = await createRes.json();
+        // if (!createRes.ok || createData.errors) throw new Error("Gagal membuat data jemaat baru.");
+        // console.log("User baru berhasil dibuat.");
+
+
       }
 
       // Berhasil masuk ke sistem
-      Alert.alert("Sukses", `Selamat datang, ${user.displayName}`);
-      router.replace("/home");
+      // Alert.alert("Sukses", `Selamat datang, ${user.displayName}`);
+      // router.replace("/home");
 
     } catch (error: any) {
       console.error("Login Error:", error);
       // Fail-Safe: Paksa logout dari Firebase jika sinkronisasi backend gagal [cite: 219]
       await auth().signOut(); 
       Alert.alert("Login Gagal", error.message || "Terjadi kesalahan sistem.");
+    } finally{
+      setIsLoading(false);
     }
   }
 
@@ -151,12 +180,26 @@ const LoginScreen = () => {
       <View style={styles.card}>
         <Text style={styles.title}>Masuk</Text>
 
-        <TouchableOpacity style={styles.googleButton} onPress={onGoogleButtonPress}>
-          <Ionicons name="logo-google" size={20} color={Colors.primary} />
-          <Text style={styles.googleText}>Masuk dengan Google</Text>
+        <TouchableOpacity 
+          style={[styles.googleButton, isLoading && { opacity: 0.7 }]} 
+          onPress={onGoogleButtonPress}
+          disabled={isLoading}
+        >
+          {/* <Ionicons name="logo-google" size={20} color={Colors.primary} />
+          <Text style={styles.googleText}>Masuk dengan Google</Text> */}
+          {isLoading ? (
+            <ActivityIndicator size="small" color={Colors.primary} />
+          ) : (
+            <Ionicons name="logo-google" size={20} color={Colors.primary} />
+          )}
+          <Text style={styles.googleText}>
+            {isLoading ? "Memuat..." : "Masuk dengan Google"}
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.guestButton} onPress={() => router.replace("/home")}>
+        <TouchableOpacity style={[styles.guestButton, isLoading && { opacity: 0.7 }]} 
+          onPress={() => router.replace("/home")}
+          disabled={isLoading}>
           <Text style={styles.guestText}>Lanjutkan sebagai Tamu</Text>
         </TouchableOpacity>
       </View>

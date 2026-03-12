@@ -148,7 +148,7 @@ export default function TabLayout() {
       onPress={() => router.replace(route)}
     >
       <Ionicons name={icon} size={24} color={isActive ? Colors.accent : Colors.white} />
-      <Text style={[styles.sidebarText, isActive && styles.sidebarTextActive]}>{name}</Text>
+      <Text style={[styles.sidebarText, isActive && styles.sidebartextActive]}>{name}</Text>
     </TouchableOpacity>
   );
   return (
