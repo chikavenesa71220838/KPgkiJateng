@@ -40,21 +40,6 @@ const LoginScreen = () => {
       // 4. Logika SSO: Cek user berdasarkan googleId ATAU emailUser [cite: 185]
       // Pengecekan emailUser bertujuan mencegah error Unique Constraint pada database
       const CHECK_USER_QUERY = {
-        // query: `
-        //   query GetUser($googleId: String!, $email: String!) {
-        //     users(where: { 
-        //       OR: [
-        //         { googleId: { equals: $googleId } },
-        //         { emailUser: { equals: $email } }
-        //       ]
-        //     }) {
-        //       id
-        //       googleId
-        //       namaUser
-        //     }
-        //   }
-        // `,
-        // variables: { googleId: user.uid, email: user.email },
         query: `
           query GetUser($googleId: String!) {
             users(where: { googleId: { equals: $googleId } }) {
@@ -153,17 +138,7 @@ const LoginScreen = () => {
         // Arahkan user baru ke halaman isi form profil
         // Alert.alert("Halo!", `Selamat datang, ${user.displayName}. Silakan lengkapi profil Anda terlebih dahulu.`);
         router.replace("/profile");
-
-        // const createData = await createRes.json();
-        // if (!createRes.ok || createData.errors) throw new Error("Gagal membuat data jemaat baru.");
-        // console.log("User baru berhasil dibuat.");
-
-
       }
-
-      // Berhasil masuk ke sistem
-      // Alert.alert("Sukses", `Selamat datang, ${user.displayName}`);
-      // router.replace("/home");
 
     } catch (error: any) {
       console.error("Login Error:", error);

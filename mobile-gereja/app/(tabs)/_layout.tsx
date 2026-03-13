@@ -133,15 +133,6 @@ export default function TabLayout() {
 
   if (loading) return null;
 
-  // const SidebarItem = ({ name, icon, route,isActive }: { name: string, icon: keyof typeof Ionicons.glyphMap, route: Href }) => (
-  //   <TouchableOpacity 
-  //     style={styles.sidebarItem} 
-  //     onPress={() => router.replace(route)}
-  //   >
-  //     <Ionicons name={icon} size={24} color={Colors.primary} />
-  //     <Text style={styles.sidebarText}>{name}</Text>
-  //   </TouchableOpacity>
-  // );
   const SidebarItem = ({ name, icon, route, isActive }: { name: string, icon: keyof typeof Ionicons.glyphMap, route: Href, isActive: boolean }) => (
     <TouchableOpacity 
       style={[styles.sidebarItem, isActive && styles.sidebarItemActive]} 
@@ -219,40 +210,6 @@ export default function TabLayout() {
 
       {/* Content & Tabs */}
       <View style={{ flex: 1, flexDirection: isLandscape ? "row" : "column" }}>
-        {/* <Tabs
-          screenOptions={({ route }) => ({
-            headerShown: false,
-            tabBarActiveTintColor: Colors.accent,
-            tabBarInactiveTintColor: Colors.white,
-            tabBarShowLabel: false,
-            tabBarHideOnKeyboard: true,
-            tabBarStyle: {
-              backgroundColor: Colors.primary,
-              borderTopWidth: 0,
-              height: Platform.OS === "android" ? 60 : 60,
-              paddingBottom: Platform.OS === "android" ? 10 : 10,
-              paddingTop:10
-            },
-            tabBarIcon: ({ focused, color }) => {
-              let iconName: keyof typeof Ionicons.glyphMap = "home";
-              if (route.name === "home") iconName = "home";
-              else if (route.name === "jadwalIbadah") iconName = "calendar";
-              else if (route.name === "warta") iconName = "newspaper";
-              else if (route.name === "Riwayat") iconName = "time";
-              else if (route.name === "profil") iconName = user ? "person" : "log-in";
-
-              return <Ionicons name={iconName} size={24} color={color} />;
-            },
-          })}
-        >
-          <Tabs.Screen name="home" />
-          <Tabs.Screen name="jadwalIbadah" />
-          <Tabs.Screen name="warta" />
-          <Tabs.Screen name="Riwayat" />
-          <Tabs.Screen name="profil" />
-        </Tabs>
-      </View>
-    </View> */}
     {/* SIDEBAR - Hanya muncul jika Landscape */}
         {isLandscape && (
           <View style={styles.sidebarContainer}>
