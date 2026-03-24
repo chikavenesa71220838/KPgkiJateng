@@ -2,16 +2,14 @@ import Constants from "expo-constants";
 import { Platform } from "react-native";
 
 function getApiUrl() {
+  if (Platform.OS === "web") {
+    return "http://localhost:3000/api/graphql";
+  }
   const productionUrl =
     "https://uninvertible-mai-unmeandering.ngrok-free.dev/api/graphql";
 
   if (process.env.NODE_ENV === "production") {
     return productionUrl;
-  }
-
-  // Web
-  if (Platform.OS === "web") {
-    return "http://localhost:3000/api/graphql";
   }
 
   const hostUri = Constants.expoConfig?.hostUri;

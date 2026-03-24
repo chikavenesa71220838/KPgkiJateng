@@ -8,6 +8,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "electron": "electron main.js",
+    "build:web": "npx expo export",
     "lint": "expo lint"
   },
   "dependencies": {
@@ -21,6 +23,7 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/material-top-tabs": "^7.3.7",
     "@react-navigation/native": "^7.1.8",
+    "electron-serve": "^3.0.1",
     "expo": "^54.0.22",
     "expo-auth-session": "~7.0.8",
     "expo-build-properties": "~1.0.10",
@@ -57,6 +60,7 @@
     "@react-native-community/cli": "^20.0.2",
     "@types/react": "~19.1.10",
     "@types/react-dom": "~19.1.7",
+    "electron": "^41.0.2",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"
