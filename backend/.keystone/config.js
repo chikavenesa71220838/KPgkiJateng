@@ -54,8 +54,16 @@ var User = (0, import_core.list)({
   access: allowAll,
   fields: {
     namaUser: (0, import_fields.text)({ validation: { isRequired: true } }),
-    emailUser: (0, import_fields.text)({ validation: { isRequired: true }, isIndexed: "unique" }),
-    googleId: (0, import_fields.text)({ isIndexed: "unique" }),
+    emailUser: (0, import_fields.text)({ validation: { isRequired: true } }),
+    googleId: (0, import_fields.text)(),
+    statusAktivasi: (0, import_fields.select)({
+      options: [
+        { label: "Aktif", value: "aktif" },
+        { label: "Non-Aktif (Dihapus)", value: "nonaktif" }
+      ],
+      defaultValue: "aktif",
+      ui: { displayMode: "segmented-control" }
+    }),
     profile: (0, import_fields.relationship)({ ref: "Profile.user", many: false })
   }
 });

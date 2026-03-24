@@ -12,11 +12,12 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  namaUser  String   @default("")
-  emailUser String   @unique @default("")
-  googleId  String   @unique @default("")
-  profile   Profile? @relation("Profile_user")
+  id             String   @id @default(cuid())
+  namaUser       String   @default("")
+  emailUser      String   @default("")
+  googleId       String   @default("")
+  statusAktivasi String?  @default("aktif")
+  profile        Profile? @relation("Profile_user")
 }
 
 model Profile {
