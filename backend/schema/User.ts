@@ -1,5 +1,5 @@
 import { list } from "@keystone-6/core";
-import { text, select, relationship, password } from "@keystone-6/core/fields";
+import { text, select, relationship } from "@keystone-6/core/fields";
 
 const allowAll = {
   operation: {
@@ -14,8 +14,17 @@ export const User = list({
   access: allowAll,
   fields: {
     namaUser: text({ validation: { isRequired: true } }),
-    emailUser: text({ validation: { isRequired: true }, isIndexed: "unique" }),
-    googleId: text({ isIndexed: "unique" }),
+    emailUser: text({ validation: { isRequired: true } }),
+    googleId: text(),
+    statusAktivasi: select({
+      options: [
+        { label: "Aktif", value: "aktif" },
+        { label: "Non-Aktif (Dihapus)", value: "nonaktif" },
+      ],
+      defaultValue: "aktif",
+      ui: { displayMode: "segmented-control" },
+    }),
+    
     profile: relationship({ ref: "Profile.user", many: false }),
   },
 });

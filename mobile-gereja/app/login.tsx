@@ -39,18 +39,24 @@ const LoginScreen = () => {
 
       // 4. Logika SSO: Cek user berdasarkan googleId ATAU emailUser [cite: 185]
       // Pengecekan emailUser bertujuan mencegah error Unique Constraint pada database
-      const CHECK_USER_QUERY = {
+const CHECK_USER_QUERY = {
         query: `
-          query GetUser($googleId: String!) {
-            users(where: { googleId: { equals: $googleId } }) {
+          query GetUser($googleId: String!, $email: String!) {
+            users(where: { 
+              statusAktivasi: { equals: "aktif" },
+              OR: [
+                { googleId: { equals: $googleId } },
+                { emailUser: { equals: $email } }
+              ]
+            }) {
               id
+              googleId
               namaUser
             }
           }
         `,
-        variables: { googleId: user.uid },
+        variables: { googleId: user.uid, email: user.email },
       };
-
       const checkRes = await fetch(API_URL, {
         method: "POST",
         headers: {

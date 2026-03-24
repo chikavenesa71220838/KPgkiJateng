@@ -6,10 +6,22 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import auth from "@react-native-firebase/auth";
+import { useRouter } from "expo-router";
+import { API_URL } from "../utils/api"; 
+// ==========================================
+// TAMBAHAN IMPORT GOOGLE SIGN IN
+// ==========================================
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 export default function ProfilScreen() {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [form, setForm] = useState({
     nama: "",
     alamat: "",
@@ -31,8 +43,118 @@ export default function ProfilScreen() {
   const handleSave = () => {
     alert(`Profil berhasil disimpan!`);
   };
+  const executeDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const user = auth().currentUser;
+      if (!user) throw new Error("Anda belum login.");
 
- 
+      const firebaseToken = await user.getIdToken(true);
+
+      // 1. CARI ID USER DI BACKEND YANG STATUSNYA AKTIF
+      const GET_USER_QUERY = {
+        query: `
+          query GetActiveUser($googleId: String!) {
+            users(where: { 
+              statusAktivasi: { equals: "aktif" },
+              googleId: { equals: $googleId }
+            }) {
+              id
+            }
+          }
+        `,
+        variables: { googleId: user.uid },
+      };
+
+      const resUser = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${firebaseToken}`,
+        },
+        body: JSON.stringify(GET_USER_QUERY),
+      });
+
+      const dataUser = await resUser.json();
+      const backendUsers = dataUser?.data?.users;
+
+      if (!backendUsers || backendUsers.length === 0) {
+        throw new Error("Akun aktif tidak ditemukan di server.");
+      }
+
+      const backendId = backendUsers[0].id;
+
+      // 2. SOFT DELETE DI BACKEND (Ubah jadi nonaktif)
+      const SOFT_DELETE_MUTATION = {
+        query: `
+          mutation SoftDeleteUser($id: ID!) {
+            updateUser(where: { id: $id }, data: { statusAktivasi: "nonaktif" }) {
+              id
+              statusAktivasi
+            }
+          }
+        `,
+        variables: { id: backendId },
+      };
+
+      const resDelete = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${firebaseToken}`,
+        },
+        body: JSON.stringify(SOFT_DELETE_MUTATION),
+      });
+
+      const dataDelete = await resDelete.json();
+      if (!resDelete.ok || dataDelete.errors) {
+        throw new Error("Gagal menonaktifkan akun di server.");
+      }
+
+      // 3. HARD DELETE DI FIREBASE
+      await user.delete();
+
+      // 4. HAPUS CACHE GOOGLE SIGN-IN
+      try {
+        await GoogleSignin.revokeAccess(); // Cabut izin aplikasi
+        await GoogleSignin.signOut();      // Logout dari SDK Google
+      } catch (googleError) {
+        console.log("Catatan: Gagal signout dari Google SDK", googleError);
+      }
+
+      Alert.alert("Sukses", "Akun Anda berhasil dihapus permanen.");
+      
+      // 5. TENDANG KE HALAMAN LOGIN
+      router.replace("/login");
+
+    } catch (error: any) {
+      console.error("Error Delete Account:", error);
+      setIsDeleting(false);
+
+      // Tangani kasus keamanan Firebase (Butuh Re-auth)
+      if (error.code === "auth/requires-recent-login") {
+        Alert.alert(
+          "Keamanan",
+          "Untuk menghapus akun, silakan logout dan login kembali terlebih dahulu untuk memverifikasi identitas Anda."
+        );
+      } else {
+        Alert.alert("Gagal Hapus Akun", error.message);
+      }
+    }
+  };
+
+  const handleDeletePrompt = () => {
+    Alert.alert(
+      "Hapus Akun",
+      "Apakah Anda yakin ingin menghapus akun? Data profil Anda tidak akan ditampilkan lagi dan Anda akan dikeluarkan dari aplikasi.",
+      [
+        { text: "Batal", style: "cancel" },
+        { text: "Ya, Hapus", style: "destructive", onPress: executeDelete },
+      ]
+    );
+  };
+  // ==========================================================
+
   const bulanMap: Record<string, string> = {
     Januari: "01",
     Februari: "02",
@@ -61,7 +183,7 @@ export default function ProfilScreen() {
     setBulan(b);
     setTahun(t);
     if (b && t) {
-      const bulanNum = bulanMap[b]; // ambil angka bulan
+      const bulanNum = bulanMap[b];
       handleChange("tanggalLahir", `${t}-${bulanNum}`);
     }
   };
@@ -105,6 +227,7 @@ export default function ProfilScreen() {
         value={form.email}
         onChangeText={(v) => handleChange("email", v)}
         keyboardType="email-address"
+        editable={false}
       />
 
       <Text style={styles.label}>Jenis Kelamin *</Text>
@@ -201,24 +324,15 @@ export default function ProfilScreen() {
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={styles.btnHapus}
-        onPress={() =>
-          setForm({
-            nama: "",
-            alamat: "",
-            kodePos: "",
-            noWa: "",
-            email: "",
-            jenisKelamin: "",
-            pendidikan: "",
-            pekerjaan: "",
-            statusKawin: "",
-            statusKeanggotaan: "",
-            tanggalLahir: "",
-          })
-        }
+        style={[styles.btnHapus, isDeleting && { backgroundColor: "#ccc" }]} 
+        onPress={handleDeletePrompt} 
+        disabled={isDeleting} 
       >
-        <Text style={styles.btnText}>Hapus</Text>
+        {isDeleting ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.btnText}>Hapus Akun</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );
@@ -256,9 +370,9 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   btnText: { color: "#fff", fontWeight: "bold" },
-    title: { 
-    fontSize: 30, 
-    fontWeight: "bold", 
-    marginBottom: 20 
+  title: {
+    fontSize: 30,
+    fontWeight: "bold",
+    marginBottom: 20,
   },
 });
