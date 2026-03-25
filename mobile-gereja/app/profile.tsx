@@ -8,6 +8,8 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
+  ToastAndroid,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import auth from "@react-native-firebase/auth";
@@ -51,19 +53,22 @@ export default function ProfilScreen() {
 
       const firebaseToken = await user.getIdToken(true);
 
-      // 1. CARI ID USER DI BACKEND YANG STATUSNYA AKTIF
+      // 1. CARI ID USER DI BACKEND
       const GET_USER_QUERY = {
         query: `
-          query GetActiveUser($googleId: String!) {
+          query GetActiveUser($googleId: String!, $email: String!) {
             users(where: { 
               statusAktivasi: { equals: "aktif" },
-              googleId: { equals: $googleId }
+              OR: [
+                { googleId: { equals: $googleId } },
+                { emailUser: { equals: $email } }
+              ]
             }) {
               id
             }
           }
         `,
-        variables: { googleId: user.uid },
+        variables: { googleId: user.uid, email: user.email },
       };
 
       const resUser = await fetch(API_URL, {
@@ -78,64 +83,61 @@ export default function ProfilScreen() {
       const dataUser = await resUser.json();
       const backendUsers = dataUser?.data?.users;
 
-      if (!backendUsers || backendUsers.length === 0) {
-        throw new Error("Akun aktif tidak ditemukan di server.");
-      }
-
-      const backendId = backendUsers[0].id;
-
-      // 2. SOFT DELETE DI BACKEND (Ubah jadi nonaktif)
-      const SOFT_DELETE_MUTATION = {
-        query: `
-          mutation SoftDeleteUser($id: ID!) {
-            updateUser(where: { id: $id }, data: { statusAktivasi: "nonaktif" }) {
-              id
-              statusAktivasi
+      // 2. CEK & SOFT DELETE DI BACKEND
+      if (backendUsers && backendUsers.length > 0) {
+        const backendId = backendUsers[0].id;
+        const SOFT_DELETE_MUTATION = {
+          query: `
+            mutation SoftDeleteUser($id: ID!) {
+              updateUser(where: { id: $id }, data: { statusAktivasi: "nonaktif" }) {
+                id
+              }
             }
-          }
-        `,
-        variables: { id: backendId },
-      };
+          `,
+          variables: { id: backendId },
+        };
 
-      const resDelete = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${firebaseToken}`,
-        },
-        body: JSON.stringify(SOFT_DELETE_MUTATION),
-      });
-
-      const dataDelete = await resDelete.json();
-      if (!resDelete.ok || dataDelete.errors) {
-        throw new Error("Gagal menonaktifkan akun di server.");
+        await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${firebaseToken}`,
+          },
+          body: JSON.stringify(SOFT_DELETE_MUTATION),
+        });
       }
 
-      // 3. HARD DELETE DI FIREBASE
-      await user.delete();
+      // ======================================================
+      // PERUBAHAN KRUSIAL DI BAWAH INI
+      // ======================================================
 
-      // 4. HAPUS CACHE GOOGLE SIGN-IN
+      // 3. HAPUS CACHE GOOGLE SIGN-IN DULUAN! (Sebelum Firebase dibunuh)
       try {
-        await GoogleSignin.revokeAccess(); // Cabut izin aplikasi
-        await GoogleSignin.signOut();      // Logout dari SDK Google
+        await GoogleSignin.revokeAccess(); 
+        await GoogleSignin.signOut();      
       } catch (googleError) {
         console.log("Catatan: Gagal signout dari Google SDK", googleError);
       }
 
-      Alert.alert("Sukses", "Akun Anda berhasil dihapus permanen.");
-      
-      // 5. TENDANG KE HALAMAN LOGIN
+      // 4. BARU HARD DELETE DI FIREBASE
+      await user.delete();
+
+      // 5. GANTI ALERT JADI TOAST (Mencegah Force Close)
+      if (Platform.OS === 'android') {
+        ToastAndroid.show("Akun berhasil dihapus permanen.", ToastAndroid.SHORT);
+      }
+
+      // 6. TENDANG KE HALAMAN LOGIN
       router.replace("/login");
 
     } catch (error: any) {
       console.error("Error Delete Account:", error);
       setIsDeleting(false);
 
-      // Tangani kasus keamanan Firebase (Butuh Re-auth)
       if (error.code === "auth/requires-recent-login") {
         Alert.alert(
           "Keamanan",
-          "Untuk menghapus akun, silakan logout dan login kembali terlebih dahulu untuk memverifikasi identitas Anda."
+          "Silakan logout dan login kembali terlebih dahulu untuk memverifikasi identitas Anda sebelum menghapus akun."
         );
       } else {
         Alert.alert("Gagal Hapus Akun", error.message);
