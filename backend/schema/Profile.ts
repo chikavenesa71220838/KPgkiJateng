@@ -13,6 +13,7 @@ const allowAll = {
 export const Profile = list({
   access: allowAll,
   fields: {
+    nama: text(),
     alamat: text(),
     nomorWa: text(),
     jenisKelamin: select({
@@ -42,7 +43,12 @@ export const Profile = list({
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
           const file = resolvedData.fotoProfil;
-          if (file && file.mimetype !== "image/jpeg") {
+          // PERBAIKAN: Gunakan .extension dan pastikan file benar-benar sedang diupload
+          if (
+            file &&
+            file.extension &&
+            !["jpg", "jpeg"].includes(file.extension)
+          ) {
             addValidationError("Hanya file JPEG yang diperbolehkan.");
           }
         },
