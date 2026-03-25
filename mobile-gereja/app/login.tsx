@@ -143,7 +143,7 @@ const CHECK_USER_QUERY = {
         
         // Arahkan user baru ke halaman isi form profil
         // Alert.alert("Halo!", `Selamat datang, ${user.displayName}. Silakan lengkapi profil Anda terlebih dahulu.`);
-        router.replace("/profile");
+        router.replace("/completeProfile" as any);
       }
 
     } catch (error: any) {
