@@ -16,7 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack } from "expo-router";
 import auth from "@react-native-firebase/auth";
-import { API_URL } from "@/utils/api";
+import { findUserIdAPI, saveUserProfileAPI } from "../services/profileAPI";
 
 export default function CompleteProfile() {
   const router = useRouter();
@@ -59,89 +59,22 @@ export default function CompleteProfile() {
       if (!currentUser) throw new Error("Anda belum login.");
       const firebaseToken = await currentUser.getIdToken(true);
 
-      const jkBackend = form.jenisKelamin === "Laki-laki" ? "L" : "P";
-      const statusBackend = form.statusKeanggotaan.toLowerCase();
-
-      // Cari ID User
-      const FIND_USER_QUERY = {
-        query: `
-          query FindUser($email: String!) {
-            users(where: { emailUser: { equals: $email } }) {
-              id
-            }
-          }
-        `,
-        variables: { email: form.email },
-      };
-
-      const resFind = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${firebaseToken}`,
-        },
-        body: JSON.stringify(FIND_USER_QUERY),
-      });
-
-      const dataFind = await resFind.json();
-      const keystoneUserId = dataFind.data?.users?.[0]?.id;
-
-      if (!keystoneUserId) {
+      // 1. cari user id
+      const keystoneUserId = await findUserIdAPI(form.email, firebaseToken);
+      if (!keystoneUserId)
         throw new Error("Data akun tidak ditemukan di server.");
-      }
-
-      // ==========================================
-      // PERUBAHAN MUTASI GRAPHQL ADA DI SINI
-      // 'nama' sekarang dimasukkan ke dalam create profile
-      // ==========================================
-      const UPDATE_PROFILE_MUTATION = {
-        query: `
-          mutation UpdateUserAndProfile($id: ID!, $nama: String!, $jk: String!, $status: String!) {
-            updateUser(
-              where: { id: $id }
-              data: {
-                profile: {
-                  create: {
-                    nama: $nama
-                    jenisKelamin: $jk
-                    statusKeanggotaan: $status
-                  }
-                }
-              }
-            ) {
-              id
-              profile {
-                id
-                nama
-                jenisKelamin
-                statusKeanggotaan
-              }
-            }
-          }
-        `,
-        variables: {
-          id: keystoneUserId,
-          nama: form.nama,
-          jk: jkBackend,
-          status: statusBackend,
-        },
+      // Perhatikan kita hanya mengirim data yang ada di halaman ini
+      const payload = {
+        nama: form.nama,
+        jk: form.jenisKelamin === "Laki-laki" ? "L" : "P",
+        statusKeanggotaan: form.statusKeanggotaan.toLowerCase(),
       };
 
-      const resUpdate = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${firebaseToken}`,
-        },
-        body: JSON.stringify(UPDATE_PROFILE_MUTATION),
-      });
+      // 3. kirim dan simpan ke backend
+      // parameter kedua (profileId) set 'null' karena ingin CREATE (membuat profil baru)
+      await saveUserProfileAPI(keystoneUserId, null, payload, firebaseToken);
 
-      const dataUpdate = await resUpdate.json();
-
-      if (dataUpdate.errors) {
-        throw new Error(dataUpdate.errors[0].message);
-      }
-
+      // 4. SUKSES & PINDAH HALAMAN
       if (Platform.OS === "android") {
         ToastAndroid.show("Profil berhasil disimpan!", ToastAndroid.SHORT);
       } else {
@@ -156,8 +89,6 @@ export default function CompleteProfile() {
         "Terjadi Kesalahan",
         error.message || "Gagal menghubungi server.",
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -185,7 +116,6 @@ export default function CompleteProfile() {
 
             {/* Form Card Section */}
             <View style={styles.card}>
-              {/* Input Nama */}
               <Text style={styles.label}>
                 Nama <Text style={styles.asterisk}>*</Text>
               </Text>
@@ -197,7 +127,6 @@ export default function CompleteProfile() {
                 onChangeText={(v) => handleChange("nama", v)}
               />
 
-              {/* Input Email */}
               <Text style={styles.label}>
                 Email <Text style={styles.asterisk}>*</Text>
               </Text>
@@ -209,46 +138,51 @@ export default function CompleteProfile() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 onChangeText={(v) => handleChange("email", v)}
-                editable={false} // Sebaiknya email dari Google tidak bisa diedit di sini
+                editable={false}
               />
 
-              {/* SECTION: GENDER TOGGLE */}
               <Text style={styles.label}>
                 Jenis Kelamin <Text style={styles.asterisk}>*</Text>
               </Text>
               <View style={styles.toggleContainer}>
+                {/* Tombol Laki-laki */}
                 <TouchableOpacity
                   style={[
                     styles.toggleButton,
-                    form.jenisKelamin === "Laki-laki" &&
-                      styles.toggleButtonActive,
+                    form.jenisKelamin === "Laki-laki"
+                      ? styles.toggleButtonActive
+                      : null,
                   ]}
                   onPress={() => handleChange("jenisKelamin", "Laki-laki")}
                 >
                   <Text
                     style={[
                       styles.toggleText,
-                      form.jenisKelamin === "Laki-laki" &&
-                        styles.toggleTextActive,
+                      form.jenisKelamin === "Laki-laki"
+                        ? styles.toggleTextActive
+                        : null,
                     ]}
                   >
                     Laki-laki
                   </Text>
                 </TouchableOpacity>
 
+                {/* Tombol Perempuan */}
                 <TouchableOpacity
                   style={[
                     styles.toggleButton,
-                    form.jenisKelamin === "Perempuan" &&
-                      styles.toggleButtonActive,
+                    form.jenisKelamin === "Perempuan"
+                      ? styles.toggleButtonActive
+                      : null,
                   ]}
                   onPress={() => handleChange("jenisKelamin", "Perempuan")}
                 >
                   <Text
                     style={[
                       styles.toggleText,
-                      form.jenisKelamin === "Perempuan" &&
-                        styles.toggleTextActive,
+                      form.jenisKelamin === "Perempuan"
+                        ? styles.toggleTextActive
+                        : null,
                     ]}
                   >
                     Perempuan
@@ -256,7 +190,6 @@ export default function CompleteProfile() {
                 </TouchableOpacity>
               </View>
 
-              {/* SECTION: CUSTOM DROPDOWN STATUS KEANGGOTAAN */}
               <Text style={styles.label}>
                 Status Keanggotaan <Text style={styles.asterisk}>*</Text>
               </Text>
@@ -329,6 +262,7 @@ export default function CompleteProfile() {
   );
 }
 
+// Styles kamu tetap sama
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { flexGrow: 1, padding: 24, justifyContent: "center" },

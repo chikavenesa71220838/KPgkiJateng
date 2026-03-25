@@ -51,13 +51,25 @@ export const saveUserProfileAPI = async (
 
   const mutation = {
     query: `
-      mutation UpdateUserAndProfile($userId: ID!, $nama: String!, $alamat: String, $domisili: String, $noWa: String, $jk: String, $pendidikan: String, $pekerjaan: String, $statusKawin: String, $statusKeanggotaan: String, $tglLahir: String) {
+      mutation UpdateUserAndProfile(
+        $userId: ID!, 
+        $nama: String!, 
+        $alamat: String, 
+        $domisili: String, 
+        $noWa: String, 
+        $jk: String, 
+        $pendidikan: String, 
+        $pekerjaan: String, 
+        $statusKawin: String, 
+        $statusKeanggotaan: String, 
+        $tglLahir: String
+      ) {
         updateUser(
           where: { id: $userId }
           data: {
-            namaUser: $nama
             profile: {
               ${profileMutationAction}
+                nama: $nama
                 alamat: $alamat
                 domisili: $domisili
                 nomorWa: $noWa
@@ -76,7 +88,7 @@ export const saveUserProfileAPI = async (
         }
       }
     `,
-    variables: { userId, ...data }, // Sebar data parameter ke variables
+    variables: { userId, ...data }, 
   };
 
   const res = await fetch(API_URL, {
@@ -115,4 +127,28 @@ export const deleteBackendDataAPI = async (userId: string | null, profileId: str
       }),
     });
   }
+};
+
+// 4. Fungsi Cari ID User (Khusus untuk halaman CompleteProfile)
+export const findUserIdAPI = async (email: string, token: string) => {
+  const query = {
+    query: `
+      query FindUser($email: String!) {
+        users(where: { emailUser: { equals: $email } }) {
+          id
+        }
+      }
+    `,
+    variables: { email },
+  };
+
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(query),
+  });
+
+  const json = await res.json();
+  if (json.errors) throw new Error(json.errors[0].message);
+  return json?.data?.users?.[0]?.id;
 };
