@@ -9,6 +9,8 @@ import { Platform } from 'react-native';
 const palette = {
   warnaUtama: '#207163ff',
   warnaMuda: '#a3d8d1ff',
+  gradientStart: '#ffffff',
+  gradientEnd: '#d7ffea',
   warnaTua: 'rgb(12, 81, 68)',
   warnaTambahan: '#ffd000ff',
   warnaError: '#d9534f',
@@ -17,7 +19,7 @@ const palette = {
   warnaBackground: '#ffffff',
   secondaryText: '#666666',
   white: '#ffffffff',
-  black: '#000000',
+  black: '#333333',
   border: '#ddd',
   placeholder: '#ccc',
   divider: '#eee',
@@ -35,6 +37,8 @@ export const Colors = {
   danger: palette.warnaError,
   primaryDark: palette.warnaUtama,
   primaryLight: palette.warnaUtama,
+  gradientStart: palette.gradientStart,
+  gradientEnd: palette.gradientEnd,
   black: palette.black,
   white: palette.white,
 
@@ -63,6 +67,23 @@ export const Colors = {
     tabIconDefault: palette.secondaryText,
     tabIconSelected: palette.warnaUtama,
   },
+};
+
+export const Shadows = {
+  shdows: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    elevation: 5,
+  },
+  button: {
+    shadowColor: palette.warnaUtama,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  }
 };
 
 export const Fonts = Platform.select({
@@ -107,7 +128,7 @@ export const Layout = {
   padding: 16,
   paddingSmall: 10,
   radius: 8,
-  radiusLarge: 12,
-  radiusXLarge: 16,
+  radiusLarge: 16,
+  radiusXLarge: 20,
   gap: 10,
 };

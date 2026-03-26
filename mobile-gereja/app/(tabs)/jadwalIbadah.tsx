@@ -12,7 +12,8 @@ import {
 import { API_URL } from "../../utils/api";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
-import { Colors, FontSize, Layout } from "../../constants/theme";
+import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface DetailIbadah {
   id: string;
@@ -165,10 +166,10 @@ export default function JadwalIbadah(): React.ReactElement {
 
   const getAdjacentDate = (
     currentDate: Date,
-    direction: 1 | -1
+    direction: 1 | -1,
   ): Date | null => {
     const index = uniqueSortedDates.findIndex(
-      (d) => d.toDateString() === currentDate.toDateString()
+      (d) => d.toDateString() === currentDate.toDateString(),
     );
 
     const newIndex = index + direction;
@@ -190,7 +191,9 @@ export default function JadwalIbadah(): React.ReactElement {
       <View style={styles.center}>
         {/* UBAH WARNA LOADING */}
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={{ marginTop: 8, color: Colors.textMuted }}>Memuat jadwal ibadah...</Text>
+        <Text style={{ marginTop: 8, color: Colors.textMuted }}>
+          Memuat jadwal ibadah...
+        </Text>
       </View>
     );
   }
@@ -206,7 +209,9 @@ export default function JadwalIbadah(): React.ReactElement {
   if (!selectedDate) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: Colors.textMuted }}>Tidak ada jadwal untuk minggu ini.</Text>
+        <Text style={{ color: Colors.textMuted }}>
+          Tidak ada jadwal untuk minggu ini.
+        </Text>
       </View>
     );
   }
@@ -221,108 +226,140 @@ export default function JadwalIbadah(): React.ReactElement {
     });
 
   return (
-    <ScrollView
+    <LinearGradient
+      colors={[Colors.gradientStart, Colors.gradientEnd]}
       style={styles.container}
-      contentContainerStyle={{
-        paddingBottom: 50,
-        paddingHorizontal: Layout.paddingSmall,
-      }}
-      showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.title}>Jadwal Ibadah</Text>
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: 50,
+          paddingTop: 10,
+          paddingHorizontal: Layout.paddingSmall,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>Jadwal Ibadah</Text>
 
-      {/* Date Navigation */}
-      <View style={styles.datePickerContainer}>
-        <TouchableOpacity onPress={handlePrevDate} disabled={isPrevDisabled}>
-          {/* UBAH WARNA ICON */}
-          <Ionicons
-            name="chevron-back"
-            size={20}
-            color={isPrevDisabled ? Colors.placeholder : Colors.primary}
-          />
-        </TouchableOpacity>
+        {/* Date Navigation */}
+        <View style={styles.datePickerContainer}>
+          <TouchableOpacity
+            onPress={handlePrevDate}
+            disabled={isPrevDisabled}
+            style={styles.navButton}
+          >
+            {/* UBAH WARNA ICON */}
+            <Ionicons
+              name="chevron-back"
+              size={20}
+              color={isPrevDisabled ? Colors.placeholder : Colors.primary}
+            />
+          </TouchableOpacity>
 
-        <Text style={styles.dateText}>
-          {formatDate(selectedDate.toISOString())}
-        </Text>
+          <Text style={styles.dateText}>
+            {formatDate(selectedDate.toISOString())}
+          </Text>
 
-        <TouchableOpacity onPress={handleNextDate}>
-          {/* UBAH WARNA ICON */}
-          <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity onPress={handleNextDate} style={styles.navButton}>
+            {/* UBAH WARNA ICON */}
+            <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
+          </TouchableOpacity>
+        </View>
 
-      {selectedJadwal.length > 0 ? (
-        selectedJadwal.map((item) =>
-          item.detailIbadah
-            .slice()
-            .sort((a, b) => a.jam.localeCompare(b.jam))
-            .map((d) => (
-              <TouchableOpacity
-                key={d.id}
-                activeOpacity={0.7}
-                onPress={async () => {
-                  if (d.url) {
-                    const supported = await Linking.canOpenURL(d.url);
-                    if (supported) {
-                      await Linking.openURL(d.url);
-                    } 
-                  }
-                }}
-              >
-                <View style={styles.cardContainer}>
-                  <View style={styles.cardRow}>
-                    {/* Gambar kiri */}
-                    <View style={styles.leftBox}>
-                      {d.banner?.url ? (
-                        <ImageBackground
-                          source={{
-                            uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url
-                              }`,
-                          }}
-                          style={styles.imageBackground}
-                          blurRadius={12}
-                        >
-                          <Image
+        {selectedJadwal.length > 0 ? (
+          selectedJadwal.map((item) =>
+            item.detailIbadah
+              .slice()
+              .sort((a, b) => a.jam.localeCompare(b.jam))
+              .map((d) => (
+                <TouchableOpacity
+                  key={d.id}
+                  activeOpacity={0.7}
+                  onPress={async () => {
+                    if (d.url) {
+                      const supported = await Linking.canOpenURL(d.url);
+                      if (supported) {
+                        await Linking.openURL(d.url);
+                      }
+                    }
+                  }}
+                >
+                  <View style={styles.cardContainer}>
+                    <View style={styles.cardRow}>
+                      {/* Gambar kiri */}
+                      <View style={styles.leftBox}>
+                        {d.banner?.url ? (
+                          <ImageBackground
                             source={{
-                              uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url
-                                }`,
+                              uri: `${API_URL.replace("/api/graphql", "")}${
+                                d.banner.url
+                              }`,
                             }}
-                            style={styles.imageForeground}
-                          />
-                        </ImageBackground>
-                      ) : (
-                        <View style={styles.imagePlaceholder} />
-                      )}
-                    </View>
+                            style={styles.imageBackground}
+                            blurRadius={12}
+                          >
+                            <Image
+                              source={{
+                                uri: `${API_URL.replace("/api/graphql", "")}${
+                                  d.banner.url
+                                }`,
+                              }}
+                              style={styles.imageForeground}
+                            />
+                          </ImageBackground>
+                        ) : (
+                          <View style={styles.imagePlaceholder} />
+                        )}
+                      </View>
 
-                    {/* Informasi kanan */}
-                    <View style={styles.rightBox}>
-                      <Text style={styles.category}>
-                        {item.topik || "Tanpa Topik"}
-                      </Text>
-                      <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
-                      <Text style={styles.isiCard}>{d.jam || "-"} WIB</Text>
-                      <Text style={styles.isiCard}>
-                        {d.pengkhotbah?.nama || "-"}
-                      </Text>
+                      {/* Informasi kanan */}
+                      <View style={styles.rightBox}>
+                        <View style={styles.tagContainer}>
+                          <Text style={styles.tagText}>
+                            {item.topik || "Umum"}
+                          </Text>
+                        </View>
+
+                        <Text style={styles.judul}>
+                          {formatDate(item.tanggal)}
+                        </Text>
+
+                        <View style={styles.infoRow}>
+                          <Ionicons
+                            name="time-outline"
+                            size={16}
+                            color={Colors.textMuted}
+                          />
+                          <Text style={styles.isiCard}>{d.jam || "-"} WIB</Text>
+                        </View>
+
+                        <View style={styles.infoRow}>
+                          <Ionicons
+                            name="person-outline"
+                            size={16}
+                            color={Colors.textMuted}
+                          />
+                          <Text style={styles.isiCard} numberOfLines={1}>
+                            {d.pengkhotbah?.nama || "-"}
+                          </Text>
+                        </View>
+                      </View>
                     </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-            ))
-        )
-      ) : (
-        <Text style={styles.emptyText}>Tidak ada jadwal untuk hari ini.</Text>
-      )}
-    </ScrollView>
+                </TouchableOpacity>
+              )),
+          )
+        ) : (
+          <Text style={styles.emptyText}>Tidak ada jadwal untuk hari ini.</Text>
+        )}
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.background,
-    paddingHorizontal: Layout.paddingSmall
+    flex: 1,
+    paddingHorizontal: Layout.paddingSmall,
   },
 
   title: {
@@ -334,10 +371,14 @@ const styles = StyleSheet.create({
 
   datePickerContainer: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 14,
+    backgroundColor: Colors.white,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 50,
+    marginBottom: 20,
+    ...Shadows.shdows,
   },
 
   dateText: {
@@ -346,14 +387,19 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
 
+  navButton: {
+    padding: 4,
+  },
+
   cardContainer: {
     backgroundColor: Colors.white,
     borderRadius: Layout.radiusLarge,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    marginBottom: 16,
+    // borderWidth: 1,
+    // borderColor: Colors.border,
+    ...Shadows.shdows,
     overflow: "hidden",
-    elevation: 2,
+    elevation: 4,
   },
 
   cardRow: {
@@ -364,13 +410,16 @@ const styles = StyleSheet.create({
   },
 
   leftBox: {
+    width: 120,
     flex: 1,
     backgroundColor: Colors.black,
+    alignItems: "center",
+    position: "relative",
   },
 
   rightBox: {
     flex: 1.3,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.white,
     padding: Layout.paddingSmall,
     justifyContent: "center",
     position: "relative",
@@ -384,10 +433,13 @@ const styles = StyleSheet.create({
     maxHeight: 120,
   },
 
-  imagePlaceholder: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: Colors.black,
+  tagContainer: {
+    backgroundColor: Colors.muda,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+    marginBottom: 8,
   },
 
   category: {
@@ -400,15 +452,23 @@ const styles = StyleSheet.create({
   judul: {
     color: Colors.white,
     fontSize: FontSize.custom.titleCard,
-    fontWeight: "600",
+    fontWeight: "700",
     marginBottom: 2,
     flexShrink: 1,
   },
 
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 1,
+    marginBottom: 4,
+    gap: 0,
+  },
   isiCard: {
-    color: Colors.white,
+    color: Colors.textMuted,
     fontSize: FontSize.custom.dateCard,
     flexShrink: 1,
+    fontWeight: "500",
   },
 
   emptyText: {
@@ -420,11 +480,26 @@ const styles = StyleSheet.create({
   center: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
 
   imageBackground: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  tagText: {
+    color: Colors.primary,
+    fontWeight: "700",
+    fontSize: 11,
+    textTransform: "uppercase",
+  },
+
+  imagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: Colors.inputBackground,
     justifyContent: "center",
     alignItems: "center",
   },

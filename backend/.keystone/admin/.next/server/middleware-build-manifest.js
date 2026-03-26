@@ -24,25 +24,20 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/profiles": [
+    "/jadwal-ibadahs": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/profiles.js"
+      "static/chunks/pages/jadwal-ibadahs.js"
     ],
-    "/profiles/[id]": [
+    "/jadwal-ibadahs/[id]": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/profiles/[id].js"
+      "static/chunks/pages/jadwal-ibadahs/[id].js"
     ],
-    "/users": [
+    "/jadwal-ibadahs/create": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/users.js"
-    ],
-    "/users/[id]": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/users/[id].js"
+      "static/chunks/pages/jadwal-ibadahs/create.js"
     ]
   },
   "ampFirstPages": []

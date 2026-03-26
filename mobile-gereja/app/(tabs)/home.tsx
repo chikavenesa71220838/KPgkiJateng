@@ -12,8 +12,8 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { API_URL } from "../../utils/api";
 import { useNavigation } from "@react-navigation/native";
-// IMPORT LENGKAP DARI THEME
-import { Colors, FontSize, Layout } from "../../constants/theme";
+import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface DetailIbadah {
   id: string;
@@ -42,15 +42,23 @@ interface JadwalRutin {
   waktu: { id: string; jam: string }[];
 }
 
+// 🔹 Fungsi Pembantu: Mengambil singkatan hari (SEN, SEL, dst)
+const getSingkatanHari = (dateString?: string) => {
+  if (!dateString) return "HARI";
+  const date = new Date(dateString);
+  const hari = ["MIN", "SEN", "SEL", "RAB", "KAM", "JUM", "SAB"];
+  return hari[date.getDay()];
+};
+
 export default function HomeScreen() {
   const navigation = useNavigation();
-  const [jadwalIbadah, setJadwalIbadah] = useState<DetailIbadah[]>([]);
+  // Gunakan tipe any sementara di state untuk menghindari bentrok saat Hot Reload
+  const [jadwalIbadah, setJadwalIbadah] = useState<any[]>([]);
   const [ayat, setAyat] = useState<AyatHarian | null>(null);
   const [jadwalRutin, setJadwalRutin] = useState<JadwalRutin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 🔹 Ambil data Ayat Harian
   const fetchAyatHarian = async () => {
     try {
       const res = await fetch(API_URL, {
@@ -71,14 +79,12 @@ export default function HomeScreen() {
       });
       const result = await res.json();
       if (result.errors) throw new Error(result.errors[0].message);
-      setAyat(result.data.ayatHarians[0]);
+      setAyat(result.data?.ayatHarians?.[0] || null);
     } catch (err: any) {
       console.error("Fetch Ayat Harian error:", err);
-      setError("Gagal memuat ayat harian");
     }
   };
 
-  // 🔹 Ambil data Jadwal Ibadah
   const fetchJadwal = async () => {
     try {
       const now = new Date().toISOString().split("T")[0];
@@ -112,15 +118,20 @@ export default function HomeScreen() {
       if (result.errors)
         throw new Error(result.errors[0]?.message || "GraphQL Error");
       const data: Jadwal[] = result.data?.jadwalIbadahs || [];
-      const allDetails = data.flatMap((item) => item.detailIbadah);
-      setJadwalIbadah(allDetails);
+      
+      // 🔹 PROTEKSI: Memastikan item.detailIbadah ada sebelum di-map
+      const flattenedDetails = data.flatMap((item) => {
+        if (!item?.detailIbadah) return [];
+        return item.detailIbadah.map(detail => ({ jadwal: item, detail }));
+      });
+      setJadwalIbadah(flattenedDetails);
+
     } catch (err: any) {
       console.error("Fetch Jadwal error:", err);
       setError(err.message);
     }
   };
 
-  // 🔹 Ambil data Jadwal Rutin dari Database
   const fetchJadwalRutin = async () => {
     try {
       const res = await fetch(API_URL, {
@@ -149,7 +160,6 @@ export default function HomeScreen() {
       setJadwalRutin(result.data?.jadwalRutins || []);
     } catch (err: any) {
       console.error("Fetch Jadwal Rutin error:", err);
-      setError("Gagal memuat jadwal rutin");
     }
   };
 
@@ -180,215 +190,317 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Home</Text>
+    <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.container}>
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: Layout.padding,
+          paddingBottom: 40,
+          paddingTop: 10,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>Home</Text>
 
-      {/* 🔹 AYAT HARIAN */}
-      <View style={styles.verseBox}>
-        <Text style={styles.verseTitle}>AYAT HARIAN</Text>
-        {ayat ? (
-          <>
-            <Text style={styles.verseText}>{ayat.text}</Text>
-            <Text style={styles.verseRef}>
-              - {ayat.book} {ayat.chapter}:{ayat.verse}
-            </Text>
-          </>
-        ) : (
-          <Text style={styles.verseText}>Tidak ada ayat harian tersedia.</Text>
-        )}
-      </View>
-
-      {/* 🔹 JADWAL IBADAH */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Jadwal Ibadah</Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("jadwalIbadah" as never)}
-        >
-          <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      {jadwalIbadah.length > 0 ? (
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={jadwalIbadah}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.jadwalCard}>
-              {item.banner?.url ? (
-                <Image
-                  source={{
-                    uri: `${API_URL.replace("/api/graphql", "")}${
-                      item.banner.url
-                    }`,
-                  }}
-                  style={styles.jadwalImage}
-                />
-              ) : (
-                <View
-                  style={[styles.jadwalImage, { backgroundColor: Colors.black }]}
-                />
-              )}
-              <View style={styles.jamContainer}>
-                <Text style={styles.jamText}>{item.jam || "-"}</Text>
-              </View>
+        {/* 🔹 AYAT HARIAN MODERN */}
+        <View style={styles.verseBox}>
+          <View style={styles.verseHeader}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="book" size={18} color={Colors.primary} />
             </View>
+            <Text style={styles.verseTitle}>AYAT HARIAN</Text>
+          </View>
+          {ayat ? (
+            <>
+              <Text style={styles.verseText}>"{ayat.text}"</Text>
+              <Text style={styles.verseRef}>
+                {ayat.book} {ayat.chapter}:{ayat.verse}
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.verseText}>Tidak ada ayat harian tersedia.</Text>
           )}
-        />
-      ) : (
-        <Text style={styles.emptyText}>Tidak ada jadwal tersedia.</Text>
-      )}
+        </View>
 
-      {/* 🔹 IBADAH RUTIN */}
-      <Text style={styles.sectionTitle2}>Ibadah Rutin</Text>
+        {/* 🔹 JADWAL IBADAH */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Jadwal Ibadah</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("jadwalIbadah" as never)}
+            style={{ padding: 4 }}
+          >
+            <Ionicons name="arrow-forward" size={24} color={Colors.primary} />
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.rutinContainer}>
-        {jadwalRutin.length > 0 ? (
-          jadwalRutin.flatMap((item) =>
-            item.waktu.length > 0
-              ? item.waktu
-                  .sort((a, b) => a.jam.localeCompare(b.jam))
-                  .map((w) => (
-                    <View key={`${item.id}-${w.id}`} style={styles.rutinCard}>
-                      <Text style={styles.rutinTitle}>{item.namaIbadah}</Text>
-                      <Text style={styles.rutinSub}>
-                        {item.nama}, {w.jam}
-                      </Text>
-                    </View>
-                  ))
-              : [
-                  <View key={item.id} style={styles.rutinCard}>
-                    <Text style={styles.rutinTitle}>{item.namaIbadah}</Text>
-                    <Text style={styles.rutinSub}>{item.nama}, -</Text>
-                  </View>,
-                ]
-          )
+        {jadwalIbadah && jadwalIbadah.length > 0 ? (
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={jadwalIbadah}
+            // 🔹 PROTEKSI KEY: Menghindari bentrok antara object baru dan state lama (hot reload)
+            keyExtractor={(item, index) => {
+              const safeId = item?.detail?.id || item?.id || index;
+              return safeId.toString();
+            }}
+            contentContainerStyle={{ paddingBottom: 16, paddingLeft: 2, paddingRight: 10 }}
+            renderItem={({ item }) => {
+              // 🔹 PROTEKSI RENDER: Amankan mapping data
+              const detail = item?.detail || item; // Fallback kalau datanya masih state versi lama
+              const jadwal = item?.jadwal || {};
+
+              return (
+                <View style={styles.jadwalCard}>
+                  <View style={styles.imageContainer}>
+                    {detail?.banner?.url ? (
+                      <Image
+                        source={{
+                          uri: `${API_URL.replace("/api/graphql", "")}${detail.banner.url}`,
+                        }}
+                        style={styles.jadwalImage}
+                      />
+                    ) : (
+                      <View style={styles.imagePlaceholder}>
+                        <Ionicons name="image-outline" size={24} color={Colors.placeholder} />
+                      </View>
+                    )}
+                    
+                    {/* 🔹 BADGE HARI (MODERN) */}
+                    {jadwal?.tanggal && (
+                      <View style={styles.dayBadge}>
+                        <Text style={styles.dayBadgeText}>{getSingkatanHari(jadwal.tanggal)}</Text>
+                      </View>
+                    )}
+                  </View>
+                  
+                  <View style={styles.jamContainer}>
+                    <Ionicons name="time-outline" size={16} color={Colors.primary} />
+                    <Text style={styles.jamText}>{detail?.jam || "-"} WIB</Text>
+                  </View>
+                </View>
+              );
+            }}
+          />
         ) : (
-          <Text style={styles.emptyText}>Tidak ada jadwal rutin tersedia.</Text>
+          <Text style={styles.emptyText}>Tidak ada jadwal tersedia.</Text>
         )}
-      </View>
-    </ScrollView>
+
+        {/* 🔹 IBADAH RUTIN */}
+        <Text style={styles.sectionTitle2}>Ibadah Rutin</Text>
+
+        <View style={styles.rutinContainer}>
+          {jadwalRutin && jadwalRutin.length > 0 ? (
+            jadwalRutin.flatMap((item) =>
+              item?.waktu && item.waktu.length > 0
+                ? item.waktu
+                    .sort((a, b) => a.jam.localeCompare(b.jam))
+                    .map((w) => (
+                      <View key={`${item?.id}-${w?.id}`} style={styles.rutinCard}>
+                        <View style={styles.rutinIconWrapper}>
+                          <Ionicons name="calendar-outline" size={22} color={Colors.primary} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.rutinTitle}>{item?.namaIbadah}</Text>
+                          <Text style={styles.rutinSub}>
+                            {item?.nama}, {w?.jam}
+                          </Text>
+                        </View>
+                      </View>
+                    ))
+                : [
+                    <View key={item?.id} style={styles.rutinCard}>
+                      <View style={styles.rutinIconWrapper}>
+                        <Ionicons name="calendar-outline" size={22} color={Colors.primary} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.rutinTitle}>{item?.namaIbadah}</Text>
+                        <Text style={styles.rutinSub}>{item?.nama}, -</Text>
+                      </View>
+                    </View>,
+                  ]
+            )
+          ) : (
+            <Text style={styles.emptyText}>Tidak ada jadwal rutin tersedia.</Text>
+          )}
+        </View>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: Colors.background, 
-    paddingHorizontal: Layout.padding 
+  container: {
+    flex: 1,
   },
-  
   title: {
-    fontSize: FontSize.h1, 
+    fontSize: FontSize.h1,
     fontWeight: "bold",
     color: Colors.primary,
     marginVertical: Layout.gap,
   },
-  
+
+  // --- AYAT HARIAN ---
   verseBox: {
-    backgroundColor: Colors.primary,
-    borderRadius: Layout.radius,
+    backgroundColor: Colors.white,
+    borderRadius: Layout.radiusLarge,
     padding: Layout.padding,
-    marginBottom: Layout.gap,
+    marginBottom: 24,
+    ...Shadows.shdows,
   },
-  
-  verseTitle: { 
-    color: Colors.white, 
-    fontWeight: "bold", 
-    marginBottom: 5 
+  verseHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
   },
-  
-  verseText: { 
-    color: Colors.white, 
-    fontSize: FontSize.custom.titleCard, 
-    marginBottom: 5 
+  iconCircle: {
+    backgroundColor: Colors.muda,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
   },
-  
-  verseRef: { 
-    color: Colors.white, 
-    fontWeight: "bold" 
+  verseTitle: {
+    color: Colors.primary,
+    fontWeight: "800",
+    fontSize: FontSize.small,
+    letterSpacing: 0.5,
   },
-  
+  verseText: {
+    color: Colors.text,
+    fontSize: 15,
+    fontStyle: "italic",
+    lineHeight: 22,
+    marginBottom: 10,
+  },
+  verseRef: {
+    color: Colors.primary,
+    fontWeight: "700",
+    fontSize: FontSize.body,
+    textAlign: "right",
+  },
+
+  // --- JADWAL IBADAH HORIZONTAL ---
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: Layout.gap,
+    marginBottom: 12,
   },
-  
-  sectionTitle: { 
-    fontSize: FontSize.h3, 
-    fontWeight: "bold", 
-    color: Colors.primary 
+  sectionTitle: {
+    fontSize: FontSize.h3,
+    fontWeight: "800",
+    color: Colors.primary,
   },
-  
   jadwalCard: {
-    width: 100,
-    height: 100,
-    marginRight: Layout.gap,
-    borderRadius: Layout.radius,
-    backgroundColor: Colors.black,
-    overflow: "hidden",
+    width: 120, 
+    height: 130, 
+    marginRight: 14,
+    borderRadius: Layout.radiusLarge,
+    backgroundColor: Colors.white,
+    ...Shadows.shdows,
   },
-  
+  imageContainer: {
+    height: "70%",
+    width: "100%",
+    borderTopLeftRadius: Layout.radiusLarge,
+    borderTopRightRadius: Layout.radiusLarge,
+    overflow: "hidden",
+    position: 'relative', 
+  },
   jadwalImage: {
     width: "100%",
-    height: "70%",
-    borderTopLeftRadius: Layout.radius,
-    borderTopRightRadius: Layout.radius,
+    height: "100%",
+    resizeMode: "cover",
   },
-  
-  jamContainer: {
-    backgroundColor: Colors.primary,
-    height: "30%",
+  imagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: Colors.inputBackground,
     justifyContent: "center",
     alignItems: "center",
   },
-  
-  jamText: { 
-    color: Colors.white, 
-    fontWeight: "bold" 
+  dayBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  
+  dayBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Colors.primary, 
+    letterSpacing: 0.5,
+  },
+  jamContainer: {
+    height: "30%",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+  },
+  jamText: {
+    color: Colors.primary,
+    fontWeight: "700",
+    fontSize: FontSize.small,
+  },
+
+  // --- IBADAH RUTIN ---
   sectionTitle2: {
     fontSize: FontSize.h3,
-    fontWeight: "bold",
+    fontWeight: "800",
     color: Colors.primary,
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  rutinContainer: {
+    marginBottom: 20,
+  },
+  rutinCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.white,
+    borderRadius: Layout.radiusLarge,
+    padding: 16,
+    marginBottom: 12,
+    ...Shadows.shdows,
+  },
+  rutinIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.muda,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  rutinTitle: {
+    fontWeight: "700",
+    fontSize: 15,
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  rutinSub: {
+    fontSize: FontSize.small,
+    color: Colors.textMuted,
+  },
+
+  emptyText: {
+    textAlign: "center",
+    color: Colors.textMuted,
     marginVertical: Layout.gap,
   },
-  
-  rutinContainer: { 
-    marginBottom: 30 
-  },
-  
-  rutinCard: {
-    backgroundColor: Colors.cardBackground,
-    borderRadius: Layout.radius,
-    padding: 12,
-    marginBottom: 8,
-    borderLeftWidth: 5,
-    borderLeftColor: Colors.primary,
-  },
-  
-  rutinTitle: { 
-    fontWeight: "bold", 
-    color: Colors.text 
-  },
-  
-  rutinSub: { 
-    color: Colors.textMuted 
-  },
-  
-  emptyText: { 
-    textAlign: "center", 
-    color: Colors.textMuted, 
-    marginVertical: Layout.gap 
-  },
-  
-  center: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center" 
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

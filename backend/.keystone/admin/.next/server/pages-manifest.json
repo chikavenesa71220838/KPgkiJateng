@@ -3,8 +3,7 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/profiles": "pages/profiles.js",
-  "/users/[id]": "pages/users/[id].js",
-  "/profiles/[id]": "pages/profiles/[id].js",
-  "/users": "pages/users.js"
+  "/jadwal-ibadahs": "pages/jadwal-ibadahs.js",
+  "/jadwal-ibadahs/create": "pages/jadwal-ibadahs/create.js",
+  "/jadwal-ibadahs/[id]": "pages/jadwal-ibadahs/[id].js"
 }

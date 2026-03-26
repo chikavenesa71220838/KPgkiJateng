@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack } from "expo-router";
 import auth from "@react-native-firebase/auth";
 import { findUserIdAPI, saveUserProfileAPI } from "../services/profileAPI";
+import { Colors, Shadows, Layout } from "../constants/theme";
 
 export default function CompleteProfile() {
   const router = useRouter();
@@ -275,11 +276,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
-    shadowColor: "#0B7A5D",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    ...Shadows.button,
+    // shadowColor: "#0B7A5D",
+    // shadowOffset: { width: 0, height: 4 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 6,
+    // elevation: 3,
   },
   title: { fontSize: 32, fontWeight: "800", color: "#0B7A5D", marginBottom: 4 },
   subtitle: { fontSize: 18, fontWeight: "600", color: "#0B7A5D" },
@@ -287,11 +289,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
-    elevation: 5,
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 8 },
+    // shadowOpacity: 0.05,
+    // shadowRadius: 15,
+    // elevation: 5,
+    ...Shadows.shdows,
   },
   label: {
     fontSize: 14,

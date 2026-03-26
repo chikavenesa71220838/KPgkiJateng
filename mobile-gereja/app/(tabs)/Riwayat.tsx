@@ -10,7 +10,9 @@ import {
 } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { API_URL } from "../../utils/api";
-import { Colors, FontSize, Layout } from "../../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface DetailIbadah {
   id: string;
@@ -116,155 +118,188 @@ export default function Riwayat(): React.ReactElement {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{
-        paddingBottom: 50,
-        paddingHorizontal: Layout.paddingSmall
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      <Text style={styles.title}>Riwayat Ibadah</Text>
+    <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.container}>
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: 50,
+          paddingTop: 10,
+          paddingHorizontal: Layout.paddingSmall,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>Riwayat Ibadah</Text>
 
-      {filteredData.length > 0 ? (
-        filteredData.map((item) =>
-          item.detailIbadah.map((d) => (
-           <TouchableOpacity
-              key={d.id}
-              activeOpacity={0.7}
-              onPress={async () => {
-                if (d.url) {
-                  const supported = await Linking.canOpenURL(d.url);
-                  if (supported) {
-                    await Linking.openURL(d.url);
+        {filteredData.length > 0 ? (
+          filteredData.map((item) =>
+            item.detailIbadah.map((d) => (
+              <TouchableOpacity
+                key={d.id}
+                activeOpacity={0.7}
+                onPress={async () => {
+                  if (d.url) {
+                    const supported = await Linking.canOpenURL(d.url);
+                    if (supported) {
+                      await Linking.openURL(d.url);
+                    }
                   }
-                }
-              }}
-            >
-              <View style={styles.cardContainer}>
-                <View style={styles.cardRow}>
-                  {/* Gambar kiri */}
-                  <View style={styles.leftBox}>
-                    {d.banner?.url ? (
-                      <Image
-                        source={{
-                          uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
-                        }}
-                        style={styles.image}
-                      />
-                    ) : (
-                      <View style={styles.imagePlaceholder} />
-                    )}
-                  </View>
+                }}
+              >
+                <View style={styles.cardContainer}>
+                  <View style={styles.cardRow}>
+                    
+                    {/* Gambar Kiri - Dikembalikan ke struktur simple agar ukuran pas */}
+                    <View style={styles.leftBox}>
+                      {d.banner?.url ? (
+                        <Image
+                          source={{
+                            uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}`,
+                          }}
+                          style={styles.imageForeground}
+                        />
+                      ) : (
+                        <View style={styles.imagePlaceholder}>
+                          <Ionicons name="image-outline" size={24} color={Colors.placeholder} />
+                        </View>
+                      )}
+                    </View>
 
-                  {/* Info kanan */}
-                  <View style={styles.rightBox}>
-                    <Text style={styles.category}>
-                      {item.topik || "Tanpa Topik"}
-                    </Text>
-                    <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
-                    <Text style={styles.isiCard}>
-                      {d.jam || "-"} WIB
-                    </Text>
-                    <Text style={styles.isiCard}>
-                      {d.pengkhotbah?.nama || "-"}
-                    </Text>
+                    {/* Informasi Kanan */}
+                    <View style={styles.rightBox}>
+                      <View style={styles.tagContainer}>
+                        <Text style={styles.tagText}>
+                          {item.topik || "Umum"}
+                        </Text>
+                      </View>
+
+                      <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
+
+                      <View style={styles.infoRow}>
+                        <Ionicons
+                          name="time-outline"
+                          size={16}
+                          color={Colors.textMuted}
+                        />
+                        <Text style={styles.isiCard}>{d.jam || "-"} WIB</Text>
+                      </View>
+
+                      <View style={styles.infoRow}>
+                        <Ionicons
+                          name="person-outline"
+                          size={16}
+                          color={Colors.textMuted}
+                        />
+                        <Text style={styles.isiCard} numberOfLines={1}>
+                          {d.pengkhotbah?.nama || "-"}
+                        </Text>
+                      </View>
+                    </View>
+
                   </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          ))
-        )
-      ) : (
-        <Text style={styles.emptyText}>Tidak ada riwayat tersedia.</Text>
-      )}
-    </ScrollView>
+              </TouchableOpacity>
+            ))
+          )
+        ) : (
+          <Text style={styles.emptyText}>Tidak ada riwayat tersedia.</Text>
+        )}
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.background,
-    paddingHorizontal: Layout.paddingSmall
+    flex: 1,
+    paddingHorizontal: Layout.paddingSmall,
   },
-
   title: {
     fontSize: FontSize.h1,
     fontWeight: "bold",
     color: Colors.primary,
     marginVertical: Layout.gap,
   },
-
   cardContainer: {
     backgroundColor: Colors.white,
     borderRadius: Layout.radiusLarge,
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    ...Shadows.shdows,
     overflow: "hidden",
     elevation: 2,
   },
-
   cardRow: {
     flexDirection: "row",
     height: 90,
     borderRadius: Layout.radiusLarge,
     overflow: "hidden",
   },
-
   leftBox: {
     flex: 1,
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.inputBackground, // Diubah jadi abu-abu muda biar estetik kalau kosong
+    justifyContent: "center",
+    alignItems: "center",
   },
-
   rightBox: {
     flex: 1.3,
-    backgroundColor: Colors.primary,
+    paddingTop: 20,
+    backgroundColor: Colors.white,
     padding: Layout.paddingSmall,
     justifyContent: "center",
     position: "relative",
   },
-
-  image: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
+  tagContainer: {
+    backgroundColor: Colors.muda,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+    marginBottom: 8,
   },
-
-  imagePlaceholder: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: Colors.black,
+  tagText: {
+    color: Colors.primary,
+    fontWeight: "700",
+    fontSize: 11,
+    textTransform: "uppercase",
   },
-
-  category: {
-    color: Colors.white,
-    fontWeight: "bold",
-    fontSize: FontSize.small,
-    marginBottom: 2,
-  },
-
   judul: {
-    color: Colors.white,
+    color: Colors.text,
     fontSize: FontSize.custom.titleCard,
-    fontWeight: "600",
+    fontWeight: "700",
     marginBottom: 2,
+    flexShrink: 1,
   },
-
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: -5,
+    marginBottom: 4,
+    gap: 3,
+  },
   isiCard: {
-    color: Colors.white,
+    color: Colors.textMuted,
     fontSize: FontSize.custom.dateCard,
+    flexShrink: 1,
+    fontWeight: "500",
   },
-
   emptyText: {
     textAlign: "center",
     color: Colors.textMuted,
     marginTop: 20,
   },
-
   center: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
+  },
+  imageForeground: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  imagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: Colors.inputBackground,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
