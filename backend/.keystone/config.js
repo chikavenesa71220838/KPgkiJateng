@@ -82,6 +82,7 @@ var allowAll2 = {
 var Profile = (0, import_core2.list)({
   access: allowAll2,
   fields: {
+    nama: (0, import_fields2.text)(),
     alamat: (0, import_fields2.text)(),
     nomorWa: (0, import_fields2.text)(),
     jenisKelamin: (0, import_fields2.select)({
@@ -111,7 +112,7 @@ var Profile = (0, import_core2.list)({
       hooks: {
         validateInput: async ({ resolvedData, addValidationError }) => {
           const file = resolvedData.fotoProfil;
-          if (file && file.mimetype !== "image/jpeg") {
+          if (file && file.extension && !["jpg", "jpeg"].includes(file.extension)) {
             addValidationError("Hanya file JPEG yang diperbolehkan.");
           }
         }

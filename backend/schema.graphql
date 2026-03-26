@@ -127,6 +127,7 @@ input ProfileRelateToOneForCreateInput {
 
 type Profile {
   id: ID!
+  nama: String
   alamat: String
   nomorWa: String
   jenisKelamin: String
@@ -166,6 +167,7 @@ input ProfileWhereInput {
   OR: [ProfileWhereInput!]
   NOT: [ProfileWhereInput!]
   id: IDFilter
+  nama: StringFilter
   alamat: StringFilter
   nomorWa: StringFilter
   jenisKelamin: StringNullableFilter
@@ -180,6 +182,7 @@ input ProfileWhereInput {
 
 input ProfileOrderByInput {
   id: OrderDirection
+  nama: OrderDirection
   alamat: OrderDirection
   nomorWa: OrderDirection
   jenisKelamin: OrderDirection
@@ -192,6 +195,7 @@ input ProfileOrderByInput {
 }
 
 input ProfileUpdateInput {
+  nama: String
   alamat: String
   nomorWa: String
   jenisKelamin: String
@@ -224,6 +228,7 @@ input ProfileUpdateArgs {
 }
 
 input ProfileCreateInput {
+  nama: String
   alamat: String
   nomorWa: String
   jenisKelamin: String

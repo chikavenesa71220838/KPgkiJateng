@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,15 +14,22 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import auth from "@react-native-firebase/auth";
 import { useRouter } from "expo-router";
-import { API_URL } from "../utils/api"; 
-// ==========================================
-// TAMBAHAN IMPORT GOOGLE SIGN IN
-// ==========================================
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { 
+  fetchUserProfileAPI, 
+  saveUserProfileAPI, 
+  deleteBackendDataAPI 
+} from "../services/profileAPI";
 
 export default function ProfilScreen() {
   const router = useRouter();
+
+  // State untuk Loading & ID dari Backend
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [keystoneUserId, setKeystoneUserId] = useState<string | null>(null);
+  const [keystoneProfileId, setKeystoneProfileId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     nama: "",
@@ -38,148 +45,80 @@ export default function ProfilScreen() {
     tanggalLahir: "",
   });
 
-  const handleChange = (key: string, value: string) => {
-    setForm({ ...form, [key]: value });
-  };
+  const [bulan, setBulan] = useState("");
+  const [tahun, setTahun] = useState("");
 
-  const handleSave = () => {
-    alert(`Profil berhasil disimpan!`);
+  const bulanMap: Record<string, string> = {
+    Januari: "01", Februari: "02", Maret: "03", April: "04",
+    Mei: "05", Juni: "06", Juli: "07", Agustus: "08",
+    September: "09", Oktober: "10", November: "11", Desember: "12",
   };
-  const executeDelete = async () => {
-    setIsDeleting(true);
+  const bulanList = Object.keys(bulanMap);
+  const tahunList = Array.from({ length: 100 }, (_, i) =>
+    (new Date().getFullYear() - i).toString(),
+  );
+
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const fetchProfileData = async () => {
     try {
       const user = auth().currentUser;
-      if (!user) throw new Error("Anda belum login.");
+      if (!user || !user.email) throw new Error("Belum login");
 
       const firebaseToken = await user.getIdToken(true);
 
-      // 1. CARI ID USER DI BACKEND
-      const GET_USER_QUERY = {
-        query: `
-          query GetActiveUser($googleId: String!, $email: String!) {
-            users(where: { 
-              statusAktivasi: { equals: "aktif" },
-              OR: [
-                { googleId: { equals: $googleId } },
-                { emailUser: { equals: $email } }
-              ]
-            }) {
-              id
-            }
+      // Panggil fungsi dari profileAPI.ts
+      const userData = await fetchUserProfileAPI(user.email, firebaseToken);
+
+      if (userData) {
+        setKeystoneUserId(userData.id);
+        const p = userData.profile;
+
+        if (p) {
+          setKeystoneProfileId(p.id);
+
+          // Terjemahkan data backend ke frontend
+          const jkFront = p.jenisKelamin === "L" ? "Laki-laki" : p.jenisKelamin === "P" ? "Perempuan" : "";
+          const statusKawinFront = p.statusPernikahan === "single" ? "Belum Menikah" : p.statusPernikahan === "married" ? "Menikah" : "";
+          const keanggotaanFront = p.statusKeanggotaan === "anggota" ? "Anggota" : p.statusKeanggotaan === "simpatisan" ? "Simpatisan" : "";
+
+          setForm({
+            nama: p.nama || "",
+            email: userData.emailUser || "",
+            alamat: p.alamat || "",
+            kodePos: p.domisili || "",
+            noWa: p.nomorWa || "",
+            jenisKelamin: jkFront,
+            pendidikan: p.pendidikan || "",
+            pekerjaan: p.pekerjaan || "",
+            statusKawin: statusKawinFront,
+            statusKeanggotaan: keanggotaanFront,
+            tanggalLahir: p.tanggalLahir || "",
+          });
+
+          // Pecah tanggal lahir
+          if (p.tanggalLahir) {
+            const [t, b] = p.tanggalLahir.split("-");
+            setTahun(t);
+            const namaBulan = Object.keys(bulanMap).find((key) => bulanMap[key] === b);
+            if (namaBulan) setBulan(namaBulan);
           }
-        `,
-        variables: { googleId: user.uid, email: user.email },
-      };
-
-      const resUser = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${firebaseToken}`,
-        },
-        body: JSON.stringify(GET_USER_QUERY),
-      });
-
-      const dataUser = await resUser.json();
-      const backendUsers = dataUser?.data?.users;
-
-      // 2. CEK & SOFT DELETE DI BACKEND
-      if (backendUsers && backendUsers.length > 0) {
-        const backendId = backendUsers[0].id;
-        const SOFT_DELETE_MUTATION = {
-          query: `
-            mutation SoftDeleteUser($id: ID!) {
-              updateUser(where: { id: $id }, data: { statusAktivasi: "nonaktif" }) {
-                id
-              }
-            }
-          `,
-          variables: { id: backendId },
-        };
-
-        await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${firebaseToken}`,
-          },
-          body: JSON.stringify(SOFT_DELETE_MUTATION),
-        });
+        } else {
+          setForm((prev) => ({ ...prev, nama: userData.namaUser, email: userData.emailUser }));
+        }
       }
-
-      // ======================================================
-      // PERUBAHAN KRUSIAL DI BAWAH INI
-      // ======================================================
-
-      // 3. HAPUS CACHE GOOGLE SIGN-IN DULUAN! (Sebelum Firebase dibunuh)
-      try {
-        await GoogleSignin.revokeAccess(); 
-        await GoogleSignin.signOut();      
-      } catch (googleError) {
-        console.log("Catatan: Gagal signout dari Google SDK", googleError);
-      }
-
-      // 4. BARU HARD DELETE DI FIREBASE
-      await user.delete();
-
-      // 5. GANTI ALERT JADI TOAST (Mencegah Force Close)
-      if (Platform.OS === 'android') {
-        ToastAndroid.show("Akun berhasil dihapus permanen.", ToastAndroid.SHORT);
-      }
-
-      // 6. TENDANG KE HALAMAN LOGIN
-      router.replace("/login");
-
-    } catch (error: any) {
-      console.error("Error Delete Account:", error);
-      setIsDeleting(false);
-
-      if (error.code === "auth/requires-recent-login") {
-        Alert.alert(
-          "Keamanan",
-          "Silakan logout dan login kembali terlebih dahulu untuk memverifikasi identitas Anda sebelum menghapus akun."
-        );
-      } else {
-        Alert.alert("Gagal Hapus Akun", error.message);
-      }
+    } catch (error) {
+      console.error("Gagal ambil data:", error);
+    } finally {
+      setIsLoadingData(false);
     }
   };
 
-  const handleDeletePrompt = () => {
-    Alert.alert(
-      "Hapus Akun",
-      "Apakah Anda yakin ingin menghapus akun? Data profil Anda tidak akan ditampilkan lagi dan Anda akan dikeluarkan dari aplikasi.",
-      [
-        { text: "Batal", style: "cancel" },
-        { text: "Ya, Hapus", style: "destructive", onPress: executeDelete },
-      ]
-    );
+  const handleChange = (key: string, value: string) => {
+    setForm({ ...form, [key]: value });
   };
-  // ==========================================================
-
-  const bulanMap: Record<string, string> = {
-    Januari: "01",
-    Februari: "02",
-    Maret: "03",
-    April: "04",
-    Mei: "05",
-    Juni: "06",
-    Juli: "07",
-    Agustus: "08",
-    September: "09",
-    Oktober: "10",
-    November: "11",
-    Desember: "12",
-  };
-
-  const bulanList = Object.keys(bulanMap);
-
-  const tahunList = Array.from({ length: 200 }, (_, i) =>
-    (new Date().getFullYear() - i).toString()
-  );
-
-  const [bulan, setBulan] = useState("");
-  const [tahun, setTahun] = useState("");
 
   const updateTanggalLahir = (b: string, t: string) => {
     setBulan(b);
@@ -190,53 +129,160 @@ export default function ProfilScreen() {
     }
   };
 
+  const handleSave = async () => {
+    if (!keystoneUserId) return Alert.alert("Error", "ID User tidak ditemukan.");
+    setIsSaving(true);
+
+    try {
+      const user = auth().currentUser;
+      const firebaseToken = await user?.getIdToken(true) || "";
+
+      // Siapkan Payload Data
+      const payload = {
+        nama: form.nama,
+        alamat: form.alamat,
+        domisili: form.kodePos,
+        noWa: form.noWa,
+        jk: form.jenisKelamin === "Laki-laki" ? "L" : form.jenisKelamin === "Perempuan" ? "P" : null,
+        pendidikan: form.pendidikan,
+        pekerjaan: form.pekerjaan,
+        statusKawin: form.statusKawin === "Belum Menikah" ? "single" : form.statusKawin === "Menikah" ? "married" : null,
+        statusKeanggotaan: form.statusKeanggotaan === "Anggota" ? "anggota" : form.statusKeanggotaan === "Simpatisan" ? "simpatisan" : null,
+        tglLahir: form.tanggalLahir,
+      };
+
+      // Panggil fungsi simpan dari profileAPI.ts
+      const result = await saveUserProfileAPI(keystoneUserId, keystoneProfileId, payload, firebaseToken);
+
+      // Update state ID profile jika baru di-create
+      if (!keystoneProfileId && result.profile?.id) {
+        setKeystoneProfileId(result.profile.id);
+      }
+
+      if (Platform.OS === "android") {
+        ToastAndroid.show("Profil berhasil diperbarui!", ToastAndroid.SHORT);
+      } else {
+        Alert.alert("Sukses", "Profil berhasil diperbarui!");
+      }
+    } catch (error: any) {
+      console.error("Gagal simpan:", error);
+      Alert.alert("Error", error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const executeDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const user = auth().currentUser;
+      if (!user) throw new Error("Anda belum login.");
+      const firebaseToken = await user.getIdToken(true);
+      
+      // Hapus data di Backend KeystoneJS
+      await deleteBackendDataAPI(keystoneUserId, keystoneProfileId, firebaseToken);
+      
+      // Hapus akun di Firebase
+      await user.delete();
+
+      // Hapus cache Google Sign-in
+      try {
+        await GoogleSignin.revokeAccess();
+        await GoogleSignin.signOut();
+      } catch (googleError) {
+        console.log("Catatan Google Signout:", googleError);
+      }
+      
+      if (Platform.OS === "android") ToastAndroid.show("Akun dihapus.", ToastAndroid.SHORT);
+      router.replace("/login");
+
+    } catch (error: any) {
+      console.error("Error Delete:", error);
+      setIsDeleting(false);
+      
+      // Penanganan khusus jika Firebase minta login ulang (Token Expired)
+if (error.code === "auth/requires-recent-login") {
+        Alert.alert(
+          "Verifikasi Keamanan 🛡️",
+          "Karena ini tindakan permanen, Google meminta Anda memverifikasi identitas sekali lagi.",
+          [
+            { text: "Batal", style: "cancel" },
+            {
+              text: "Verifikasi Sekarang",
+              onPress: async () => {
+                try {
+                  await GoogleSignin.hasPlayServices();
+                  const response = await GoogleSignin.signIn();
+                  if (response.type === 'success') {
+                    const idToken = response.data.idToken;
+                    
+                    if (idToken) {
+                      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+                      
+                      // Masukkan kredensial baru ke Firebase
+                      await auth().currentUser?.reauthenticateWithCredential(googleCredential);
+                      
+                      Alert.alert("Sukses", "Identitas terverifikasi! Silakan tekan tombol 'Hapus Akun' sekali lagi.");
+                    }
+                  } else {
+                    console.log("Verifikasi dibatalkan oleh user.");
+                  }
+
+                } catch (reauthErr) {
+                  console.log("Batal verifikasi:", reauthErr);
+                }
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert("Gagal Hapus Akun", error.message);
+      }
+    }
+  };
+
+  const handleDeletePrompt = () => {
+    Alert.alert("Hapus Akun", "Yakin ingin menghapus akun?", [
+      { text: "Batal", style: "cancel" },
+      { text: "Ya, Hapus", style: "destructive", onPress: executeDelete },
+    ]);
+  };
+
+  if (isLoadingData) {
+    return (
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color="#1E90FF" />
+        <Text style={{ marginTop: 10 }}>Memuat Profil...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Profil Jemaat</Text>
+
       <Text style={styles.label}>Nama *</Text>
-      <TextInput
-        style={styles.input}
-        value={form.nama}
-        onChangeText={(v) => handleChange("nama", v)}
-      />
+      <TextInput style={styles.input} value={form.nama} onChangeText={(v) => handleChange("nama", v)} />
 
       <Text style={styles.label}>Alamat *</Text>
-      <TextInput
-        style={styles.input}
-        value={form.alamat}
-        onChangeText={(v) => handleChange("alamat", v)}
-      />
+      <TextInput style={styles.input} value={form.alamat} onChangeText={(v) => handleChange("alamat", v)} />
 
-      <Text style={styles.label}>Kode Pos *</Text>
-      <TextInput
-        style={styles.input}
-        value={form.kodePos}
-        onChangeText={(v) => handleChange("kodePos", v)}
-        keyboardType="numeric"
-      />
+      <Text style={styles.label}>Kode Pos / Domisili *</Text>
+      <TextInput style={styles.input} value={form.kodePos} onChangeText={(v) => handleChange("kodePos", v)} keyboardType="numeric" />
 
       <Text style={styles.label}>Nomor WA *</Text>
-      <TextInput
-        style={styles.input}
-        value={form.noWa}
-        onChangeText={(v) => handleChange("noWa", v)}
-        keyboardType="phone-pad"
-      />
+      <TextInput style={styles.input} value={form.noWa} onChangeText={(v) => handleChange("noWa", v)} keyboardType="phone-pad" />
 
       <Text style={styles.label}>Email *</Text>
-      <TextInput
-        style={styles.input}
-        value={form.email}
-        onChangeText={(v) => handleChange("email", v)}
-        keyboardType="email-address"
-        editable={false}
-      />
+      <TextInput style={styles.input} value={form.email} editable={false} />
 
       <Text style={styles.label}>Jenis Kelamin *</Text>
       <View style={styles.pickerWrapper}>
         <Picker
           selectedValue={form.jenisKelamin}
           onValueChange={(v) => handleChange("jenisKelamin", v)}
+          style={{ color: '#000' }}
+          dropdownIconColor="#000"
         >
           <Picker.Item label="Pilih jenis kelamin..." value="" />
           <Picker.Item label="Laki-laki" value="Laki-laki" />
@@ -249,6 +295,8 @@ export default function ProfilScreen() {
         <Picker
           selectedValue={form.pendidikan}
           onValueChange={(v) => handleChange("pendidikan", v)}
+          style={{ color: '#000' }}
+          dropdownIconColor="#000"
         >
           <Picker.Item label="Pilih pendidikan terakhir..." value="" />
           <Picker.Item label="Tidak/Belum Sekolah" value="Tidak/Belum Sekolah" />
@@ -263,11 +311,7 @@ export default function ProfilScreen() {
       </View>
 
       <Text style={styles.label}>Pekerjaan *</Text>
-      <TextInput
-        style={styles.input}
-        value={form.pekerjaan}
-        onChangeText={(v) => handleChange("pekerjaan", v)}
-      />
+      <TextInput style={styles.input} value={form.pekerjaan} onChangeText={(v) => handleChange("pekerjaan", v)} />
 
       <Text style={styles.label}>Tanggal Lahir (Bulan & Tahun) *</Text>
       <View style={{ flexDirection: "row", gap: 10 }}>
@@ -275,6 +319,8 @@ export default function ProfilScreen() {
           <Picker
             selectedValue={bulan}
             onValueChange={(v) => updateTanggalLahir(v, tahun)}
+            style={{ color: '#000' }}
+            dropdownIconColor="#000"
           >
             <Picker.Item label="Bulan" value="" />
             {bulanList.map((b, i) => (
@@ -286,6 +332,8 @@ export default function ProfilScreen() {
           <Picker
             selectedValue={tahun}
             onValueChange={(v) => updateTanggalLahir(bulan, v)}
+            style={{ color: '#000' }}
+            dropdownIconColor="#000"
           >
             <Picker.Item label="Tahun" value="" />
             {tahunList.map((t, i) => (
@@ -300,12 +348,12 @@ export default function ProfilScreen() {
         <Picker
           selectedValue={form.statusKawin}
           onValueChange={(v) => handleChange("statusKawin", v)}
+          style={{ color: '#000' }} 
+          dropdownIconColor="#000"
         >
           <Picker.Item label="Pilih status perkawinan..." value="" />
           <Picker.Item label="Belum Menikah" value="Belum Menikah" />
           <Picker.Item label="Menikah" value="Menikah" />
-          <Picker.Item label="Cerai Hidup" value="Cerai Hidup" />
-          <Picker.Item label="Cerai Mati" value="Cerai Mati" />
         </Picker>
       </View>
 
@@ -314,6 +362,8 @@ export default function ProfilScreen() {
         <Picker
           selectedValue={form.statusKeanggotaan}
           onValueChange={(v) => handleChange("statusKeanggotaan", v)}
+          style={{ color: '#000' }} 
+          dropdownIconColor="#000"
         >
           <Picker.Item label="Pilih status keanggotaan..." value="" />
           <Picker.Item label="Anggota" value="Anggota" />
@@ -321,14 +371,24 @@ export default function ProfilScreen() {
         </Picker>
       </View>
 
-      <TouchableOpacity style={styles.btnSave} onPress={handleSave}>
-        <Text style={styles.btnText}>Simpan</Text>
+      {/* Tombol Simpan */}
+      <TouchableOpacity
+        style={[styles.btnSave, isSaving && { backgroundColor: "#87CEFA" }]}
+        onPress={handleSave}
+        disabled={isSaving}
+      >
+        {isSaving ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.btnText}>Simpan</Text>
+        )}
       </TouchableOpacity>
 
+      {/* Tombol Hapus */}
       <TouchableOpacity
-        style={[styles.btnHapus, isDeleting && { backgroundColor: "#ccc" }]} 
-        onPress={handleDeletePrompt} 
-        disabled={isDeleting} 
+        style={[styles.btnHapus, isDeleting && { backgroundColor: "#ccc" }]}
+        onPress={handleDeletePrompt}
+        disabled={isDeleting}
       >
         {isDeleting ? (
           <ActivityIndicator color="#fff" />
@@ -372,9 +432,5 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   btnText: { color: "#fff", fontWeight: "bold" },
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
+  title: { fontSize: 30, fontWeight: "bold", marginBottom: 20 },
 });
