@@ -16,7 +16,8 @@ import {
 import { API_URL } from "../../utils/api";
 import { Ionicons } from "@expo/vector-icons";
 import RenderHTML from "react-native-render-html";
-import { Colors, FontSize, Layout } from "../../constants/theme";
+import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface WartaItem {
   id: string;
@@ -178,7 +179,6 @@ export default function Warta(): React.ReactElement {
   if (loading) {
     return (
       <View style={styles.center}>
-        {/* UBAH WARNA LOADING */}
         <ActivityIndicator size="large" color={Colors.primary} />
         <Text style={{ marginTop: 8, color: Colors.textMuted }}>
           Memuat warta gereja...
@@ -196,18 +196,20 @@ export default function Warta(): React.ReactElement {
   }
 
   return (
+    <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.container}>
     <ScrollView
-      style={styles.container}
       contentContainerStyle={{
         paddingBottom: 50,
+        paddingTop: 10, // 🔹 Ditambahkan agar posisi title konsisten
         paddingHorizontal: Layout.paddingSmall,
       }}
       showsVerticalScrollIndicator={false}
     >
       <Text style={styles.title}>Warta</Text>
 
+      {/* 🔹 BENTUK DATE PICKER DISAMAKAN (PILL MODERN) */}
       <View style={styles.datePickerContainer}>
-        <TouchableOpacity onPress={handlePrevMonth}>
+        <TouchableOpacity onPress={handlePrevMonth} style={styles.navButton}>
           <Ionicons name="chevron-back" size={20} color={Colors.primary} />
         </TouchableOpacity>
 
@@ -218,7 +220,7 @@ export default function Warta(): React.ReactElement {
           })}
         </Text>
 
-        <TouchableOpacity onPress={handleNextMonth}>
+        <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
           <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
         </TouchableOpacity>
       </View>
@@ -341,12 +343,13 @@ export default function Warta(): React.ReactElement {
         <Text style={styles.emptyText}>Tidak ada warta untuk bulan ini.</Text>
       )}
     </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.background,
+    flex: 1,
     paddingHorizontal: Layout.paddingSmall,
   },
 
@@ -366,18 +369,27 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
+  // 🔹 UPDATE STYLE DATE SELECTOR DISINI
   datePickerContainer: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 14,
+    backgroundColor: Colors.white,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 50,
+    marginBottom: 20,
+    ...Shadows.shdows,
   },
 
   dateText: {
-    fontSize: FontSize.body,
+    fontSize: 15,
     fontWeight: "bold",
     color: Colors.text,
+  },
+
+  navButton: {
+    padding: 4,
   },
 
   cardContainer: {

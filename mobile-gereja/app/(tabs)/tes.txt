@@ -6,7 +6,6 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
-  ImageBackground,
   Linking,
 } from "react-native";
 import { API_URL } from "../../utils/api";
@@ -46,6 +45,13 @@ const formatYMD = (date: Date) => {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+};
+
+// 🔹 Fungsi Pembantu: Mengambil singkatan hari (SEN, SEL, dst)
+const getSingkatanHari = (dateString: string) => {
+  const date = new Date(dateString);
+  const hari = ["MIN", "SEN", "SEL", "RAB", "KAM", "JUM", "SAB"];
+  return hari[date.getDay()];
 };
 
 export default function JadwalIbadah(): React.ReactElement {
@@ -166,10 +172,10 @@ export default function JadwalIbadah(): React.ReactElement {
 
   const getAdjacentDate = (
     currentDate: Date,
-    direction: 1 | -1,
+    direction: 1 | -1
   ): Date | null => {
     const index = uniqueSortedDates.findIndex(
-      (d) => d.toDateString() === currentDate.toDateString(),
+      (d) => d.toDateString() === currentDate.toDateString()
     );
 
     const newIndex = index + direction;
@@ -189,11 +195,8 @@ export default function JadwalIbadah(): React.ReactElement {
   if (loading) {
     return (
       <View style={styles.center}>
-        {/* UBAH WARNA LOADING */}
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={{ marginTop: 8, color: Colors.textMuted }}>
-          Memuat jadwal ibadah...
-        </Text>
+        <Text style={{ marginTop: 8, color: Colors.textMuted }}>Memuat jadwal ibadah...</Text>
       </View>
     );
   }
@@ -209,9 +212,7 @@ export default function JadwalIbadah(): React.ReactElement {
   if (!selectedDate) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: Colors.textMuted }}>
-          Tidak ada jadwal untuk minggu ini.
-        </Text>
+        <Text style={{ color: Colors.textMuted }}>Tidak ada jadwal untuk minggu ini.</Text>
       </View>
     );
   }
@@ -226,28 +227,20 @@ export default function JadwalIbadah(): React.ReactElement {
     });
 
   return (
-    <LinearGradient
-      colors={[Colors.gradientStart, Colors.gradientEnd]}
-      style={styles.container}
-    >
+    <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.container}>
       <ScrollView
         contentContainerStyle={{
-          paddingBottom: 50,
-          paddingTop: 10,
-          paddingHorizontal: Layout.paddingSmall,
+          paddingHorizontal: Layout.padding, // Konsisten dengan Home
+          paddingBottom: 40,
+          paddingTop: 10, // Konsisten dengan Home
         }}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>Jadwal Ibadah</Text>
 
-        {/* Date Navigation */}
+        {/* Date Navigation Modern */}
         <View style={styles.datePickerContainer}>
-          <TouchableOpacity
-            onPress={handlePrevDate}
-            disabled={isPrevDisabled}
-            style={styles.navButton}
-          >
-            {/* UBAH WARNA ICON */}
+          <TouchableOpacity onPress={handlePrevDate} disabled={isPrevDisabled} style={styles.navButton}>
             <Ionicons
               name="chevron-back"
               size={20}
@@ -260,7 +253,6 @@ export default function JadwalIbadah(): React.ReactElement {
           </Text>
 
           <TouchableOpacity onPress={handleNextDate} style={styles.navButton}>
-            {/* UBAH WARNA ICON */}
             <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
           </TouchableOpacity>
         </View>
@@ -273,80 +265,63 @@ export default function JadwalIbadah(): React.ReactElement {
               .map((d) => (
                 <TouchableOpacity
                   key={d.id}
-                  activeOpacity={0.7}
+                  activeOpacity={0.8}
                   onPress={async () => {
                     if (d.url) {
                       const supported = await Linking.canOpenURL(d.url);
                       if (supported) {
                         await Linking.openURL(d.url);
-                      }
+                      } 
                     }
                   }}
                 >
                   <View style={styles.cardContainer}>
                     <View style={styles.cardRow}>
-                      {/* Gambar kiri */}
+                      
+                      {/* Gambar Kiri */}
                       <View style={styles.leftBox}>
                         {d.banner?.url ? (
-                          <ImageBackground
-                            source={{
-                              uri: `${API_URL.replace("/api/graphql", "")}${
-                                d.banner.url
-                              }`,
-                            }}
-                            style={styles.imageBackground}
-                            blurRadius={12}
-                          >
-                            <Image
-                              source={{
-                                uri: `${API_URL.replace("/api/graphql", "")}${
-                                  d.banner.url
-                                }`,
-                              }}
-                              style={styles.imageForeground}
-                            />
-                          </ImageBackground>
+                          <Image
+                            source={{ uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}` }}
+                            style={styles.imageForeground}
+                          />
                         ) : (
-                          <View style={styles.imagePlaceholder} />
+                          <View style={styles.imagePlaceholder}>
+                            <Ionicons name="image-outline" size={32} color={Colors.placeholder} />
+                          </View>
                         )}
+                        
+                        {/* 🔹 BADGE HARI */}
+                        <View style={styles.dayBadge}>
+                          <Text style={styles.dayBadgeText}>{getSingkatanHari(item.tanggal)}</Text>
+                        </View>
                       </View>
 
-                      {/* Informasi kanan */}
+                      {/* Informasi Kanan (Putih, Bersih) */}
                       <View style={styles.rightBox}>
                         <View style={styles.tagContainer}>
-                          <Text style={styles.tagText}>
-                            {item.topik || "Umum"}
-                          </Text>
+                          <Text style={styles.tagText}>{item.topik || "Umum"}</Text>
                         </View>
-
-                        <Text style={styles.judul}>
-                          {formatDate(item.tanggal)}
-                        </Text>
-
+                        
+                        <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
+                        
                         <View style={styles.infoRow}>
-                          <Ionicons
-                            name="time-outline"
-                            size={16}
-                            color={Colors.textMuted}
-                          />
+                          <Ionicons name="time-outline" size={16} color={Colors.textMuted} />
                           <Text style={styles.isiCard}>{d.jam || "-"} WIB</Text>
                         </View>
-
+                        
                         <View style={styles.infoRow}>
-                          <Ionicons
-                            name="person-outline"
-                            size={16}
-                            color={Colors.textMuted}
-                          />
+                          <Ionicons name="person-outline" size={16} color={Colors.textMuted} />
                           <Text style={styles.isiCard} numberOfLines={1}>
                             {d.pengkhotbah?.nama || "-"}
                           </Text>
                         </View>
                       </View>
+
                     </View>
                   </View>
                 </TouchableOpacity>
-              )),
+              ))
           )
         ) : (
           <Text style={styles.emptyText}>Tidak ada jadwal untuk hari ini.</Text>
@@ -359,16 +334,16 @@ export default function JadwalIbadah(): React.ReactElement {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: Layout.paddingSmall,
   },
-
+  // Konsisten margin dan ukuran dengan home.tsx
   title: {
     fontSize: FontSize.h1,
-    fontWeight: "bold",
+    fontWeight: "800",
     color: Colors.primary,
-    marginVertical: Layout.gap,
+    marginVertical: Layout.gap, 
   },
 
+  // Date Picker Pill Style
   datePickerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -380,59 +355,75 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     ...Shadows.shdows,
   },
-
-  dateText: {
-    fontSize: FontSize.body,
-    fontWeight: "bold",
-    color: Colors.text,
-  },
-
   navButton: {
     padding: 4,
   },
+  dateText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: Colors.text,
+  },
 
+  // Card Modern Style
   cardContainer: {
     backgroundColor: Colors.white,
     borderRadius: Layout.radiusLarge,
     marginBottom: 16,
-    // borderWidth: 1,
-    // borderColor: Colors.border,
     ...Shadows.shdows,
-    overflow: "hidden",
-    elevation: 4,
+    elevation: 4, 
   },
-
   cardRow: {
     flexDirection: "row",
     borderRadius: Layout.radiusLarge,
-    overflow: "hidden",
-    alignItems: "stretch",
-  },
-
-  leftBox: {
-    width: 120,
-    flex: 1,
-    backgroundColor: Colors.black,
-    alignItems: "center",
-    position: "relative",
-  },
-
-  rightBox: {
-    flex: 1.3,
+    overflow: "hidden", 
     backgroundColor: Colors.white,
-    padding: Layout.paddingSmall,
+  },
+  leftBox: {
+    width: 120, // Lebar fixed 
+    backgroundColor: Colors.muda,
     justifyContent: "center",
-    position: "relative",
+    alignItems: "center",
+    position: 'relative', // Untuk badge
   },
-
-  image: {
+  rightBox: {
+    flex: 1,
+    padding: 16,
+    justifyContent: "center",
+  },
+  imageForeground: {
     width: "100%",
-    height: undefined,
+    height: "100%",
     resizeMode: "cover",
-    aspectRatio: 1.5,
-    maxHeight: 120,
+  },
+  imagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: Colors.inputBackground, 
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dayBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  dayBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Colors.primary, 
+    letterSpacing: 0.5,
   },
 
+  // Typography & Tags
   tagContainer: {
     backgroundColor: Colors.muda,
     paddingHorizontal: 10,
@@ -441,32 +432,27 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginBottom: 8,
   },
-
-  category: {
-    color: Colors.white,
-    fontWeight: "bold",
-    fontSize: FontSize.small,
-    marginBottom: 2,
-  },
-
-  judul: {
-    color: Colors.white,
-    fontSize: FontSize.custom.titleCard,
+  tagText: {
+    color: Colors.primary,
     fontWeight: "700",
-    marginBottom: 2,
-    flexShrink: 1,
+    fontSize: 11,
+    textTransform: "uppercase",
   },
-
+  judul: {
+    color: Colors.text,
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 1,
     marginBottom: 4,
-    gap: 0,
+    gap: 6,
   },
   isiCard: {
     color: Colors.textMuted,
-    fontSize: FontSize.custom.dateCard,
+    fontSize: 13,
     flexShrink: 1,
     fontWeight: "500",
   },
@@ -474,41 +460,12 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: "center",
     color: Colors.textMuted,
-    marginTop: 20,
+    marginTop: 30,
+    fontSize: 15,
   },
-
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-
-  imageBackground: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  tagText: {
-    color: Colors.primary,
-    fontWeight: "700",
-    fontSize: 11,
-    textTransform: "uppercase",
-  },
-
-  imagePlaceholder: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: Colors.inputBackground,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  imageForeground: {
-    width: "100%",
-    aspectRatio: 1.5,
-    resizeMode: "cover",
-    borderTopLeftRadius: Layout.radiusLarge,
-    borderBottomLeftRadius: Layout.radiusLarge,
   },
 });
