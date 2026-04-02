@@ -10,19 +10,24 @@ import {
   ActivityIndicator,
   Platform,
   ToastAndroid,
+  KeyboardAvoidingView,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { Ionicons } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
-import { useRouter } from "expo-router";
+import { useRouter, Stack } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { 
-  fetchUserProfileAPI, 
-  saveUserProfileAPI, 
-  deleteBackendDataAPI 
+import { LinearGradient } from "expo-linear-gradient";
+import { Colors, FontSize, Layout, Shadows } from "../constants/theme";
+import {
+  fetchUserProfileAPI,
+  saveUserProfileAPI,
+  deleteBackendDataAPI
 } from "../services/profileAPI";
 
 export default function ProfilScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
 
   // State untuk Loading & ID dari Backend
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -30,6 +35,9 @@ export default function ProfilScreen() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [keystoneUserId, setKeystoneUserId] = useState<string | null>(null);
   const [keystoneProfileId, setKeystoneProfileId] = useState<string | null>(null);
+
+  // State untuk melacak dropdown mana yang sedang terbuka
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     nama: "",
@@ -57,6 +65,12 @@ export default function ProfilScreen() {
   const tahunList = Array.from({ length: 100 }, (_, i) =>
     (new Date().getFullYear() - i).toString(),
   );
+  
+  const pendidikanList = [
+    "Tidak/Belum Sekolah", "SD/Sederajat", "SMP/Sederajat", 
+    "SMA/SMK/Sederajat", "Diploma", "Sarjana (S1)", 
+    "Magister (S2)", "Doktor (S3)"
+  ];
 
   useEffect(() => {
     fetchProfileData();
@@ -68,8 +82,6 @@ export default function ProfilScreen() {
       if (!user || !user.email) throw new Error("Belum login");
 
       const firebaseToken = await user.getIdToken(true);
-
-      // Panggil fungsi dari profileAPI.ts
       const userData = await fetchUserProfileAPI(user.email, firebaseToken);
 
       if (userData) {
@@ -79,7 +91,6 @@ export default function ProfilScreen() {
         if (p) {
           setKeystoneProfileId(p.id);
 
-          // Terjemahkan data backend ke frontend
           const jkFront = p.jenisKelamin === "L" ? "Laki-laki" : p.jenisKelamin === "P" ? "Perempuan" : "";
           const statusKawinFront = p.statusPernikahan === "single" ? "Belum Menikah" : p.statusPernikahan === "married" ? "Menikah" : "";
           const keanggotaanFront = p.statusKeanggotaan === "anggota" ? "Anggota" : p.statusKeanggotaan === "simpatisan" ? "Simpatisan" : "";
@@ -98,7 +109,6 @@ export default function ProfilScreen() {
             tanggalLahir: p.tanggalLahir || "",
           });
 
-          // Pecah tanggal lahir
           if (p.tanggalLahir) {
             const [t, b] = p.tanggalLahir.split("-");
             setTahun(t);
@@ -137,7 +147,6 @@ export default function ProfilScreen() {
       const user = auth().currentUser;
       const firebaseToken = await user?.getIdToken(true) || "";
 
-      // Siapkan Payload Data
       const payload = {
         nama: form.nama,
         alamat: form.alamat,
@@ -151,10 +160,8 @@ export default function ProfilScreen() {
         tglLahir: form.tanggalLahir,
       };
 
-      // Panggil fungsi simpan dari profileAPI.ts
       const result = await saveUserProfileAPI(keystoneUserId, keystoneProfileId, payload, firebaseToken);
 
-      // Update state ID profile jika baru di-create
       if (!keystoneProfileId && result.profile?.id) {
         setKeystoneProfileId(result.profile.id);
       }
@@ -179,13 +186,9 @@ export default function ProfilScreen() {
       if (!user) throw new Error("Anda belum login.");
       const firebaseToken = await user.getIdToken(true);
       
-      // Hapus data di Backend KeystoneJS
       await deleteBackendDataAPI(keystoneUserId, keystoneProfileId, firebaseToken);
-      
-      // Hapus akun di Firebase
       await user.delete();
 
-      // Hapus cache Google Sign-in
       try {
         await GoogleSignin.revokeAccess();
         await GoogleSignin.signOut();
@@ -200,8 +203,7 @@ export default function ProfilScreen() {
       console.error("Error Delete:", error);
       setIsDeleting(false);
       
-      // Penanganan khusus jika Firebase minta login ulang (Token Expired)
-if (error.code === "auth/requires-recent-login") {
+      if (error.code === "auth/requires-recent-login") {
         Alert.alert(
           "Verifikasi Keamanan 🛡️",
           "Karena ini tindakan permanen, Google meminta Anda memverifikasi identitas sekali lagi.",
@@ -215,19 +217,12 @@ if (error.code === "auth/requires-recent-login") {
                   const response = await GoogleSignin.signIn();
                   if (response.type === 'success') {
                     const idToken = response.data.idToken;
-                    
                     if (idToken) {
                       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-                      
-                      // Masukkan kredensial baru ke Firebase
                       await auth().currentUser?.reauthenticateWithCredential(googleCredential);
-                      
                       Alert.alert("Sukses", "Identitas terverifikasi! Silakan tekan tombol 'Hapus Akun' sekali lagi.");
                     }
-                  } else {
-                    console.log("Verifikasi dibatalkan oleh user.");
                   }
-
                 } catch (reauthErr) {
                   console.log("Batal verifikasi:", reauthErr);
                 }
@@ -250,187 +245,365 @@ if (error.code === "auth/requires-recent-login") {
 
   if (isLoadingData) {
     return (
-      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator size="large" color="#1E90FF" />
-        <Text style={{ marginTop: 10 }}>Memuat Profil...</Text>
-      </View>
+      <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.center}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={{ marginTop: 10, color: Colors.primary }}>Memuat Profil...</Text>
+      </LinearGradient>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Profil Jemaat</Text>
-
-      <Text style={styles.label}>Nama *</Text>
-      <TextInput style={styles.input} value={form.nama} onChangeText={(v) => handleChange("nama", v)} />
-
-      <Text style={styles.label}>Alamat *</Text>
-      <TextInput style={styles.input} value={form.alamat} onChangeText={(v) => handleChange("alamat", v)} />
-
-      <Text style={styles.label}>Kode Pos / Domisili *</Text>
-      <TextInput style={styles.input} value={form.kodePos} onChangeText={(v) => handleChange("kodePos", v)} keyboardType="numeric" />
-
-      <Text style={styles.label}>Nomor WA *</Text>
-      <TextInput style={styles.input} value={form.noWa} onChangeText={(v) => handleChange("noWa", v)} keyboardType="phone-pad" />
-
-      <Text style={styles.label}>Email *</Text>
-      <TextInput style={styles.input} value={form.email} editable={false} />
-
-      <Text style={styles.label}>Jenis Kelamin *</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={form.jenisKelamin}
-          onValueChange={(v) => handleChange("jenisKelamin", v)}
-          style={{ color: '#000' }}
-          dropdownIconColor="#000"
+    <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      {/* 🔹 HEADER KONSISTEN & RAPI */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
         >
-          <Picker.Item label="Pilih jenis kelamin..." value="" />
-          <Picker.Item label="Laki-laki" value="Laki-laki" />
-          <Picker.Item label="Perempuan" value="Perempuan" />
-        </Picker>
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profil Akun</Text>
       </View>
 
-      <Text style={styles.label}>Pendidikan Terakhir *</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={form.pendidikan}
-          onValueChange={(v) => handleChange("pendidikan", v)}
-          style={{ color: '#000' }}
-          dropdownIconColor="#000"
-        >
-          <Picker.Item label="Pilih pendidikan terakhir..." value="" />
-          <Picker.Item label="Tidak/Belum Sekolah" value="Tidak/Belum Sekolah" />
-          <Picker.Item label="SD/Sederajat" value="SD/Sederajat" />
-          <Picker.Item label="SMP/Sederajat" value="SMP/Sederajat" />
-          <Picker.Item label="SMA/SMK/Sederajat" value="SMA/SMK/Sederajat" />
-          <Picker.Item label="Diploma" value="Diploma" />
-          <Picker.Item label="Sarjana (S1)" value="Sarjana (S1)" />
-          <Picker.Item label="Magister (S2)" value="Magister (S2)" />
-          <Picker.Item label="Doktor (S3)" value="Doktor (S3)" />
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>Pekerjaan *</Text>
-      <TextInput style={styles.input} value={form.pekerjaan} onChangeText={(v) => handleChange("pekerjaan", v)} />
-
-      <Text style={styles.label}>Tanggal Lahir (Bulan & Tahun) *</Text>
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        <View style={[styles.pickerWrapper, { flex: 1 }]}>
-          <Picker
-            selectedValue={bulan}
-            onValueChange={(v) => updateTanggalLahir(v, tahun)}
-            style={{ color: '#000' }}
-            dropdownIconColor="#000"
-          >
-            <Picker.Item label="Bulan" value="" />
-            {bulanList.map((b, i) => (
-              <Picker.Item key={i} label={b} value={b} />
-            ))}
-          </Picker>
-        </View>
-        <View style={[styles.pickerWrapper, { flex: 1 }]}>
-          <Picker
-            selectedValue={tahun}
-            onValueChange={(v) => updateTanggalLahir(bulan, v)}
-            style={{ color: '#000' }}
-            dropdownIconColor="#000"
-          >
-            <Picker.Item label="Tahun" value="" />
-            {tahunList.map((t, i) => (
-              <Picker.Item key={i} label={t} value={t} />
-            ))}
-          </Picker>
-        </View>
-      </View>
-
-      <Text style={styles.label}>Status Perkawinan *</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={form.statusKawin}
-          onValueChange={(v) => handleChange("statusKawin", v)}
-          style={{ color: '#000' }} 
-          dropdownIconColor="#000"
-        >
-          <Picker.Item label="Pilih status perkawinan..." value="" />
-          <Picker.Item label="Belum Menikah" value="Belum Menikah" />
-          <Picker.Item label="Menikah" value="Menikah" />
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>Status Keanggotaan Gereja *</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={form.statusKeanggotaan}
-          onValueChange={(v) => handleChange("statusKeanggotaan", v)}
-          style={{ color: '#000' }} 
-          dropdownIconColor="#000"
-        >
-          <Picker.Item label="Pilih status keanggotaan..." value="" />
-          <Picker.Item label="Anggota" value="Anggota" />
-          <Picker.Item label="Simpatisan" value="Simpatisan" />
-        </Picker>
-      </View>
-
-      {/* Tombol Simpan */}
-      <TouchableOpacity
-        style={[styles.btnSave, isSaving && { backgroundColor: "#87CEFA" }]}
-        onPress={handleSave}
-        disabled={isSaving}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        {isSaving ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.btnText}>Simpan</Text>
-        )}
-      </TouchableOpacity>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.card}>
+            
+            <Text style={[styles.label, { marginTop: 0 }]}>Nama <Text style={styles.asterisk}>*</Text></Text>
+            <TextInput style={styles.input} value={form.nama} onChangeText={(v) => handleChange("nama", v)} />
 
-      {/* Tombol Hapus */}
-      <TouchableOpacity
-        style={[styles.btnHapus, isDeleting && { backgroundColor: "#ccc" }]}
-        onPress={handleDeletePrompt}
-        disabled={isDeleting}
-      >
-        {isDeleting ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.btnText}>Hapus Akun</Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+            <Text style={styles.label}>Alamat <Text style={styles.asterisk}>*</Text></Text>
+            <TextInput style={styles.input} value={form.alamat} onChangeText={(v) => handleChange("alamat", v)} />
+
+            <Text style={styles.label}>Kode Pos / Domisili <Text style={styles.asterisk}>*</Text></Text>
+            <TextInput style={styles.input} value={form.kodePos} onChangeText={(v) => handleChange("kodePos", v)} keyboardType="numeric" />
+
+            <Text style={styles.label}>Nomor WA <Text style={styles.asterisk}>*</Text></Text>
+            <TextInput style={styles.input} value={form.noWa} onChangeText={(v) => handleChange("noWa", v)} keyboardType="phone-pad" />
+
+            <Text style={styles.label}>Email</Text>
+            <TextInput style={[styles.input, { backgroundColor: Colors.divider, color: Colors.textMuted }]} value={form.email} editable={false} />
+
+            {/* 🔹 TOGGLE JENIS KELAMIN */}
+            <Text style={styles.label}>Jenis Kelamin <Text style={styles.asterisk}>*</Text></Text>
+            <View style={styles.toggleContainer}>
+              <TouchableOpacity
+                style={[styles.toggleButton, form.jenisKelamin === "Laki-laki" ? styles.toggleButtonActive : null]}
+                onPress={() => handleChange("jenisKelamin", "Laki-laki")}
+              >
+                <Text style={[styles.toggleText, form.jenisKelamin === "Laki-laki" ? styles.toggleTextActive : null]}>Laki-laki</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleButton, form.jenisKelamin === "Perempuan" ? styles.toggleButtonActive : null]}
+                onPress={() => handleChange("jenisKelamin", "Perempuan")}
+              >
+                <Text style={[styles.toggleText, form.jenisKelamin === "Perempuan" ? styles.toggleTextActive : null]}>Perempuan</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* 🔹 CUSTOM DROPDOWN PENDIDIKAN */}
+            <Text style={styles.label}>Pendidikan Terakhir <Text style={styles.asterisk}>*</Text></Text>
+            <TouchableOpacity
+              style={styles.dropdownHeader}
+              activeOpacity={0.8}
+              onPress={() => setOpenDropdown(openDropdown === "pendidikan" ? null : "pendidikan")}
+            >
+              <Text style={[styles.dropdownHeaderText, !form.pendidikan && { color: Colors.placeholder }]}>
+                {form.pendidikan ? form.pendidikan : "Pilih pendidikan..."}
+              </Text>
+              <Ionicons name={openDropdown === "pendidikan" ? "chevron-up" : "chevron-down"} size={20} color={Colors.textMuted} />
+            </TouchableOpacity>
+            {openDropdown === "pendidikan" && (
+              <View style={styles.dropdownListContainer}>
+                <ScrollView nestedScrollEnabled style={{ maxHeight: 200 }}>
+                  {pendidikanList.map((item, idx) => (
+                    <View key={idx}>
+                      <TouchableOpacity
+                        style={styles.dropdownItem}
+                        onPress={() => { handleChange("pendidikan", item); setOpenDropdown(null); }}
+                      >
+                        <Text style={styles.dropdownItemText}>{item}</Text>
+                      </TouchableOpacity>
+                      {idx < pendidikanList.length - 1 && <View style={styles.divider} />}
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            <Text style={styles.label}>Pekerjaan <Text style={styles.asterisk}>*</Text></Text>
+            <TextInput style={styles.input} value={form.pekerjaan} onChangeText={(v) => handleChange("pekerjaan", v)} />
+
+            {/* 🔹 CUSTOM DROPDOWN TANGGAL LAHIR */}
+            <Text style={styles.label}>Tanggal Lahir (Bulan & Tahun) <Text style={styles.asterisk}>*</Text></Text>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              
+              <View style={{ flex: 1 }}>
+                <TouchableOpacity style={styles.dropdownHeader} onPress={() => setOpenDropdown(openDropdown === "bulan" ? null : "bulan")}>
+                  <Text style={[styles.dropdownHeaderText, !bulan && { color: Colors.placeholder }]}>{bulan || "Bulan"}</Text>
+                  <Ionicons name={openDropdown === "bulan" ? "chevron-up" : "chevron-down"} size={20} color={Colors.textMuted} />
+                </TouchableOpacity>
+                {openDropdown === "bulan" && (
+                  <View style={[styles.dropdownListContainer, { position: "absolute", top: 50, left: 0, right: 0, zIndex: 10 }]}>
+                    <ScrollView nestedScrollEnabled style={{ maxHeight: 150 }}>
+                      {bulanList.map((b, i) => (
+                        <TouchableOpacity key={i} style={styles.dropdownItem} onPress={() => { updateTanggalLahir(b, tahun); setOpenDropdown(null); }}>
+                          <Text style={styles.dropdownItemText}>{b}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <TouchableOpacity style={styles.dropdownHeader} onPress={() => setOpenDropdown(openDropdown === "tahun" ? null : "tahun")}>
+                  <Text style={[styles.dropdownHeaderText, !tahun && { color: Colors.placeholder }]}>{tahun || "Tahun"}</Text>
+                  <Ionicons name={openDropdown === "tahun" ? "chevron-up" : "chevron-down"} size={20} color={Colors.textMuted} />
+                </TouchableOpacity>
+                {openDropdown === "tahun" && (
+                  <View style={[styles.dropdownListContainer, { position: "absolute", top: 50, left: 0, right: 0, zIndex: 10 }]}>
+                    <ScrollView nestedScrollEnabled style={{ maxHeight: 150 }}>
+                      {tahunList.map((t, i) => (
+                        <TouchableOpacity key={i} style={styles.dropdownItem} onPress={() => { updateTanggalLahir(bulan, t); setOpenDropdown(null); }}>
+                          <Text style={styles.dropdownItemText}>{t}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {/* 🔹 CUSTOM DROPDOWN PERKAWINAN */}
+            <Text style={styles.label}>Status Perkawinan <Text style={styles.asterisk}>*</Text></Text>
+            <TouchableOpacity
+              style={styles.dropdownHeader}
+              activeOpacity={0.8}
+              onPress={() => setOpenDropdown(openDropdown === "kawin" ? null : "kawin")}
+            >
+              <Text style={[styles.dropdownHeaderText, !form.statusKawin && { color: Colors.placeholder }]}>
+                {form.statusKawin ? form.statusKawin : "Pilih status..."}
+              </Text>
+              <Ionicons name={openDropdown === "kawin" ? "chevron-up" : "chevron-down"} size={20} color={Colors.textMuted} />
+            </TouchableOpacity>
+            {openDropdown === "kawin" && (
+              <View style={styles.dropdownListContainer}>
+                <TouchableOpacity style={styles.dropdownItem} onPress={() => { handleChange("statusKawin", "Belum Menikah"); setOpenDropdown(null); }}>
+                  <Text style={styles.dropdownItemText}>Belum Menikah</Text>
+                </TouchableOpacity>
+                <View style={styles.divider} />
+                <TouchableOpacity style={styles.dropdownItem} onPress={() => { handleChange("statusKawin", "Menikah"); setOpenDropdown(null); }}>
+                  <Text style={styles.dropdownItemText}>Menikah</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* 🔹 CUSTOM DROPDOWN KEANGGOTAAN */}
+            <Text style={styles.label}>Status Keanggotaan Gereja <Text style={styles.asterisk}>*</Text></Text>
+            <TouchableOpacity
+              style={styles.dropdownHeader}
+              activeOpacity={0.8}
+              onPress={() => setOpenDropdown(openDropdown === "anggota" ? null : "anggota")}
+            >
+              <Text style={[styles.dropdownHeaderText, !form.statusKeanggotaan && { color: Colors.placeholder }]}>
+                {form.statusKeanggotaan ? form.statusKeanggotaan : "Pilih status..."}
+              </Text>
+              <Ionicons name={openDropdown === "anggota" ? "chevron-up" : "chevron-down"} size={20} color={Colors.textMuted} />
+            </TouchableOpacity>
+            {openDropdown === "anggota" && (
+              <View style={styles.dropdownListContainer}>
+                <TouchableOpacity style={styles.dropdownItem} onPress={() => { handleChange("statusKeanggotaan", "Anggota"); setOpenDropdown(null); }}>
+                  <Text style={styles.dropdownItemText}>Anggota</Text>
+                </TouchableOpacity>
+                <View style={styles.divider} />
+                <TouchableOpacity style={styles.dropdownItem} onPress={() => { handleChange("statusKeanggotaan", "Simpatisan"); setOpenDropdown(null); }}>
+                  <Text style={styles.dropdownItemText}>Simpatisan</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Tombol Simpan */}
+            <TouchableOpacity
+              style={[styles.btnSave, isSaving && { opacity: 0.7 }]}
+              onPress={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <ActivityIndicator color={Colors.white} />
+              ) : (
+                <Text style={styles.btnText}>Simpan</Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Tombol Hapus */}
+            <TouchableOpacity
+              style={[styles.btnHapus, isDeleting && { opacity: 0.7 }]}
+              onPress={handleDeletePrompt}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <ActivityIndicator color={Colors.white} />
+              ) : (
+                <Text style={styles.btnText}>Hapus Akun</Text>
+              )}
+            </TouchableOpacity>
+
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
-  label: { fontWeight: "bold", marginBottom: 4, marginTop: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: "#f9f9f9",
+  container: {
+    flex: 1,
   },
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    backgroundColor: "#f9f9f9",
-  },
-  btnSave: {
-    backgroundColor: "#1E90FF",
-    padding: 14,
-    borderRadius: 10,
+  center: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    marginTop: 24,
+  },
+  
+  // 🔹 HEADER RAPI & GAP DIPERBAIKI
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Layout.padding,
+    paddingVertical: 16,
+    paddingTop: Platform.OS === 'android' ? 40 : 20, 
+  },
+  backButton: {
+    marginRight: 10,
+  },
+  headerTitle: {
+    fontSize: FontSize.h1,
+    fontWeight: "bold",
+    color: Colors.primary,
+  },
+
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: Layout.padding,
+    paddingTop: 4,
+    paddingBottom: 40,
+  },
+  
+  card: {
+    backgroundColor: Colors.white,
+    borderRadius: Layout.radiusXLarge,
+    padding: 24,
     marginBottom: 20,
+    ...Shadows.shdows, 
+  },
+
+  // 🔹 TYPOGRAPHY & INPUT
+  label: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: Colors.text,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  asterisk: {
+    color: Colors.danger, 
+  },
+  input: {
+    backgroundColor: Colors.inputBackground,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Layout.radiusLarge,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: Colors.text,
+  },
+
+  // 🔹 TOGGLE GENDER
+  toggleContainer: {
+    flexDirection: "row",
+    backgroundColor: "rgba(0,0,0,0.03)", // Sedikit abu-abu transparan
+    borderRadius: Layout.radiusLarge,
+    padding: 4,
+    height: 50,
+  },
+  toggleButton: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 12,
+  },
+  toggleButtonActive: {
+    backgroundColor: Colors.white,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  toggleText: { fontSize: 15, fontWeight: "600", color: Colors.textMuted },
+  toggleTextActive: { color: Colors.primary, fontWeight: "700" },
+
+  // 🔹 CUSTOM DROPDOWN
+  dropdownHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: Colors.inputBackground,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Layout.radiusLarge,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  dropdownHeaderText: { fontSize: 15, color: Colors.text },
+  dropdownListContainer: {
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Layout.radiusLarge,
+    marginTop: 6,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  dropdownItem: { paddingVertical: 14, paddingHorizontal: 16 },
+  dropdownItemText: { fontSize: 15, color: Colors.text },
+  divider: { height: 1, backgroundColor: Colors.border, marginHorizontal: 16 },
+
+  // 🔹 BUTTONS
+  btnSave: {
+    backgroundColor: Colors.primary,
+    borderRadius: Layout.radiusLarge,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 12,
+    ...Shadows.button,
   },
   btnHapus: {
-    backgroundColor: "#FF6347",
-    padding: 14,
-    borderRadius: 10,
+    backgroundColor: Colors.danger,
+    borderRadius: Layout.radiusLarge,
+    paddingVertical: 16,
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 10,
+    ...Shadows.button,
   },
-  btnText: { color: "#fff", fontWeight: "bold" },
-  title: { fontSize: 30, fontWeight: "bold", marginBottom: 20 },
+  btnText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });

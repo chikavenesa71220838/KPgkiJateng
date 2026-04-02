@@ -1,37 +1,38 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
-  StyleSheet,
   Text,
+  StyleSheet,
+  TextInput,
   ScrollView,
-  Image,
   ActivityIndicator,
-  Linking,
+  Image,
+  TouchableOpacity,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+  useWindowDimensions,
 } from "react-native";
 import { API_URL } from "../../utils/api";
 import { Ionicons } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import RenderHTML from "react-native-render-html";
 import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 
-interface DetailIbadah {
+interface WartaItem {
   id: string;
-  jam: string;
-  pengkhotbah?: { nama: string };
-  banner?: { url: string };
-  url?: string;
+  judul: string;
+  isiWarta: string | { document: any };
+  masaBerlaku?: string;
+  tanggalPelaksanaan?: string;
+  kategori?: { nama: string };
+  gambar?: { url: string };
 }
 
-interface Jadwal {
-  id: string;
-  tanggal: string;
-  topik: string;
-  detailIbadah: DetailIbadah[];
-}
-
-const formatDate = (dateString: string) => {
+const formatDate = (dateString?: string) => {
+  if (!dateString) return "-";
   const options: Intl.DateTimeFormatOptions = {
-    weekday: "long",
+    weekday: "long", // 🔹 Tambah hari biar mirip referensi gambar
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -39,71 +40,87 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("id-ID", options);
 };
 
-// Format ke yyyy-mm-dd
-const formatYMD = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
-// 🔹 Fungsi Pembantu: Mengambil singkatan hari (SEN, SEL, dst)
-const getSingkatanHari = (dateString: string) => {
-  const date = new Date(dateString);
-  const hari = ["MIN", "SEN", "SEL", "RAB", "KAM", "JUM", "SAB"];
-  return hari[date.getDay()];
-};
+function keystoneDocumentToHtml(document: any[]): string {
+  if (!Array.isArray(document)) return "";
 
-export default function JadwalIbadah(): React.ReactElement {
-  const [jadwal, setJadwal] = useState<Jadwal[]>([]);
-  const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
+  const serializeNode = (node: any): string => {
+    if (!node) return "";
+
+    if (node.type === "divider") {
+      return "<hr />";
+    }
+
+    if (node.children) {
+      const childrenHtml = node.children.map(serializeNode).join("");
+
+      switch (node.type) {
+        case "paragraph":
+          return `<p>${childrenHtml}</p>`;
+        case "heading":
+          return `<h${node.level || 2}>${childrenHtml}</h${node.level || 2}>`;
+        case "numbered-list":
+        case "ordered-list":
+          return `<ol>${childrenHtml}</ol>`;
+        case "bulleted-list":
+        case "unordered-list":
+          return `<ul>${childrenHtml}</ul>`;
+        case "list-item":
+          return `<li>${childrenHtml}</li>`;
+        case "list-item-content":
+          return childrenHtml;
+        case "link":
+          return `<a href="${node.href}">${childrenHtml}</a>`;
+        default:
+          return childrenHtml;
+      }
+    }
+
+    let text = node.text || "";
+    if (node.bold) text = `<strong>${text}</strong>`;
+    if (node.italic) text = `<em>${text}</em>`;
+    if (node.underline) text = `<u>${text}</u>`;
+    if (node.strikethrough) text = `<s>${text}</s>`;
+    if (node.code) text = `<code>${text}</code>`;
+    return text;
+  };
+
+  return document.map(serializeNode).join("");
+}
+
+export default function Warta(): React.ReactElement {
+  const { width } = useWindowDimensions();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [warta, setWarta] = useState<WartaItem[]>([]);
+  const [filteredData, setFilteredData] = useState<WartaItem[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const uniqueSortedDates = React.useMemo(() => {
-    const allDates = jadwal.map((j) => new Date(j.tanggal));
-    const uniqueDateTimes = [
-      ...new Set(allDates.map((d) => d.setHours(0, 0, 0, 0))),
-    ];
-
-    return uniqueDateTimes
-      .map((t) => new Date(t))
-      .sort((a, b) => a.getTime() - b.getTime());
-  }, [jadwal]);
-
-  const fetchData = async () => {
+  const fetchWarta = async () => {
     try {
-      const today = new Date();
-      const dayOfWeek = today.getDay();
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - dayOfWeek);
-      const endOfNextWeek = new Date(startOfWeek);
-      endOfNextWeek.setDate(startOfWeek.getDate() + 14);
-
-      const now = formatYMD(startOfWeek);
-      const next = formatYMD(endOfNextWeek);
-
+      setLoading(true);
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `
             query {
-              jadwalIbadahs(
-                where: { tanggal: { gte: "${now}", lte: "${next}" } }
-                orderBy: { tanggal: asc }
-              ) {
+              wartas(orderBy: { masaBerlaku: desc }) {
                 id
-                tanggal
-                topik
-                detailIbadah {
-                  id
-                  jam
-                  url
-                  pengkhotbah { nama }
-                  banner { url }
-                }
+                judul
+                isiWarta { document }
+                masaBerlaku
+                tanggalPelaksanaan
+                kategori { nama }
+                gambar { url }
               }
             }
           `,
@@ -114,30 +131,9 @@ export default function JadwalIbadah(): React.ReactElement {
       if (result.errors)
         throw new Error(result.errors[0]?.message || "GraphQL Error");
 
-      const data = result.data?.jadwalIbadahs || [];
-
-      setJadwal(data);
+      const data = result.data?.wartas || [];
+      setWarta(data);
       setFilteredData(data);
-
-      if (data.length > 0) {
-        const todayDate = new Date();
-        todayDate.setHours(0, 0, 0, 0);
-
-        const nextUpcoming = data.find((item: Jadwal) => {
-          const itemDate = new Date(item.tanggal);
-          itemDate.setHours(0, 0, 0, 0);
-          return itemDate.getTime() >= todayDate.getTime();
-        });
-
-        if (nextUpcoming) {
-          setSelectedDate(new Date(nextUpcoming.tanggal));
-        } else {
-          setSelectedDate(new Date(data[data.length - 1].tanggal));
-        }
-      } else {
-        setSelectedDate(today);
-      }
-
       setError(null);
     } catch (err: any) {
       console.error("Fetch error:", err);
@@ -148,55 +144,46 @@ export default function JadwalIbadah(): React.ReactElement {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchWarta();
   }, []);
 
-  const handlePrevDate = () => {
-    if (!selectedDate) return;
-    const prevDate = getAdjacentDate(selectedDate, -1);
-    if (!prevDate) return;
+  useEffect(() => {
+    const selectedMonth = selectedDate.getMonth();
+    const selectedYear = selectedDate.getFullYear();
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    let data = warta.filter((item) => {
+      if (!item.masaBerlaku) return false;
+      const d = new Date(item.masaBerlaku);
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
 
-    if (prevDate.getTime() < today.getTime()) return;
+    setFilteredData(data);
+  }, [selectedDate, warta]);
 
-    setSelectedDate(prevDate);
+  const handlePrevMonth = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(selectedDate.getMonth() - 1);
+    setSelectedDate(newDate);
   };
 
-  const handleNextDate = () => {
-    if (!selectedDate) return;
-    const nextDate = getAdjacentDate(selectedDate, 1);
-    if (nextDate) setSelectedDate(nextDate);
+  const handleNextMonth = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(selectedDate.getMonth() + 1);
+    setSelectedDate(newDate);
   };
 
-  const getAdjacentDate = (
-    currentDate: Date,
-    direction: 1 | -1
-  ): Date | null => {
-    const index = uniqueSortedDates.findIndex(
-      (d) => d.toDateString() === currentDate.toDateString()
-    );
-
-    const newIndex = index + direction;
-    if (newIndex >= 0 && newIndex < uniqueSortedDates.length) {
-      return uniqueSortedDates[newIndex];
-    }
-    return null;
+  const toggleExpand = (id: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedId(expandedId === id ? null : id);
   };
-
-  const isPrevDisabled = (() => {
-    if (!selectedDate) return true;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return selectedDate.getTime() <= today.getTime();
-  })();
 
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={{ marginTop: 8, color: Colors.textMuted }}>Memuat jadwal ibadah...</Text>
+        <Text style={{ marginTop: 8, color: Colors.textMuted }}>
+          Memuat warta gereja...
+        </Text>
       </View>
     );
   }
@@ -209,124 +196,135 @@ export default function JadwalIbadah(): React.ReactElement {
     );
   }
 
-  if (!selectedDate) {
-    return (
-      <View style={styles.center}>
-        <Text style={{ color: Colors.textMuted }}>Tidak ada jadwal untuk minggu ini.</Text>
-      </View>
-    );
-  }
-
-  const formattedSelected = formatYMD(selectedDate);
-  const selectedJadwal = filteredData
-    .filter((item) => item.tanggal.startsWith(formattedSelected))
-    .sort((a, b) => {
-      const jamA = a.detailIbadah[0]?.jam || "00:00";
-      const jamB = b.detailIbadah[0]?.jam || "00:00";
-      return jamA.localeCompare(jamB);
-    });
-
   return (
     <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.container}>
-      <ScrollView
-        contentContainerStyle={{
-          paddingHorizontal: Layout.padding, // Konsisten dengan Home
-          paddingBottom: 40,
-          paddingTop: 10, // Konsisten dengan Home
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.title}>Jadwal Ibadah</Text>
+    <ScrollView
+      contentContainerStyle={{
+        paddingBottom: 50,
+        paddingTop: 10,
+        paddingHorizontal: Layout.paddingSmall,
+      }}
+      showsVerticalScrollIndicator={false}
+    >
+      <Text style={styles.title}>Warta</Text>
 
-        {/* Date Navigation Modern */}
-        <View style={styles.datePickerContainer}>
-          <TouchableOpacity onPress={handlePrevDate} disabled={isPrevDisabled} style={styles.navButton}>
-            <Ionicons
-              name="chevron-back"
-              size={20}
-              color={isPrevDisabled ? Colors.placeholder : Colors.primary}
-            />
-          </TouchableOpacity>
+      <View style={styles.datePickerContainer}>
+        <TouchableOpacity onPress={handlePrevMonth} style={styles.navButton}>
+          <Ionicons name="chevron-back" size={20} color={Colors.primary} />
+        </TouchableOpacity>
 
-          <Text style={styles.dateText}>
-            {formatDate(selectedDate.toISOString())}
-          </Text>
+        <Text style={styles.dateText}>
+          {selectedDate.toLocaleDateString("id-ID", {
+            month: "long",
+            year: "numeric",
+          })}
+        </Text>
 
-          <TouchableOpacity onPress={handleNextDate} style={styles.navButton}>
-            <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
+          <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
+        </TouchableOpacity>
+      </View>
 
-        {selectedJadwal.length > 0 ? (
-          selectedJadwal.map((item) =>
-            item.detailIbadah
-              .slice()
-              .sort((a, b) => a.jam.localeCompare(b.jam))
-              .map((d) => (
-                <TouchableOpacity
-                  key={d.id}
-                  activeOpacity={0.8}
-                  onPress={async () => {
-                    if (d.url) {
-                      const supported = await Linking.canOpenURL(d.url);
-                      if (supported) {
-                        await Linking.openURL(d.url);
-                      } 
-                    }
-                  }}
-                >
-                  <View style={styles.cardContainer}>
-                    <View style={styles.cardRow}>
-                      
-                      {/* Gambar Kiri */}
-                      <View style={styles.leftBox}>
-                        {d.banner?.url ? (
-                          <Image
-                            source={{ uri: `${API_URL.replace("/api/graphql", "")}${d.banner.url}` }}
-                            style={styles.imageForeground}
-                          />
-                        ) : (
-                          <View style={styles.imagePlaceholder}>
-                            <Ionicons name="image-outline" size={32} color={Colors.placeholder} />
-                          </View>
-                        )}
-                        
-                        {/* 🔹 BADGE HARI */}
-                        <View style={styles.dayBadge}>
-                          <Text style={styles.dayBadgeText}>{getSingkatanHari(item.tanggal)}</Text>
-                        </View>
-                      </View>
+      {filteredData.length > 0 ? (
+        filteredData.map((item) => {
+          const isExpanded = expandedId === item.id;
+          return (
+            <View key={item.id} style={styles.cardContainer}>
+              <View style={styles.cardRow}>
+                <View style={styles.leftBox}>
+                  {item.gambar?.url ? (
+                    <Image
+                      source={{
+                        uri: `${API_URL.replace("/api/graphql", "")}${
+                          item.gambar.url
+                        }`,
+                      }}
+                      style={styles.image}
+                    />
+                  ) : (
+                    <View style={styles.imagePlaceholder} />
+                  )}
+                </View>
 
-                      {/* Informasi Kanan (Putih, Bersih) */}
-                      <View style={styles.rightBox}>
-                        <View style={styles.tagContainer}>
-                          <Text style={styles.tagText}>{item.topik || "Umum"}</Text>
-                        </View>
-                        
-                        <Text style={styles.judul}>{formatDate(item.tanggal)}</Text>
-                        
-                        <View style={styles.infoRow}>
-                          <Ionicons name="time-outline" size={16} color={Colors.textMuted} />
-                          <Text style={styles.isiCard}>{d.jam || "-"} WIB</Text>
-                        </View>
-                        
-                        <View style={styles.infoRow}>
-                          <Ionicons name="person-outline" size={16} color={Colors.textMuted} />
-                          <Text style={styles.isiCard} numberOfLines={1}>
-                            {d.pengkhotbah?.nama || "-"}
-                          </Text>
-                        </View>
-                      </View>
-
-                    </View>
+                {/* 🔹 BAGIAN KANAN DIUPDATE SESUAI REFERENSI FOTO */}
+                <View style={styles.rightBox}>
+                  {/* Badge Tag (seperti KABAR BAIK DARI PADANG GURUN) */}
+                  <View style={styles.tagContainer}>
+                    <Text style={styles.tagText} numberOfLines={1}>
+                      {item.kategori?.nama || "Umum"}
+                    </Text>
                   </View>
-                </TouchableOpacity>
-              ))
-          )
-        ) : (
-          <Text style={styles.emptyText}>Tidak ada jadwal untuk hari ini.</Text>
-        )}
-      </ScrollView>
+
+                  {/* Judul Utama yang ditebalkan */}
+                  <Text style={styles.judul} numberOfLines={2}>
+                    {item.judul}
+                  </Text>
+                  
+                  {/* Info Pelaksanaan dengan Ikon Jam */}
+                  <View style={styles.infoRow}>
+                    <Ionicons name="time-outline" size={14} color={Colors.textMuted} />
+                    <Text style={styles.isiCard} numberOfLines={1}>
+                      {formatDate(item.tanggalPelaksanaan)}
+                    </Text>
+                  </View>
+
+                  {/* Info Masa Berlaku dengan Ikon Orang/Kalender */}
+                  <View style={styles.infoRow}>
+                    <Ionicons name="calendar-outline" size={14} color={Colors.textMuted} />
+                    <Text style={styles.isiCard} numberOfLines={1}>
+                      S/d {formatDate(item.masaBerlaku)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* 🔹 PEMBATAS SHADOW DI BAWAH KARTU UTAMA (SESUAI GARIS MERAH) */}
+              <View style={styles.dividerWithShadow} />
+
+              {/* Bagian isi warta (expand) */}
+              {isExpanded && item.isiWarta && (
+                <View style={styles.detail}>
+                  <RenderHTML
+                    contentWidth={width}
+                    source={{
+                      html:
+                        typeof item.isiWarta === "object" &&
+                        Array.isArray(item.isiWarta.document)
+                          ? keystoneDocumentToHtml(item.isiWarta.document)
+                          : (item.isiWarta as string),
+                    }}
+                    tagsStyles={{
+                      // ... (tagsStyles tidak diubah)
+                      a: { color: Colors.primary, textDecorationLine: "underline", fontWeight: "bold" },
+                      hr: { backgroundColor: Colors.border, height: 1, marginVertical: 10, width: "100%" },
+                      p: { fontSize: 13, color: Colors.text, marginBottom: 6 },
+                      strong: { fontWeight: "bold" },
+                      em: { fontStyle: "italic" },
+                      u: { textDecorationLine: "underline" },
+                      ol: { paddingLeft: 20, marginBottom: 10 },
+                      ul: { paddingLeft: 20, marginBottom: 10 },
+                      li: { marginBottom: 4, fontSize: 13, color: Colors.text },
+                      h1: { fontSize: 22, fontWeight: "bold", color: Colors.black, marginVertical: 8 },
+                      h2: { fontSize: 20, fontWeight: "bold", color: Colors.black, marginVertical: 6 },
+                      h3: { fontSize: 18, fontWeight: "600", color: Colors.black, marginVertical: 4 },
+                    }}
+                  />
+                </View>
+              )}
+              
+              {/* Tombol Toggle Expansion */}
+              <TouchableOpacity onPress={() => toggleExpand(item.id)}>
+                <Text style={styles.expandToggle}>
+                  {isExpanded ? "▲ Tutup" : "▼ Baca Selengkapnya"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          );
+        })
+      ) : (
+        <Text style={styles.emptyText}>Tidak ada warta untuk bulan ini.</Text>
+      )}
+    </ScrollView>
     </LinearGradient>
   );
 }
@@ -334,16 +332,25 @@ export default function JadwalIbadah(): React.ReactElement {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  // Konsisten margin dan ukuran dengan home.tsx
-  title: {
-    fontSize: FontSize.h1,
-    fontWeight: "800",
-    color: Colors.primary,
-    marginVertical: Layout.gap, 
+    paddingHorizontal: Layout.paddingSmall,
   },
 
-  // Date Picker Pill Style
+  title: {
+    fontSize: FontSize.h1,
+    fontWeight: "bold",
+    color: Colors.primary,
+    marginVertical: Layout.gap,
+  },
+
+  input: {
+    backgroundColor: Colors.inputBackground,
+    borderRadius: Layout.radius,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: FontSize.custom.titleCard,
+    marginBottom: 12,
+  },
+
   datePickerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -355,114 +362,127 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     ...Shadows.shdows,
   },
-  navButton: {
-    padding: 4,
-  },
+
   dateText: {
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: "bold",
     color: Colors.text,
   },
 
-  // Card Modern Style
+  navButton: {
+    padding: 4,
+  },
+
   cardContainer: {
     backgroundColor: Colors.white,
     borderRadius: Layout.radiusLarge,
-    marginBottom: 16,
-    ...Shadows.shdows,
-    elevation: 4, 
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: "hidden",
+    elevation: 2,
+    // (Batas shadow luar tidak diubah sesuai request)
   },
+
   cardRow: {
     flexDirection: "row",
+    height: 90,
     borderRadius: Layout.radiusLarge,
-    overflow: "hidden", 
-    backgroundColor: Colors.white,
+    overflow: "hidden",
   },
+
   leftBox: {
-    width: 120, // Lebar fixed 
-    backgroundColor: Colors.muda,
-    justifyContent: "center",
-    alignItems: "center",
-    position: 'relative', // Untuk badge
-  },
-  rightBox: {
     flex: 1,
-    padding: 16,
-    justifyContent: "center",
+    backgroundColor: Colors.black,
   },
-  imageForeground: {
+
+  rightBox: {
+    flex: 1.3,
+    backgroundColor: Colors.white,
+    padding: Layout.paddingSmall,
+    justifyContent: "center",
+    position: "relative",
+  },
+
+  image: {
     width: "100%",
     height: "100%",
     resizeMode: "cover",
   },
+
   imagePlaceholder: {
     width: "100%",
     height: "100%",
-    backgroundColor: Colors.inputBackground, 
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: Colors.black,
   },
-  dayBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+
+  // 🔹 STYLING BARU UNTUK ISI CARD (Disamakan dengan referensi gambar)
+  tagContainer: {
+    backgroundColor: Colors.muda,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  dayBadgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: Colors.primary, 
-    letterSpacing: 0.5,
-  },
-
-  // Typography & Tags
-  tagContainer: {
-    backgroundColor: Colors.muda,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
     alignSelf: "flex-start",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   tagText: {
     color: Colors.primary,
-    fontWeight: "700",
-    fontSize: 11,
+    fontWeight: "800", // Tebal kayak di gambar
+    fontSize: 10,
     textTransform: "uppercase",
   },
   judul: {
-    color: Colors.text,
-    fontSize: 15,
+    color: Colors.text, // Teks gelap/hitam
+    fontSize: 14,
     fontWeight: "700",
-    marginBottom: 8,
+    marginBottom: 4,
+    lineHeight: 18,
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 4,
-    gap: 6,
+    marginBottom: 2,
+    gap: 4, // Jarak icon dan teks
   },
   isiCard: {
     color: Colors.textMuted,
-    fontSize: 13,
+    fontSize: 12,
     flexShrink: 1,
     fontWeight: "500",
+  },
+
+  // 🔹 PEMBATAS SHADOW DI BAWAH KARTU SEBELUM TOMBOL BACA SELENGKAPNYA
+  dividerWithShadow: {
+    height: 1,
+    backgroundColor: Colors.border, // Garis halus
+    shadowColor: "#000", // Efek shadow biar tegas seperti garis merah
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+    marginBottom: 4, // Jarak dengan teks expand
+  },
+
+  detail: {
+    padding: 12,
+    backgroundColor: Colors.cardBackground,
+  },
+
+  expandToggle: {
+    color: Colors.textMuted, // Warna abu-abu halus sesuai gambar
+    fontStyle: "italic",
+    fontSize: 12,
+    textAlign: "right",
+    padding: 8,
+    paddingRight: 12, // Geser sedikit ke kiri
   },
 
   emptyText: {
     textAlign: "center",
     color: Colors.textMuted,
-    marginTop: 30,
-    fontSize: 15,
+    marginTop: 20,
   },
+
   center: {
     flex: 1,
     justifyContent: "center",
