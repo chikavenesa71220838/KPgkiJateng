@@ -226,9 +226,6 @@ export default function HomeScreen() {
             <Text style={styles.greetingText}>Selamat Datang,</Text>
             <Text style={styles.userNameText}>{userName}</Text>
           </View>
-          <View style={styles.profileCircle}>
-            <Ionicons name="person" size={20} color={Colors.primary} />
-          </View>
         </View>
 
         {/* 🔹 AYAT HARIAN MODERN */}
