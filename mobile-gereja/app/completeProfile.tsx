@@ -11,6 +11,7 @@ import {
   ToastAndroid,
   ActivityIndicator,
   Alert,
+  Image
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,6 +25,7 @@ export default function CompleteProfile() {
   const [form, setForm] = useState({
     nama: "",
     email: auth().currentUser?.email || "",
+    fotoUrl: auth().currentUser?.photoURL || "",
     jenisKelamin: "",
     statusKeanggotaan: "",
   });
@@ -109,7 +111,14 @@ export default function CompleteProfile() {
             {/* Header Section */}
             <View style={styles.headerContainer}>
               <View style={styles.iconCircle}>
-                <Ionicons name="person-outline" size={40} color="#0B7A5D" />
+                {form.fotoUrl ? (
+                  <Image
+                    source={{ uri: form.fotoUrl }}
+                    style={styles.profileImage}
+                  />
+                ) : (
+                  <Ionicons name="person-outline" size={40} color="#0B7A5D" />
+                )}
               </View>
               <Text style={styles.title}>Selamat Datang,</Text>
               <Text style={styles.subtitle}>Silahkan Lengkapi Profil Anda</Text>
@@ -296,6 +305,13 @@ const styles = StyleSheet.create({
     // elevation: 5,
     ...Shadows.shdows,
   },
+
+  profileImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+  },
+  
   label: {
     fontSize: 14,
     fontWeight: "700",

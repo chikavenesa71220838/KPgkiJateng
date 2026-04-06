@@ -14,7 +14,8 @@ import * as Clipboard from "expo-clipboard";
 import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
 import { API_URL } from "@/utils/api";
-import { Colors, FontSize, Layout } from "../../constants/theme";
+import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function ProfilGereja(): React.ReactElement {
   const router = useRouter();
@@ -125,195 +126,193 @@ export default function ProfilGereja(): React.ReactElement {
 
   if (error)
     return (
-      <Text style={{ color: Colors.danger, textAlign: "center", marginTop: 20 }}>
-        {error}
-      </Text>
+      <View style={styles.center}>
+        <Text style={{ color: Colors.danger, textAlign: "center", marginTop: 20 }}>
+          {error}
+        </Text>
+      </View>
     );
 
   if (!gereja)
     return (
-      <Text style={{ color: Colors.primary, textAlign: "center", marginTop: 20 }}>
-        Tidak ada data gereja.
-      </Text>
+      <View style={styles.center}>
+        <Text style={{ color: Colors.primary, textAlign: "center", marginTop: 20 }}>
+          Tidak ada data gereja.
+        </Text>
+      </View>
     );
 
   return (
     <>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: 20 }}
-      >
-        <Text style={styles.sectionTitle}>Profil Gereja</Text>
+      <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.container}>
+        <ScrollView
+          contentContainerStyle={{ 
+            paddingBottom: 50, 
+            paddingTop: 10, 
+            paddingHorizontal: Layout.paddingSmall 
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.sectionTitle}>Profil Gereja</Text>
 
-        {/* Alamat + Foto Gereja */}
-        <View style={[styles.infoCardGereja, styles.flexRow]}>
-          <Image
-            source={
-              gereja.gambar?.url
-                ? { uri: `${BASE_URL}${gereja.gambar.url}` }
-                : require("../../assets/images/fotogereja.jpeg")
-            }
-            style={styles.gerejaImage}
-          />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.infoTitle}>{gereja.nama}</Text>
-            <Text style={styles.infoText}>{gereja.alamat}</Text>
-          </View>
-        </View>
-
-        {/* Jam Kerja */}
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>Jam Kerja Kantor</Text>
-          {gereja.hari?.split("\n").map((h: string, i: number) => (
-            <Text key={i} style={styles.infoText}>
-              {h}
-            </Text>
-          ))}
-        </View>
-
-        {/* Telepon */}
-        {gereja.telepon ? (
-          <TouchableOpacity
-            style={[styles.infoCard, styles.rowBetween]}
-            onPress={() => Linking.openURL(`tel:${gereja.telepon}`)}
-            onLongPress={() => salinTeks(gereja.telepon)}
-          >
-            <Text style={styles.infoTitle}>Telepon</Text>
-            <Text
-              style={[styles.infoText, { textDecorationLine: "underline" }]}
-            >
-              {gereja.telepon}
-            </Text>
-          </TouchableOpacity>
-        ) : null}
-
-        {/* Sosial Media */}
-        <View style={styles.infoCard}>
-          <View style={styles.socialHeader}>
-            <Text style={styles.infoTitle}>Sosial Media</Text>
-            <View style={styles.socialIcons}>
-              {gereja.linkWhatsapp && (
-                <TouchableOpacity
-                  onPress={() => Linking.openURL(gereja.linkWhatsapp)}
-                >
-                  <FontAwesome
-                    name="whatsapp"
-                    size={24}
-                    color={Colors.white}
-                    style={styles.icon}
-                  />
-                </TouchableOpacity>
-              )}
-              {gereja.linkInstagram && (
-                <TouchableOpacity
-                  onPress={() => Linking.openURL(gereja.linkInstagram)}
-                >
-                  <FontAwesome
-                    name="instagram"
-                    size={24}
-                    color={Colors.white}
-                    style={styles.icon}
-                  />
-                </TouchableOpacity>
-              )}
-              {gereja.linkEmail && (
-                <TouchableOpacity
-                  onPress={() => Linking.openURL(gereja.linkEmail)}
-                >
-                  <Ionicons
-                    name="mail"
-                    size={24}
-                    color={Colors.white}
-                    style={styles.icon}
-                  />
-                </TouchableOpacity>
-              )}
-              {gereja.linkYoutube && (
-                <TouchableOpacity
-                  onPress={() => Linking.openURL(gereja.linkYoutube)}
-                >
-                  <FontAwesome
-                    name="youtube-play"
-                    size={24}
-                    color={Colors.white}
-                    style={styles.icon}
-                  />
-                </TouchableOpacity>
-              )}
-              {gereja.linkFacebook && (
-                <TouchableOpacity
-                  onPress={() => Linking.openURL(gereja.linkFacebook)}
-                >
-                  <FontAwesome
-                    name="facebook"
-                    size={24}
-                    color={Colors.white}
-                    style={styles.icon}
-                  />
-                </TouchableOpacity>
-              )}
+          {/* Alamat + Foto Gereja */}
+          <View style={styles.infoCardGereja}>
+            <Image
+              source={
+                gereja.gambar?.url
+                  ? { uri: `${BASE_URL}${gereja.gambar.url}` }
+                  : require("../../assets/images/fotogereja.jpeg")
+              }
+              style={styles.gerejaImage}
+            />
+            <View style={styles.gerejaTextContainer}>
+              <Text style={styles.infoTitle}>{gereja.nama}</Text>
+              <Text style={styles.infoText}>{gereja.alamat}</Text>
             </View>
           </View>
-        </View>
 
-        {/* Sejarah Gereja */}
-        <TouchableOpacity
-          style={[styles.infoCard, styles.rowBetween]}
-          onPress={() => router.push("/sejarah")}
-        >
-          <Text style={styles.infoTitle}>Sejarah Gereja</Text>
-          <Ionicons name="arrow-forward" size={20} color={Colors.white} />
-        </TouchableOpacity>
-
-        {/* Pendeta Gereja */}
-        <Text style={styles.subTitle}>Pendeta Gereja</Text>
-
-        {pendeta.length === 0 ? (
-          <Text
-            style={{
-              textAlign: "center",
-              color: Colors.primary,
-              marginTop: 10,
-            }}
-          >
-            Tidak ada data pendeta.
-          </Text>
-        ) : (
-          <View style={styles.pendetaList}>
-            {pendeta.map((p) => (
-              <TouchableOpacity
-                key={p.id}
-                style={styles.pendetaCard}
-                onPress={() => Linking.openURL(`mailto:${p.email}`)}
-                onLongPress={() => salinTeksEmail(p.email)}
-              >
-                <Image
-                  source={
-                    p.foto?.url
-                      ? { uri: `${BASE_URL}${p.foto.url}` }
-                      : require("../../assets/images/logogereja.png")
-                  }
-                  style={styles.pendetaImg}
-                />
-                <View style={styles.pendetaInfo}>
-                  <Text style={styles.pendetaName}>{p.nama}</Text>
-                  <Text
-                    style={[
-                      styles.pendetaEmail,
-                      { textDecorationLine: "underline" },
-                    ]}
-                  >
-                    {p.email}
-                  </Text>
-                  <Text style={styles.pendetaSejak}>
-                    Sejak: {p.sejakKapanAktif || "-"}
-                  </Text>
-                </View>
-              </TouchableOpacity>
+          {/* Jam Kerja */}
+          <View style={styles.infoCard}>
+            <View style={styles.cardHeaderRow}>
+              <Ionicons name="time-outline" size={20} color={Colors.primary} />
+              <Text style={styles.infoTitleWithIcon}>Jam Kerja Kantor</Text>
+            </View>
+            {gereja.hari?.split("\n").map((h: string, i: number) => (
+              <Text key={i} style={styles.infoText}>
+                {h}
+              </Text>
             ))}
           </View>
-        )}
-      </ScrollView>
+
+          {/* Telepon */}
+          {gereja.telepon ? (
+            <TouchableOpacity
+              style={[styles.infoCard, styles.rowBetween]}
+              onPress={() => Linking.openURL(`tel:${gereja.telepon}`)}
+              onLongPress={() => salinTeks(gereja.telepon)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.cardHeaderRow}>
+                <Ionicons name="call-outline" size={20} color={Colors.primary} />
+                <Text style={styles.infoTitleWithIcon}>Telepon</Text>
+              </View>
+              <Text
+                style={[styles.infoText, { textDecorationLine: "underline", color: Colors.primary }]}
+              >
+                {gereja.telepon}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+
+          {/* Sosial Media */}
+          <View style={styles.infoCard}>
+            <View style={styles.socialHeader}>
+              <View style={styles.cardHeaderRow}>
+                <Ionicons name="share-social-outline" size={20} color={Colors.primary} />
+                <Text style={styles.infoTitleWithIcon}>Sosial Media</Text>
+              </View>
+              
+              <View style={styles.socialIcons}>
+                {gereja.linkWhatsapp && (
+                  <TouchableOpacity onPress={() => Linking.openURL(gereja.linkWhatsapp)}>
+                    <View style={[styles.iconCircle, { backgroundColor: '#25D366' }]}>
+                      <FontAwesome name="whatsapp" size={18} color={Colors.white} />
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {gereja.linkInstagram && (
+                  <TouchableOpacity onPress={() => Linking.openURL(gereja.linkInstagram)}>
+                    <View style={[styles.iconCircle, { backgroundColor: '#E1306C' }]}>
+                      <FontAwesome name="instagram" size={18} color={Colors.white} />
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {gereja.linkEmail && (
+                  <TouchableOpacity onPress={() => Linking.openURL(gereja.linkEmail)}>
+                    <View style={[styles.iconCircle, { backgroundColor: '#D44638' }]}>
+                      <Ionicons name="mail" size={18} color={Colors.white} />
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {gereja.linkYoutube && (
+                  <TouchableOpacity onPress={() => Linking.openURL(gereja.linkYoutube)}>
+                    <View style={[styles.iconCircle, { backgroundColor: '#FF0000' }]}>
+                      <FontAwesome name="youtube-play" size={18} color={Colors.white} />
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {gereja.linkFacebook && (
+                  <TouchableOpacity onPress={() => Linking.openURL(gereja.linkFacebook)}>
+                    <View style={[styles.iconCircle, { backgroundColor: '#1877F2' }]}>
+                      <FontAwesome name="facebook" size={18} color={Colors.white} />
+                    </View>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </View>
+
+          {/* Sejarah Gereja */}
+          <TouchableOpacity
+            style={[styles.infoCard, styles.rowBetween]}
+            onPress={() => router.push("/sejarah")}
+            activeOpacity={0.7}
+          >
+            <View style={styles.cardHeaderRow}>
+              <Ionicons name="library-outline" size={20} color={Colors.primary} />
+              <Text style={styles.infoTitleWithIcon}>Sejarah Gereja</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          {/* Pendeta Gereja */}
+          <Text style={styles.subTitle}>Pendeta Gereja</Text>
+
+          {pendeta.length === 0 ? (
+            <Text
+              style={{
+                textAlign: "center",
+                color: Colors.textMuted,
+                marginTop: 10,
+              }}
+            >
+              Tidak ada data pendeta.
+            </Text>
+          ) : (
+            <View style={styles.pendetaList}>
+              {pendeta.map((p) => (
+                <TouchableOpacity
+                  key={p.id}
+                  style={styles.pendetaCard}
+                  onPress={() => Linking.openURL(`mailto:${p.email}`)}
+                  onLongPress={() => salinTeksEmail(p.email)}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={
+                      p.foto?.url
+                        ? { uri: `${BASE_URL}${p.foto.url}` }
+                        : require("../../assets/images/logogereja.png")
+                    }
+                    style={styles.pendetaImg}
+                  />
+                  <View style={styles.pendetaInfo}>
+                    <Text style={styles.pendetaName} numberOfLines={1}>{p.nama}</Text>
+                    <Text style={styles.pendetaEmail} numberOfLines={1}>
+                      {p.email}
+                    </Text>
+                    <View style={styles.pendetaSejakContainer}>
+                      <Text style={styles.pendetaSejak}>
+                        Sejak: {p.sejakKapanAktif || "-"}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      </LinearGradient>
       <Toast />
     </>
   );
@@ -322,123 +321,148 @@ export default function ProfilGereja(): React.ReactElement {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
-    padding: Layout.padding,
   },
   center: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 10,
   },
   sectionTitle: {
     fontSize: FontSize.h1,
     fontWeight: "bold",
     color: Colors.primary,
-    marginTop: -6,
-    marginBottom: 10,
+    marginVertical: Layout.gap,
   },
   subTitle: {
     fontSize: FontSize.h2,
-    fontWeight: "bold",
+    fontWeight: "800",
     color: Colors.primary,
     marginTop: 15,
-    marginBottom: 8,
-  },
-  infoCard: {
-    backgroundColor: Colors.primary,
-    borderRadius: Layout.radiusLarge,
-    padding: 12,
     marginBottom: 12,
+  },
+  
+  infoCard: {
+    backgroundColor: Colors.white,
+    borderRadius: Layout.radiusLarge,
+    padding: 16,
+    marginBottom: 14,
+    ...Shadows.shdows,
   },
   infoCardGereja: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.white,
     borderRadius: Layout.radiusLarge,
-    paddingLeft: 0,
-    marginBottom: 12,
+    marginBottom: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+    ...Shadows.shdows,
+  },
+  gerejaImage: {
+    width: 110,
+    height: "100%",
+    minHeight: 110,
+    resizeMode: "cover",
+  },
+  gerejaTextContainer: {
+    flex: 1,
+    padding: 14,
+    justifyContent: "center",
+  },
+  
+  cardHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
   },
   infoTitle: {
-    color: Colors.white,
-    fontWeight: "bold",
+    color: Colors.primary,
+    fontWeight: "800",
     marginBottom: 4,
     fontSize: 16,
   },
+  infoTitleWithIcon: {
+    color: Colors.primary,
+    fontWeight: "800",
+    fontSize: 16,
+    marginLeft: 8, 
+  },
   infoText: {
-    color: Colors.white,
-    fontSize: FontSize.body,
+    color: Colors.text,
+    fontSize: 14,
+    lineHeight: 22,
   },
-  gerejaImage: {
-    width: 100,
-    height: 100,
-    borderTopLeftRadius: Layout.radiusLarge,
-    borderBottomLeftRadius: Layout.radiusLarge,
-  },
-  
-  flexRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
+
   rowBetween: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
+  
+  // 🔹 SOSIAL MEDIA
   socialHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  socialIcons: { flexDirection: "row", alignItems: "center" },
-  icon: { marginLeft: 10 },
+  socialIcons: { 
+    flexDirection: "row", 
+    alignItems: "center",
+    gap: 8,
+  },
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   pendetaList: {
     flexDirection: "row",
     flexWrap: "wrap",
-    // justifyContent: "space-between",
-    justifyContent: "flex-start",
-    gap: Layout.gap,
+    justifyContent: "space-between", 
   },
   pendetaCard: {
     backgroundColor: Colors.white,
-    borderRadius: Layout.radiusXLarge,
+    borderRadius: Layout.radiusLarge,
     overflow: "hidden",
-    width: "48%",
+    width: "48%", 
     marginBottom: 16,
-    elevation: 3,
-    shadowColor: Colors.black,
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    // flexGrow: 1,
-    // alignSelf: "stretch",
+    ...Shadows.shdows,
   },
   pendetaImg: {
     width: "100%",
-    height: 120,
-    borderTopLeftRadius: Layout.radiusXLarge,
-    borderTopRightRadius: Layout.radiusXLarge,
-    backgroundColor: Colors.black,
+    height: 140,
+    resizeMode: "cover",
+    backgroundColor: Colors.inputBackground,
   },
   pendetaInfo: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderBottomLeftRadius: Layout.radiusXLarge,
-    borderBottomRightRadius: Layout.radiusXLarge,
-    flexShrink: 1,
-    flex: 1,
+    backgroundColor: Colors.white,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     justifyContent: "center",
   },
   pendetaName: {
-    color: Colors.white,
-    fontWeight: "bold",
-    fontSize: 16,
+    color: Colors.primary,
+    fontWeight: "800",
+    fontSize: 14,
+    marginBottom: 2,
   },
   pendetaEmail: {
-    color: Colors.white,
-    fontSize: FontSize.body,
+    color: Colors.textMuted,
+    fontSize: 11,
+    marginBottom: 6,
+  },
+  pendetaSejakContainer: {
+    backgroundColor: Colors.muda,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    alignSelf: "flex-start",
   },
   pendetaSejak: {
-    color: Colors.white,
-    fontSize: 13,
-    marginTop: 2,
+    color: Colors.primary,
+    fontSize: 10,
+    fontWeight: "700",
   },
 });

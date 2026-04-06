@@ -9,11 +9,6 @@ self.__BUILD_MANIFEST = {
   "lowPriorityFiles": [],
   "rootMainFiles": [],
   "pages": {
-    "/": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/index.js"
-    ],
     "/_app": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -24,20 +19,15 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/profiles": [
+    "/gerejas": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/profiles.js"
+      "static/chunks/pages/gerejas.js"
     ],
-    "/profiles/[id]": [
+    "/gerejas/[id]": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/profiles/[id].js"
-    ],
-    "/users": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/users.js"
+      "static/chunks/pages/gerejas/[id].js"
     ],
     "/users/[id]": [
       "static/chunks/webpack.js",

@@ -196,153 +196,159 @@ export default function Warta(): React.ReactElement {
   }
 
   return (
-    <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.container}>
-    <ScrollView
-      contentContainerStyle={{
-        paddingBottom: 50,
-        paddingTop: 10, // 🔹 Ditambahkan agar posisi title konsisten
-        paddingHorizontal: Layout.paddingSmall,
-      }}
-      showsVerticalScrollIndicator={false}
+    <LinearGradient
+      colors={[Colors.gradientStart, Colors.gradientEnd]}
+      style={styles.container}
     >
-      <Text style={styles.title}>Warta</Text>
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: 50,
+          paddingTop: 10, // 🔹 Ditambahkan agar posisi title konsisten
+          paddingHorizontal: Layout.paddingSmall,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>Warta</Text>
 
-      {/* 🔹 BENTUK DATE PICKER DISAMAKAN (PILL MODERN) */}
-      <View style={styles.datePickerContainer}>
-        <TouchableOpacity onPress={handlePrevMonth} style={styles.navButton}>
-          <Ionicons name="chevron-back" size={20} color={Colors.primary} />
-        </TouchableOpacity>
+        {/* 🔹 BENTUK DATE PICKER DISAMAKAN (PILL MODERN) */}
+        <View style={styles.datePickerContainer}>
+          <TouchableOpacity onPress={handlePrevMonth} style={styles.navButton}>
+            <Ionicons name="chevron-back" size={20} color={Colors.primary} />
+          </TouchableOpacity>
 
-        <Text style={styles.dateText}>
-          {selectedDate.toLocaleDateString("id-ID", {
-            month: "long",
-            year: "numeric",
-          })}
-        </Text>
+          <Text style={styles.dateText}>
+            {selectedDate.toLocaleDateString("id-ID", {
+              month: "long",
+              year: "numeric",
+            })}
+          </Text>
 
-        <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
-          <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
+            <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
+          </TouchableOpacity>
+        </View>
 
-      {filteredData.length > 0 ? (
-        filteredData.map((item) => {
-          const isExpanded = expandedId === item.id;
-          return (
-            <View key={item.id} style={styles.cardContainer}>
-              {/* Bagian utama kartu */}
-              <View style={styles.cardRow}>
-                <View style={styles.leftBox}>
-                  {item.gambar?.url ? (
-                    <Image
+        {filteredData.length > 0 ? (
+          filteredData.map((item) => {
+            const isExpanded = expandedId === item.id;
+            return (
+              <View key={item.id} style={styles.cardContainer}>
+                {/* Bagian utama kartu */}
+                <View style={styles.cardRow}>
+                  <View style={styles.leftBox}>
+                    {item.gambar?.url ? (
+                      <Image
+                        source={{
+                          uri: `${API_URL.replace("/api/graphql", "")}${
+                            item.gambar.url
+                          }`,
+                        }}
+                        style={styles.image}
+                      />
+                    ) : (
+                      <View style={styles.imagePlaceholder} />
+                    )}
+                  </View>
+
+                  <View style={styles.rightBox}>
+                    <View style={styles.tagContainer}>
+                      <Text style={styles.tagText}>
+                        {item.kategori?.nama || "Umum"}
+                      </Text>
+                    </View>
+                    <Text style={styles.judul}>{item.judul}</Text>
+                    <Text style={styles.tanggalPelaksanaan}>
+                      {formatDate(item.tanggalPelaksanaan)}
+                    </Text>
+
+                    {/* Masa berlaku di pojok kanan bawah */}
+                    <Text style={styles.masaBerlaku}>
+                      {formatDate(item.masaBerlaku)}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.dividerWithShadow} />
+
+                {/* Bagian isi warta (expand) */}
+                {isExpanded && item.isiWarta && (
+                  <View style={styles.detail}>
+                    <RenderHTML
+                      contentWidth={width}
                       source={{
-                        uri: `${API_URL.replace("/api/graphql", "")}${
-                          item.gambar.url
-                        }`,
+                        html:
+                          typeof item.isiWarta === "object" &&
+                          Array.isArray(item.isiWarta.document)
+                            ? keystoneDocumentToHtml(item.isiWarta.document)
+                            : (item.isiWarta as string),
                       }}
-                      style={styles.image}
+                      tagsStyles={{
+                        a: {
+                          color: Colors.primary,
+                          textDecorationLine: "underline",
+                          fontWeight: "bold",
+                        },
+                        hr: {
+                          backgroundColor: Colors.border,
+                          height: 1,
+                          marginVertical: 10,
+                          width: "100%",
+                        },
+                        p: {
+                          fontSize: 13,
+                          color: Colors.text,
+                          marginBottom: 6,
+                        },
+                        strong: { fontWeight: "bold" },
+                        em: { fontStyle: "italic" },
+                        u: { textDecorationLine: "underline" },
+                        ol: {
+                          paddingLeft: 20,
+                          marginBottom: 10,
+                        },
+                        ul: {
+                          paddingLeft: 20,
+                          marginBottom: 10,
+                        },
+                        li: {
+                          marginBottom: 4,
+                          fontSize: 13,
+                          color: Colors.text,
+                        },
+
+                        h1: {
+                          fontSize: 22,
+                          fontWeight: "bold",
+                          color: Colors.black,
+                          marginVertical: 8,
+                        },
+                        h2: {
+                          fontSize: 20,
+                          fontWeight: "bold",
+                          color: Colors.black,
+                          marginVertical: 6,
+                        },
+                        h3: {
+                          fontSize: 18,
+                          fontWeight: "600",
+                          color: Colors.black,
+                          marginVertical: 4,
+                        },
+                      }}
                     />
-                  ) : (
-                    <View style={styles.imagePlaceholder} />
-                  )}
-                </View>
-
-                <View style={styles.rightBox}>
-                  <Text style={styles.category}>
-                    {item.kategori?.nama || "Umum"}
+                  </View>
+                )}
+                <TouchableOpacity onPress={() => toggleExpand(item.id)}>
+                  <Text style={styles.expandToggle}>
+                    {isExpanded ? "▲ Tutup" : "▼ Baca Selengkapnya"}
                   </Text>
-                  <Text style={styles.judul}>{item.judul}</Text>
-                  <Text style={styles.tanggalPelaksanaan}>
-                    {formatDate(item.tanggalPelaksanaan)}
-                  </Text>
-
-                  {/* Masa berlaku di pojok kanan bawah */}
-                  <Text style={styles.masaBerlaku}>
-                    {formatDate(item.masaBerlaku)}
-                  </Text>
-                </View>
+                </TouchableOpacity>
               </View>
-
-              {/* Bagian isi warta (expand) */}
-              {isExpanded && item.isiWarta && (
-                <View style={styles.detail}>
-                  <RenderHTML
-                    contentWidth={width}
-                    source={{
-                      html:
-                        typeof item.isiWarta === "object" &&
-                        Array.isArray(item.isiWarta.document)
-                          ? keystoneDocumentToHtml(item.isiWarta.document)
-                          : (item.isiWarta as string),
-                    }}
-                    tagsStyles={{
-                      a: {
-                        color: Colors.primary, 
-                        textDecorationLine: "underline",
-                        fontWeight: "bold",
-                      },
-                      hr: {
-                        backgroundColor: Colors.border,
-                        height: 1,
-                        marginVertical: 10,
-                        width: "100%",
-                      },
-                      p: {
-                        fontSize: 13,
-                        color: Colors.text,
-                        marginBottom: 6,
-                      },
-                      strong: { fontWeight: "bold" },
-                      em: { fontStyle: "italic" },
-                      u: { textDecorationLine: "underline" },
-                      ol: {
-                        paddingLeft: 20,
-                        marginBottom: 10,
-                      },
-                      ul: {
-                        paddingLeft: 20,
-                        marginBottom: 10,
-                      },
-                      li: {
-                        marginBottom: 4,
-                        fontSize: 13,
-                        color: Colors.text,
-                      },
-
-                      h1: {
-                        fontSize: 22,
-                        fontWeight: "bold",
-                        color: Colors.black,
-                        marginVertical: 8,
-                      },
-                      h2: {
-                        fontSize: 20,
-                        fontWeight: "bold",
-                        color: Colors.black,
-                        marginVertical: 6,
-                      },
-                      h3: {
-                        fontSize: 18,
-                        fontWeight: "600",
-                        color: Colors.black,
-                        marginVertical: 4,
-                      },
-                    }}
-                  />
-                </View>
-              )}
-              <TouchableOpacity onPress={() => toggleExpand(item.id)}>
-                <Text style={styles.expandToggle}>
-                  {isExpanded ? "▲ Tutup" : "▼ Baca Selengkapnya"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          );
-        })
-      ) : (
-        <Text style={styles.emptyText}>Tidak ada warta untuk bulan ini.</Text>
-      )}
-    </ScrollView>
+            );
+          })
+        ) : (
+          <Text style={styles.emptyText}>Tidak ada warta untuk bulan ini.</Text>
+        )}
+      </ScrollView>
     </LinearGradient>
   );
 }
@@ -416,7 +422,7 @@ const styles = StyleSheet.create({
 
   rightBox: {
     flex: 1.3,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.white,
     padding: Layout.paddingSmall,
     justifyContent: "center",
     position: "relative",
@@ -435,21 +441,21 @@ const styles = StyleSheet.create({
   },
 
   category: {
-    color: Colors.white,
+    color: Colors.primary,
     fontWeight: "bold",
     fontSize: FontSize.small,
     marginBottom: 2,
   },
 
   judul: {
-    color: Colors.white,
+    color: Colors.primary,
     fontSize: FontSize.custom.titleCard,
     fontWeight: "600",
     marginBottom: 2,
   },
 
   tanggalPelaksanaan: {
-    color: Colors.white,
+    color: Colors.primary,
     fontSize: FontSize.custom.dateCard,
   },
 
@@ -472,6 +478,32 @@ const styles = StyleSheet.create({
     fontSize: FontSize.small,
     textAlign: "right",
     padding: 6,
+  },
+
+  tagContainer: {
+    backgroundColor: Colors.muda,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+    marginBottom: 6,
+  },
+  tagText: {
+    color: Colors.primary,
+    fontWeight: "800", // Tebal kayak di gambar
+    fontSize: 10,
+    textTransform: "uppercase",
+  },
+
+  dividerWithShadow: {
+    height: 1,
+    backgroundColor: Colors.border, // Garis halus
+    shadowColor: "#000", // Efek shadow biar tegas seperti garis merah
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+    marginBottom: 4, // Jarak dengan teks expand
   },
 
   emptyText: {
