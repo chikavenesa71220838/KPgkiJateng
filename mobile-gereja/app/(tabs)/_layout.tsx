@@ -20,9 +20,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { API_URL } from "../../utils/api";
 
-// Import Firebase Auth
-import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+// 🔹 Import Firebase Auth dari Service Custom kita (Aman untuk Web & Mobile)
+import { listenToAuth, forceSignOut } from "../../services/authGoogle";
 
 const { Navigator } = createBottomTabNavigator();
 const Tabs = withLayoutContext(Navigator);
@@ -39,8 +38,9 @@ export default function TabLayout() {
   const [gereja, setGereja] = useState<Gereja | null>(null);
   const [loading, setLoading] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
-  // State untuk menyimpan data user login
-  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+  
+  // 🔹 State untuk menyimpan data user login (Ubah tipe menjadi any agar tidak bergantung pada native module)
+  const [user, setUser] = useState<any>(null);
   
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -50,17 +50,12 @@ export default function TabLayout() {
 
   const pathname = usePathname();
 
-  // 1. Observer untuk memantau status login Firebase
+  // 🔹 1. Observer untuk memantau status login (Berlaku untuk Web & Mobile)
   useEffect(() => {
-    if (Platform.OS === 'web') {
-    setLoading(false); // Langsung set false agar loading kelar
-    return;
-  }
-
-    const subscriber = auth().onAuthStateChanged((currentUser) => {
+    const unsubscribe = listenToAuth((currentUser) => {
       setUser(currentUser);
     });
-    return subscriber; // unsubscribe saat unmount
+    return () => unsubscribe(); // unsubscribe saat unmount
   }, []);
 
   const fetchGereja = async () => {
@@ -101,34 +96,43 @@ export default function TabLayout() {
     }
   }, [loading]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setMenuVisible(false);
     
-    Alert.alert(
-      "Konfirmasi Keluar",
-      "Apakah Anda yakin ingin keluar?",
-      [
-        { text: "Batal", style: "cancel" },
-        { 
-          text: "Ya, Keluar", 
-          style: "destructive",
-          onPress: async () => {
-            try {
-              if (Platform.OS !== 'web') {
-               await auth().signOut();
-               await GoogleSignin.signOut();
-            }
-              // await auth().signOut();
-              // await GoogleSignin.signOut();
-              router.replace("/home");
-            } catch (error) {
-              console.error("Logout Error:", error);
-              router.replace("/home");
+    // Alert Native kadang tidak berjalan mulus di Web, kita beri proteksi khusus Web
+    if (Platform.OS === 'web') {
+      const confirmLogout = window.confirm("Apakah Anda yakin ingin keluar?");
+      if (confirmLogout) {
+        try {
+          await forceSignOut();
+          router.replace("/home");
+        } catch (error) {
+          console.error("Logout Error:", error);
+        }
+      }
+    } else {
+      Alert.alert(
+        "Konfirmasi Keluar",
+        "Apakah Anda yakin ingin keluar?",
+        [
+          { text: "Batal", style: "cancel" },
+          { 
+            text: "Ya, Keluar", 
+            style: "destructive",
+            onPress: async () => {
+              try {
+                // 🔹 Cukup panggil fungsi ini, dia sudah pintar membedakan platform!
+                await forceSignOut();
+                router.replace("/home");
+              } catch (error) {
+                console.error("Logout Error:", error);
+                router.replace("/home");
+              }
             }
           }
-        }
-      ]
-    );
+        ]
+      );
+    }
   };
 
   if (loading) return null;
@@ -142,6 +146,7 @@ export default function TabLayout() {
       <Text style={[styles.sidebarText, isActive && styles.sidebartextActive]}>{name}</Text>
     </TouchableOpacity>
   );
+
   return (
     <View style={{ flex: 1, backgroundColor: Colors.white }} onLayout={onLayoutRootView}>
       {/* Header */}
@@ -163,7 +168,7 @@ export default function TabLayout() {
           <View>
             <Text style={styles.headerText}>{gereja?.nama || "Nama Gereja"}</Text>
             {user && (
-               <Text style={styles.userGreet}>Halo, {user.displayName?.split(' ')[0]}</Text>
+               <Text style={styles.userGreet}>Halo, {user.displayName?.split(' ')[0] || "Jemaat"}</Text>
             )}
           </View>
         </TouchableOpacity>
@@ -210,7 +215,7 @@ export default function TabLayout() {
 
       {/* Content & Tabs */}
       <View style={{ flex: 1, flexDirection: isLandscape ? "row" : "column" }}>
-    {/* SIDEBAR - Hanya muncul jika Landscape */}
+        {/* SIDEBAR - Hanya muncul jika Landscape */}
         {isLandscape && (
           <View style={styles.sidebarContainer}>
             <SidebarItem name="Home" icon="home" route="/home" isActive={pathname === "/home" || pathname === "/"} />

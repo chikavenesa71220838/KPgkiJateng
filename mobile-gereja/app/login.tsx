@@ -1,45 +1,37 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
-import auth from "@react-native-firebase/auth";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  Platform,
+} from "react-native";
 import { API_URL } from "@/utils/api";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../constants/theme";
-import { useState } from "react";
 
-// Konfigurasi Google Sign-In menggunakan Web Client ID dari Firebase Console
-GoogleSignin.configure({
-  webClientId: "848782878807-jmcg7f65sj586hde2isabmdjtd28rqj7.apps.googleusercontent.com",
-});
+// AJAIB: Import ini akan otomatis milih file .native atau .web sesuai platform yang jalan!
+import { signInGoogleAccess, forceSignOut } from "../services/authGoogle";
 
 const LoginScreen = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   async function onGoogleButtonPress() {
     setIsLoading(true);
     try {
-      // 1. Inisialisasi Google Sign-In dan perolehan ID Token
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      const response = await GoogleSignin.signIn();
-      const idToken = response.data?.idToken;
+      // 1 & 2 & 3. Ambil data User & Token dari Mobile ATAU Web
+      const { user, firebaseToken } = await signInGoogleAccess();
+      console.log(
+        "Firebase Login Sukses. Token aktif didapatkan.",
+        firebaseToken,
+      );
 
-      if (!idToken) throw new Error("Google ID Token tidak ditemukan.");
-
-      // 2. Autentikasi dengan Firebase Authentication [cite: 223]
-      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-      const userCredential = await auth().signInWithCredential(googleCredential);
-      const user = userCredential.user;
-
-      // 3. Ambil Firebase ID Token terbaru (Force Refresh)
-      // Menggunakan true untuk memastikan token belum kadaluwarsa saat dikirim ke backend
-      const firebaseToken = await user.getIdToken(true);
-      console.log("Firebase Login Sukses. Token aktif didapatkan.", firebaseToken);
-
-      // 4. Logika SSO: Cek user berdasarkan googleId ATAU emailUser [cite: 185]
-      // Pengecekan emailUser bertujuan mencegah error Unique Constraint pada database
-const CHECK_USER_QUERY = {
+      // 4. Logika SSO: Cek user berdasarkan googleId ATAU emailUser
+      const CHECK_USER_QUERY = {
         query: `
           query GetUser($googleId: String!, $email: String!) {
             users(where: { 
@@ -57,28 +49,29 @@ const CHECK_USER_QUERY = {
         `,
         variables: { googleId: user.uid, email: user.email },
       };
+
       const checkRes = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${firebaseToken}`, // Menyertakan token aktif [cite: 220]
+          Authorization: `Bearer ${firebaseToken}`,
         },
         body: JSON.stringify(CHECK_USER_QUERY),
       });
 
       const checkData = await checkRes.json();
 
-      // Validasi Respon Server: Jika token tidak valid, proses dihentikan di sini
       if (!checkRes.ok || checkData.errors) {
-        const errorMsg = checkData.errors?.[0]?.message || "Gagal memverifikasi sesi ke server.";
-        throw new Error(errorMsg); 
+        const errorMsg =
+          checkData.errors?.[0]?.message ||
+          "Gagal memverifikasi sesi ke server.";
+        throw new Error(errorMsg);
       }
 
       const existingUser = checkData.data?.users?.[0];
 
       if (existingUser) {
         // SKENARIO A: Hubungkan Akun (Linking Account)
-        // Jika email sudah terdaftar namun belum memiliki Google ID
         if (!existingUser.googleId) {
           const UPDATE_USER_MUTATION = {
             query: `
@@ -101,10 +94,13 @@ const CHECK_USER_QUERY = {
           });
 
           const updateData = await updateRes.json();
-          if (!updateRes.ok || updateData.errors) throw new Error("Gagal menghubungkan akun.");
+          if (!updateRes.ok || updateData.errors)
+            throw new Error("Gagal menghubungkan akun.");
           console.log("Akun berhasil dihubungkan.");
         }
-        // Alert.alert("Sukses", `Selamat datang kembali, ${user.displayName}`);
+
+        // Pindah Halaman
+        setIsLoading(false);
         router.replace("/home");
       } else {
         // SKENARIO B: Registrasi Otomatis Jemaat Baru
@@ -136,23 +132,33 @@ const CHECK_USER_QUERY = {
 
         const createResult = await createRes.json();
 
-        if (createResult.errors) {
+        if (createResult.errors)
           throw new Error(createResult.errors[0].message);
-        }
-        console.log("User baru berhasil dibuat di Keystone:", createResult.data.createUser);
-        
-        // Arahkan user baru ke halaman isi form profil
-        // Alert.alert("Halo!", `Selamat datang, ${user.displayName}. Silakan lengkapi profil Anda terlebih dahulu.`);
+        console.log(
+          "User baru berhasil dibuat di Keystone:",
+          createResult.data.createUser,
+        );
+
+        // Pindah Halaman ke Complete Profile
+        setIsLoading(false);
         router.replace("/completeProfile" as any);
       }
-
     } catch (error: any) {
       console.error("Login Error:", error);
-      // Fail-Safe: Paksa logout dari Firebase jika sinkronisasi backend gagal [cite: 219]
-      await auth().signOut(); 
-      Alert.alert("Login Gagal", error.message || "Terjadi kesalahan sistem.");
-    } finally{
-      setIsLoading(false);
+      await forceSignOut(); // Fail-Safe
+      setIsLoading(false); // Matikan loading jika error
+
+      // Jika user membatalkan popup web, jangan munculkan alert merah
+      if (error.code === "auth/popup-closed-by-user") return;
+
+      if (Platform.OS === "web") {
+        alert(error.message || "Terjadi kesalahan sistem.");
+      } else {
+        Alert.alert(
+          "Login Gagal",
+          error.message || "Terjadi kesalahan sistem.",
+        );
+      }
     }
   }
 
@@ -161,13 +167,11 @@ const CHECK_USER_QUERY = {
       <View style={styles.card}>
         <Text style={styles.title}>Masuk</Text>
 
-        <TouchableOpacity 
-          style={[styles.googleButton, isLoading && { opacity: 0.7 }]} 
+        <TouchableOpacity
+          style={[styles.googleButton, isLoading && { opacity: 0.7 }]}
           onPress={onGoogleButtonPress}
           disabled={isLoading}
         >
-          {/* <Ionicons name="logo-google" size={20} color={Colors.primary} />
-          <Text style={styles.googleText}>Masuk dengan Google</Text> */}
           {isLoading ? (
             <ActivityIndicator size="small" color={Colors.primary} />
           ) : (
@@ -178,9 +182,11 @@ const CHECK_USER_QUERY = {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.guestButton, isLoading && { opacity: 0.7 }]} 
+        <TouchableOpacity
+          style={[styles.guestButton, isLoading && { opacity: 0.7 }]}
           onPress={() => router.replace("/home")}
-          disabled={isLoading}>
+          disabled={isLoading}
+        >
           <Text style={styles.guestText}>Lanjutkan sebagai Tamu</Text>
         </TouchableOpacity>
       </View>
@@ -223,19 +229,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 15,
   },
-  googleText: {
-    marginLeft: 10,
-    fontWeight: "600",
-    color: Colors.primary,
-  },
+  googleText: { marginLeft: 10, fontWeight: "600", color: Colors.primary },
   guestButton: {
     backgroundColor: Colors.muda,
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
   },
-  guestText: {
-    fontWeight: "600",
-    color: Colors.primary,
-  },
+  guestText: { fontWeight: "600", color: Colors.primary },
 });

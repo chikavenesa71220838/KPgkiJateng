@@ -13,10 +13,8 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import auth from "@react-native-firebase/auth";
 import { useRouter, Stack } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, FontSize, Layout, Shadows } from "../constants/theme";
 import {
@@ -25,18 +23,22 @@ import {
   deleteBackendDataAPI
 } from "../services/profileAPI";
 
+// 🔹 Import Firebase Auth dari Service Custom kita (Aman untuk Web & Mobile)
+import { listenToAuth, forceSignOut } from "../services/authGoogle";
+
 export default function ProfilScreen() {
   const router = useRouter();
   const navigation = useNavigation();
 
-  // State untuk Loading & ID dari Backend
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [keystoneUserId, setKeystoneUserId] = useState<string | null>(null);
   const [keystoneProfileId, setKeystoneProfileId] = useState<string | null>(null);
 
-  // State untuk melacak dropdown mana yang sedang terbuka
+  // 🔹 State untuk menyimpan data User dari Firebase (Web/Mobile)
+  const [activeUser, setActiveUser] = useState<any>(null);
+
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const [form, setForm] = useState({
@@ -72,17 +74,32 @@ export default function ProfilScreen() {
     "Magister (S2)", "Doktor (S3)"
   ];
 
+  // 🔹 MENDENGARKAN STATUS LOGIN SECARA UNIVERSAL (Web & Mobile)
   useEffect(() => {
-    fetchProfileData();
+    const unsubscribe = listenToAuth(async (user) => {
+      if (user && user.email) {
+        setActiveUser(user);
+        try {
+          const firebaseToken = await user.getIdToken(true);
+          await fetchProfileData(user.email, firebaseToken, user.displayName);
+        } catch (error) {
+          console.error("Gagal verifikasi token:", error);
+          setIsLoadingData(false);
+        }
+      } else {
+        setIsLoadingData(false);
+        // Jika tidak ada user (belum login), kembalikan ke home/login
+        Alert.alert("Akses Ditolak", "Anda harus login untuk melihat profil.");
+        router.replace("/login");
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const fetchProfileData = async () => {
+  const fetchProfileData = async (email: string, token: string, fallbackName: string) => {
     try {
-      const user = auth().currentUser;
-      if (!user || !user.email) throw new Error("Belum login");
-
-      const firebaseToken = await user.getIdToken(true);
-      const userData = await fetchUserProfileAPI(user.email, firebaseToken);
+      const userData = await fetchUserProfileAPI(email, token);
 
       if (userData) {
         setKeystoneUserId(userData.id);
@@ -116,11 +133,11 @@ export default function ProfilScreen() {
             if (namaBulan) setBulan(namaBulan);
           }
         } else {
-          setForm((prev) => ({ ...prev, nama: userData.namaUser, email: userData.emailUser }));
+          setForm((prev) => ({ ...prev, nama: userData.namaUser || fallbackName, email: userData.emailUser || email }));
         }
       }
     } catch (error) {
-      console.error("Gagal ambil data:", error);
+      console.error("Gagal ambil data profil backend:", error);
     } finally {
       setIsLoadingData(false);
     }
@@ -141,11 +158,12 @@ export default function ProfilScreen() {
 
   const handleSave = async () => {
     if (!keystoneUserId) return Alert.alert("Error", "ID User tidak ditemukan.");
+    if (!activeUser) return Alert.alert("Error", "Sesi login tidak valid.");
+    
     setIsSaving(true);
 
     try {
-      const user = auth().currentUser;
-      const firebaseToken = await user?.getIdToken(true) || "";
+      const firebaseToken = await activeUser.getIdToken(true);
 
       const payload = {
         nama: form.nama,
@@ -182,18 +200,26 @@ export default function ProfilScreen() {
   const executeDelete = async () => {
     setIsDeleting(true);
     try {
-      const user = auth().currentUser;
-      if (!user) throw new Error("Anda belum login.");
-      const firebaseToken = await user.getIdToken(true);
+      if (!activeUser) throw new Error("Anda belum login.");
+      const firebaseToken = await activeUser.getIdToken(true);
       
+      // 1. Hapus data di Backend KeystoneJS
       await deleteBackendDataAPI(keystoneUserId, keystoneProfileId, firebaseToken);
-      await user.delete();
+      
+      // 2. Hapus akun di Firebase
+      await activeUser.delete();
 
-      try {
-        await GoogleSignin.revokeAccess();
-        await GoogleSignin.signOut();
-      } catch (googleError) {
-        console.log("Catatan Google Signout:", googleError);
+      // 3. Bersihkan Sesi Google (Hanya dijalankan di HP agar Web tidak crash)
+      if (Platform.OS !== 'web') {
+        try {
+          const { GoogleSignin } = require("@react-native-google-signin/google-signin");
+          await GoogleSignin.revokeAccess();
+          await GoogleSignin.signOut();
+        } catch (googleError) {
+          console.log("Catatan Google Signout:", googleError);
+        }
+      } else {
+        await forceSignOut();
       }
       
       if (Platform.OS === "android") ToastAndroid.show("Akun dihapus.", ToastAndroid.SHORT);
@@ -204,28 +230,18 @@ export default function ProfilScreen() {
       setIsDeleting(false);
       
       if (error.code === "auth/requires-recent-login") {
+        // Jika butuh verifikasi ulang, minta user login lagi. 
+        // Ini cara paling aman lintas platform (Web & Mobile).
         Alert.alert(
           "Verifikasi Keamanan 🛡️",
-          "Karena ini tindakan permanen, Google meminta Anda memverifikasi identitas sekali lagi.",
+          "Karena ini tindakan permanen, sistem meminta Anda untuk Logout dan Login kembali untuk memverifikasi identitas sebelum menghapus akun.",
           [
             { text: "Batal", style: "cancel" },
             {
-              text: "Verifikasi Sekarang",
+              text: "Logout Sekarang",
               onPress: async () => {
-                try {
-                  await GoogleSignin.hasPlayServices();
-                  const response = await GoogleSignin.signIn();
-                  if (response.type === 'success') {
-                    const idToken = response.data.idToken;
-                    if (idToken) {
-                      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-                      await auth().currentUser?.reauthenticateWithCredential(googleCredential);
-                      Alert.alert("Sukses", "Identitas terverifikasi! Silakan tekan tombol 'Hapus Akun' sekali lagi.");
-                    }
-                  }
-                } catch (reauthErr) {
-                  console.log("Batal verifikasi:", reauthErr);
-                }
+                await forceSignOut();
+                router.replace("/login");
               },
             },
           ]
@@ -237,10 +253,16 @@ export default function ProfilScreen() {
   };
 
   const handleDeletePrompt = () => {
-    Alert.alert("Hapus Akun", "Yakin ingin menghapus akun?", [
-      { text: "Batal", style: "cancel" },
-      { text: "Ya, Hapus", style: "destructive", onPress: executeDelete },
-    ]);
+    // Alert Native kadang tidak muncul di Web, kita beri proteksi khusus Web
+    if (Platform.OS === 'web') {
+      const confirmDelete = window.confirm("PERINGATAN: Yakin ingin menghapus akun secara permanen?");
+      if (confirmDelete) executeDelete();
+    } else {
+      Alert.alert("Hapus Akun", "Yakin ingin menghapus akun secara permanen?", [
+        { text: "Batal", style: "cancel" },
+        { text: "Ya, Hapus", style: "destructive", onPress: executeDelete },
+      ]);
+    }
   };
 
   if (isLoadingData) {
