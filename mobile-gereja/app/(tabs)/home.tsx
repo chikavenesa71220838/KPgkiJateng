@@ -15,6 +15,9 @@ import { useNavigation } from "@react-navigation/native";
 import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 
+// 🔹 Import listener auth untuk mendeteksi user login secara realtime
+import { listenToAuth } from "../../services/authGoogle";
+
 interface DetailIbadah {
   id: string;
   jam: string;
@@ -58,6 +61,24 @@ export default function HomeScreen() {
   const [jadwalRutin, setJadwalRutin] = useState<JadwalRutin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // 🔹 STATE BARU: Untuk menyimpan nama user yang sedang login
+  const [userName, setUserName] = useState("Tamu");
+
+  // 🔹 EFFECT BARU: Mendengarkan perubahan status Login
+  useEffect(() => {
+    const unsubscribe = listenToAuth((user) => {
+      if (user) {
+        // Ambil nama asli, kalau kosong ambil dari email bagian depan, kalau kosong pakai "Jemaat"
+        setUserName(user.displayName || user.email?.split("@")[0] || "Jemaat");
+      } else {
+        setUserName("Tamu");
+      }
+    });
+
+    // Cleanup listener saat komponen ditutup agar tidak memory leak
+    return () => unsubscribe();
+  }, []);
 
   const fetchAyatHarian = async () => {
     try {
@@ -199,7 +220,16 @@ export default function HomeScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Home</Text>
+        {/* 🔹 HEADER GREETING BARU */}
+        <View style={styles.headerContainer}>
+          <View>
+            <Text style={styles.greetingText}>Selamat Datang,</Text>
+            <Text style={styles.userNameText}>{userName}</Text>
+          </View>
+          <View style={styles.profileCircle}>
+            <Ionicons name="person" size={20} color={Colors.primary} />
+          </View>
+        </View>
 
         {/* 🔹 AYAT HARIAN MODERN */}
         <View style={styles.verseBox}>
@@ -331,11 +361,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  title: {
+  
+  // --- HEADER BARU ---
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: Layout.gap,
+    marginBottom: 20,
+  },
+  greetingText: {
+    fontSize: 15,
+    color: Colors.textMuted,
+    marginBottom: 2,
+    fontWeight: "500",
+  },
+  userNameText: {
     fontSize: FontSize.h1,
     fontWeight: "bold",
     color: Colors.primary,
-    marginVertical: Layout.gap,
+  },
+  profileCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.muda,
+    justifyContent: "center",
+    alignItems: "center",
+    ...Shadows.shdows,
   },
 
   // --- AYAT HARIAN ---

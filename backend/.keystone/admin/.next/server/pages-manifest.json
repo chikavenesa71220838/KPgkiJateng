@@ -2,8 +2,7 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/users/[id]": "pages/users/[id].js",
-  "/gerejas": "pages/gerejas.js",
-  "/gerejas/[id]": "pages/gerejas/[id].js",
-  "/": "pages/index.js"
+  "/": "pages/index.js",
+  "/profiles": "pages/profiles.js",
+  "/profiles/[id]": "pages/profiles/[id].js"
 }
