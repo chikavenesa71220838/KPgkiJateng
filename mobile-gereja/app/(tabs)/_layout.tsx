@@ -38,14 +38,14 @@ export default function TabLayout() {
   const [gereja, setGereja] = useState<Gereja | null>(null);
   const [loading, setLoading] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
-  
+
   // 🔹 State untuk menyimpan data user login (Ubah tipe menjadi any agar tidak bergantung pada native module)
   const [user, setUser] = useState<any>(null);
-  
+
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const {width, height} = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
 
   const pathname = usePathname();
@@ -98,7 +98,7 @@ export default function TabLayout() {
 
   const handleLogout = async () => {
     setMenuVisible(false);
-    
+
     // Alert Native kadang tidak berjalan mulus di Web, kita beri proteksi khusus Web
     if (Platform.OS === 'web') {
       const confirmLogout = window.confirm("Apakah Anda yakin ingin keluar?");
@@ -116,8 +116,8 @@ export default function TabLayout() {
         "Apakah Anda yakin ingin keluar?",
         [
           { text: "Batal", style: "cancel" },
-          { 
-            text: "Ya, Keluar", 
+          {
+            text: "Ya, Keluar",
             style: "destructive",
             onPress: async () => {
               try {
@@ -138,8 +138,8 @@ export default function TabLayout() {
   if (loading) return null;
 
   const SidebarItem = ({ name, icon, route, isActive }: { name: string, icon: keyof typeof Ionicons.glyphMap, route: Href, isActive: boolean }) => (
-    <TouchableOpacity 
-      style={[styles.sidebarItem, isActive && styles.sidebarItemActive]} 
+    <TouchableOpacity
+      style={[styles.sidebarItem, isActive && styles.sidebarItemActive]}
       onPress={() => router.replace(route)}
     >
       <Ionicons name={icon} size={24} color={isActive ? Colors.accent : Colors.white} />
@@ -167,9 +167,9 @@ export default function TabLayout() {
           )}
           <View>
             <Text style={styles.headerText}>{gereja?.nama || "Nama Gereja"}</Text>
-            {user && (
+            {/* {user && (
                <Text style={styles.userGreet}>Halo, {user.displayName?.split(' ')[0] || "Jemaat"}</Text>
-            )}
+            )} */}
           </View>
         </TouchableOpacity>
 
@@ -177,14 +177,23 @@ export default function TabLayout() {
           <TouchableOpacity onPress={() => router.push("../search")} style={styles.iconButton}>
             <Ionicons name="search" size={24} color={Colors.primary} />
           </TouchableOpacity>
+
           <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)} style={styles.iconButton}>
-            <Ionicons name="menu" size={28} color={Colors.primary} />
+            <View style={styles.profileCircleHeader}>
+              <Ionicons name="person" size={20} color={Colors.primary} />
+            </View>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Dropdown Menu */}
       {menuVisible && (
+        <>
+        <Pressable 
+            style={styles.overlay} 
+            onPress={() => setMenuVisible(false)} 
+          />
+
         <View style={styles.dropdownMenu}>
           <Pressable
             style={styles.menuItem}
@@ -200,7 +209,7 @@ export default function TabLayout() {
             <Ionicons name="person-circle-outline" size={20} color={Colors.primary} />
             <Text style={styles.menuText}>{user ? "Profil Akun" : "Masuk / Login"}</Text>
           </Pressable>
-          
+
           {user && (
             <>
               <View style={styles.menuDivider} />
@@ -211,6 +220,7 @@ export default function TabLayout() {
             </>
           )}
         </View>
+        </>
       )}
 
       {/* Content & Tabs */}
@@ -245,7 +255,7 @@ export default function TabLayout() {
                   borderTopWidth: 0,
                   height: Platform.OS === "android" ? 60 : 60,
                   paddingBottom: Platform.OS === "android" ? 10 : 10,
-                  paddingTop:10
+                  paddingTop: 10
                 },
                 tabBarIcon: ({ focused, color }) => {
                   let iconName: keyof typeof Ionicons.glyphMap = "home";
@@ -285,7 +295,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? 12 : 12,
   },
   logo: { width: 40, height: 40, marginRight: 10, borderRadius: 8 },
-  headerText: { fontSize: 18, fontWeight: "bold", color: Colors.primary },
+  headerText: { fontSize: 22, fontWeight: "bold", color: Colors.primary },
   userGreet: { fontSize: 12, color: Colors.primary, marginTop: -2 },
   rightButtons: { flexDirection: "row", alignItems: "center" },
   iconButton: { padding: 6, marginLeft: 8 },
@@ -332,5 +342,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.white,
     fontWeight: '500',
-  }
+  },
+
+  profileCircleHeader: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  backgroundColor: Colors.muda,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+overlay: {
+    ...StyleSheet.absoluteFillObject, 
+    zIndex: 98, // Harus di bawah zIndex dropdown (99)
+    elevation: 4, 
+  },
 });
