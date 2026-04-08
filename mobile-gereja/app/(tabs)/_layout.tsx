@@ -137,12 +137,23 @@ export default function TabLayout() {
 
   if (loading) return null;
 
-  const SidebarItem = ({ name, icon, route, isActive }: { name: string, icon: keyof typeof Ionicons.glyphMap, route: Href, isActive: boolean }) => (
+const SidebarItem = ({ name, icon, route, isActive, isProfile }: { name: string, icon?: keyof typeof Ionicons.glyphMap, route: Href, isActive: boolean, isProfile?: boolean }) => (
     <TouchableOpacity
       style={[styles.sidebarItem, isActive && styles.sidebarItemActive]}
-      onPress={() => router.replace(route)}
+      onPress={() => router.navigate(route)}
     >
-      <Ionicons name={icon} size={24} color={isActive ? Colors.accent : Colors.white} />
+      {isProfile ? (
+        gereja?.logo?.url ? (
+          <Image
+            source={{ uri: `${API_URL.replace("/api/graphql", "")}${gereja.logo.url}` }}
+            style={{ width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: isActive ? Colors.accent : "transparent" }}
+          />
+        ) : (
+          <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: "#ccc" }} />
+        )
+      ) : (
+        icon ? <Ionicons name={icon} size={24} color={isActive ? Colors.accent : Colors.white} /> : null
+      )}
       <Text style={[styles.sidebarText, isActive && styles.sidebartextActive]}>{name}</Text>
     </TouchableOpacity>
   );
@@ -207,7 +218,7 @@ export default function TabLayout() {
             }}
           >
             <Ionicons name="person-circle-outline" size={20} color={Colors.primary} />
-            <Text style={styles.menuText}>{user ? "Profil Akun" : "Masuk / Login"}</Text>
+            <Text style={styles.menuText}>{user ? "Profil Akun" : "Daftar / Masuk"}</Text>
           </Pressable>
 
           {user && (
@@ -232,17 +243,13 @@ export default function TabLayout() {
             <SidebarItem name="Jadwal" icon="calendar" route="/jadwalIbadah" isActive={pathname === "/jadwalIbadah"} />
             <SidebarItem name="Warta" icon="newspaper" route="/warta" isActive={pathname === "/warta"} />
             <SidebarItem name="Riwayat" icon="time" route="/Riwayat" isActive={pathname === "/Riwayat"} />
-            <SidebarItem name="Profil" icon={user ? "person" : "log-in"} route="/profil" isActive={pathname === "/profil"} />
+            {/* <SidebarItem name="Profil" icon={user ? "person" : "log-in"} route="/profil" isActive={pathname === "/profil"} /> */}
+<SidebarItem name="Profil Gereja" route="/profil" isActive={pathname === "/profil"} isProfile={true} />
           </View>
         )}
 
         {/* KONTEN LAYAR & TABS */}
-        <View style={{ flex: 1 }}>
-          {isLandscape ? (
-            /* Mode Landscape: Render konten langsung tanpa tab bawah menggunakan Slot */
-            <Slot />
-          ) : (
-            /* Mode Portrait: Gunakan Bottom Tabs bawaan milikmu yang lama */
+       <View style={{ flex: 1 }}>
             <Tabs
               screenOptions={({ route }) => ({
                 headerShown: false,
@@ -251,6 +258,7 @@ export default function TabLayout() {
                 tabBarShowLabel: false,
                 tabBarHideOnKeyboard: true,
                 tabBarStyle: {
+                  display: isLandscape ? "none" : "flex",
                   backgroundColor: Colors.primary,
                   borderTopWidth: 0,
                   height: Platform.OS === "android" ? 60 : 60,
@@ -258,12 +266,22 @@ export default function TabLayout() {
                   paddingTop: 10
                 },
                 tabBarIcon: ({ focused, color }) => {
+                  if (route.name === "profil") {
+                    return gereja?.logo?.url ? (
+                      <Image
+                        source={{ uri: `${API_URL.replace("/api/graphql", "")}${gereja.logo.url}` }}
+                        style={{ width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: focused ? Colors.accent : "transparent" }}
+                      />
+                    ) : (
+                      <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: "#ccc" }} />
+                    );
+                  }
                   let iconName: keyof typeof Ionicons.glyphMap = "home";
                   if (route.name === "home") iconName = "home";
                   else if (route.name === "jadwalIbadah") iconName = "calendar";
                   else if (route.name === "warta") iconName = "newspaper";
                   else if (route.name === "Riwayat") iconName = "time";
-                  else if (route.name === "profil") iconName = user ? "person" : "log-in";
+                  // else if (route.name === "profil") iconName = user ? "person" : "log-in";
 
                   return <Ionicons name={iconName} size={24} color={color} />;
                 },
@@ -275,7 +293,7 @@ export default function TabLayout() {
               <Tabs.Screen name="Riwayat" />
               <Tabs.Screen name="profil" />
             </Tabs>
-          )}
+          
         </View>
       </View>
     </View>
@@ -319,12 +337,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     borderRightWidth: 1,
     borderColor: Colors.border,
-    paddingTop: 20,
+    paddingTop: 0,
   },
   sidebarItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 15,
+    paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',

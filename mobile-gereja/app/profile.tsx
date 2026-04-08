@@ -88,8 +88,8 @@ export default function ProfilScreen() {
         }
       } else {
         setIsLoadingData(false);
-        // Jika tidak ada user (belum login), kembalikan ke home/login
-        Alert.alert("Akses Ditolak", "Anda harus login untuk melihat profil.");
+        // // Jika tidak ada user (belum login), kembalikan ke home/login
+        // Alert.alert("Akses Ditolak", "Anda harus login untuk melihat profil.");
         router.replace("/login");
       }
     });
@@ -268,6 +268,7 @@ export default function ProfilScreen() {
   if (isLoadingData) {
     return (
       <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.center}>
+        <Stack.Screen options={{ headerShown: false }} />
         <ActivityIndicator size="large" color={Colors.primary} />
         <Text style={{ marginTop: 10, color: Colors.primary }}>Memuat Profil...</Text>
       </LinearGradient>
