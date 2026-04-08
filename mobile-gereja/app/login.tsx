@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,18 +7,40 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Image,
+  useWindowDimensions
 } from "react-native";
 import { API_URL } from "@/utils/api";
-import { useRouter } from "expo-router";
+import { useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "../constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
+import { Colors, Shadows, Layout, FontSize } from "../constants/theme";
 
-// AJAIB: Import ini akan otomatis milih file .native atau .web sesuai platform yang jalan!
 import { signInGoogleAccess, forceSignOut } from "../services/authGoogle";
+
+const BASE_URL = API_URL.replace("/api/graphql", "");
 
 const LoginScreen = () => {
   const router = useRouter();
+
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
+
   const [isLoading, setIsLoading] = useState(false);
+  const [gereja, setGereja] = useState<{ nama: string; logo?: { url: string } } | null>(null);
+
+  useEffect(() => {
+    fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `query { gerejas { nama logo { url } } }`,
+      }),
+    })
+      .then((r) => r.json())
+      .then((json) => setGereja(json.data?.gerejas?.[0] ?? null))
+      .catch(() => { });
+  }, []);
 
   async function onGoogleButtonPress() {
     setIsLoading(true);
@@ -163,34 +185,93 @@ const LoginScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Masuk</Text>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.container}>
+        <View style={[
+          styles.contentWrapper,
+          isLandscape && {
+            flexDirection: 'row',
+            justifyContent: 'center',
+            maxWidth: 1000,
+            alignSelf: 'center',
+            width: '95%'
+          }
+        ]}>
 
-        <TouchableOpacity
-          style={[styles.googleButton, isLoading && { opacity: 0.7 }]}
-          onPress={onGoogleButtonPress}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color={Colors.primary} />
-          ) : (
-            <Ionicons name="logo-google" size={20} color={Colors.primary} />
-          )}
-          <Text style={styles.googleText}>
-            {isLoading ? "Memuat..." : "Masuk dengan Google"}
-          </Text>
-        </TouchableOpacity>
+          {/* Bagian Logo / Judul Mode Landscape*/}
+          <View style={[
+            styles.headerSection,
+            isLandscape && {
+              marginBottom: 0,
+              marginRight: 40,
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingLeft: Layout.padding
+            }
+          ]}>
+            {gereja?.logo?.url ? (
+              <Image
+                source={{ uri: `${BASE_URL}${gereja.logo.url}` }}
+                style={styles.logoImage}
+              />
+            ) : (
+              <View style={styles.iconCircle}>
+                <Ionicons name="people" size={40} color={Colors.primary} />
+              </View>
+            )}
+            <Text style={styles.title}>{gereja?.nama ?? "GKI Gejayan"}</Text>
+            <Text style={styles.subtitle}>Aplikasi Informasi untuk Jemaat</Text>
+          </View>
 
-        <TouchableOpacity
-          style={[styles.guestButton, isLoading && { opacity: 0.7 }]}
-          onPress={() => router.replace("/home")}
-          disabled={isLoading}
-        >
-          <Text style={styles.guestText}>Lanjutkan sebagai Tamu</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          {/* BAGIAN KANAN (Mode Landscape) / BAGIAN BAWAH (Mode Portrait) */}
+          <View style={isLandscape && { flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+
+          
+          {/* Card Form */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Daftar atau Masuk ke Akun Anda</Text>
+
+            <Text style={styles.description}>
+              Gunakan akun Google Anda untuk melanjutkan.
+            </Text>
+
+            <TouchableOpacity
+              style={[styles.googleButton, isLoading && { opacity: 0.7 }]}
+              onPress={onGoogleButtonPress}
+              disabled={isLoading}
+              activeOpacity={0.8}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color={Colors.white} />
+              ) : (
+                <Ionicons name="logo-google" size={20} color={Colors.white} style={{ marginRight: 8 }} />
+              )}
+              <Text style={styles.googleText}>
+                {isLoading ? "Memuat..." : "Lanjutkan dengan Google"}
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>ATAU</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.guestButton, isLoading && { opacity: 0.7 }]}
+              onPress={() => router.replace("/home")}
+              disabled={isLoading}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.guestText}>Lanjutkan sebagai Tamu</Text>
+            </TouchableOpacity>
+          </View>
+          </View>
+        </View>
+      </LinearGradient>
+    </>
   );
 };
 
@@ -199,42 +280,116 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  contentWrapper: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Layout.padding,
+  },
+
+  headerSection: {
+    alignItems: "center",
+    marginBottom: 40,
+  },
+  logoImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 16,
+    marginBottom: 16,
+    ...Shadows.button,
+  },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: Colors.white,
     justifyContent: "center",
     alignItems: "center",
-  },
-  card: {
-    width: "85%",
-    backgroundColor: Colors.primary,
-    padding: 30,
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 8,
+    marginBottom: 16,
+    ...Shadows.button,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "white",
+    fontSize: 28,
+    fontWeight: "800",
+    color: Colors.primary,
+    marginBottom: 4,
     textAlign: "center",
-    marginBottom: 25,
   },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.textMuted,
+    textAlign: "center",
+  },
+
+  card: {
+    width: "100%",
+    maxWidth: 400, // Agar di tablet/web tidak terlalu melebar
+    backgroundColor: Colors.white,
+    borderRadius: Layout.radiusXLarge,
+    padding: 30,
+    ...Shadows.shdows,
+  },
+  cardTitle: {
+    fontSize: FontSize.h2,
+    fontWeight: "bold",
+    color: Colors.text,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  description: {
+    fontSize: FontSize.body,
+    color: Colors.textMuted,
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+
   googleButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "white",
-    paddingVertical: 12,
-    borderRadius: 12,
+    backgroundColor: Colors.primary,
+    paddingVertical: 14,
+    borderRadius: Layout.radiusLarge,
     justifyContent: "center",
-    marginBottom: 15,
+    marginBottom: 20,
+    ...Shadows.button,
   },
-  googleText: { marginLeft: 10, fontWeight: "600", color: Colors.primary },
+  googleText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: Colors.white,
+  },
+
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.divider,
+  },
+  dividerText: {
+    paddingHorizontal: 10,
+    color: Colors.textMuted,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
   guestButton: {
-    backgroundColor: Colors.muda,
-    paddingVertical: 12,
-    borderRadius: 12,
+    backgroundColor: Colors.inputBackground,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingVertical: 14,
+    borderRadius: Layout.radiusLarge,
     alignItems: "center",
   },
-  guestText: { fontWeight: "600", color: Colors.primary },
+  guestText: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: Colors.text,
+  },
 });
