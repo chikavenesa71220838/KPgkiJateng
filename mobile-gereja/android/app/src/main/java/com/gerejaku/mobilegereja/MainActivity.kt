@@ -1,4 +1,4 @@
-package com.dwiyanbagus.mobilegereja
+package com.gerejaku.mobilegereja
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

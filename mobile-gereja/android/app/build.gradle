@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.dwiyanbagus.mobilegereja'
+    namespace 'com.gerejaku.mobilegereja'
     defaultConfig {
-        applicationId 'com.dwiyanbagus.mobilegereja'
+        applicationId 'com.gerejaku.mobilegereja'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
