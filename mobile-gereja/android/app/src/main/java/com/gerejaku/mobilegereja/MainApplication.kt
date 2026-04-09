@@ -1,4 +1,4 @@
-package com.dwiyanbagus.mobilegereja
+package com.gerejaku.mobilegereja
 
 import android.app.Application
 import android.content.res.Configuration
