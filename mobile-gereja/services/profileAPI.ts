@@ -102,30 +102,55 @@ export const saveUserProfileAPI = async (
   return json.data.updateUser;
 };
 
-// 3. Fungsi Hapus Data Backend (Soft & Hard Delete)
-export const deleteBackendDataAPI = async (userId: string | null, profileId: string | null, token: string) => {
-  // Soft Delete User
-  if (userId) {
-    await fetch(API_URL, {
+// 3. Fungsi Hapus Data Backend (Soft Delete User & Hard Delete Profile)
+export const deleteBackendDataAPI = async (
+  userId: string | null, 
+  profileId: string | null, 
+  token: string, 
+  userEmail: string
+) => {
+  // Soft Delete User & Samarkan Email
+  if (userId && userEmail) {
+    // Membuat email unik agar tidak bentrok jika user mendaftar lagi
+    const timestamp = Date.now();
+    const deletedEmail = `deleted_${timestamp}_${userEmail}`;
+
+    const res1 = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        query: `mutation SoftDeleteUser($id: ID!) { updateUser(where: { id: $id }, data: { statusAktivasi: "nonaktif" }) { id } }`,
-        variables: { id: userId },
+        query: `mutation SoftDeleteUser($id: ID!, $newEmail: String!) { 
+          updateUser(
+            where: { id: $id }, 
+            data: { 
+              statusAktivasi: "nonaktif",
+              emailUser: $newEmail 
+            }
+          ) { id } 
+        }`,
+        variables: { id: userId, newEmail: deletedEmail },
       }),
     });
+    
+    const json1 = await res1.json();
+    if (json1.errors) throw new Error("Gagal nonaktifkan User: " + json1.errors[0].message);
   }
 
-  // Hard Delete Profile
+  // Hard Delete Profile (Biarin ke-delete selamanya karena nanti buat baru)
   if (profileId) {
-    await fetch(API_URL, {
+    const res2 = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        query: `mutation DeleteProfile($id: ID!) { deleteProfile(where: { id: $id }) { id } }`,
+        query: `mutation DeleteProfile($id: ID!) { 
+          deleteProfile(where: { id: $id }) { id } 
+        }`,
         variables: { id: profileId },
       }),
     });
+
+    const json2 = await res2.json();
+    if (json2.errors) throw new Error("Gagal hapus Profile: " + json2.errors[0].message);
   }
 };
 

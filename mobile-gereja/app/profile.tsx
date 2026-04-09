@@ -202,9 +202,11 @@ export default function ProfilScreen() {
     try {
       if (!activeUser) throw new Error("Anda belum login.");
       const firebaseToken = await activeUser.getIdToken(true);
+
+      const userEmail = activeUser.email || form.email;
       
       // 1. Hapus data di Backend KeystoneJS
-      await deleteBackendDataAPI(keystoneUserId, keystoneProfileId, firebaseToken);
+      await deleteBackendDataAPI(keystoneUserId, keystoneProfileId, firebaseToken, userEmail);
       
       // 2. Hapus akun di Firebase
       await activeUser.delete();
