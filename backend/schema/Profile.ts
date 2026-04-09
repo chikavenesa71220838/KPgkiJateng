@@ -38,22 +38,7 @@ export const Profile = list({
         { label: "Simpatisan", value: "simpatisan" },
       ],
     }),
-    fotoProfil: image({
-      storage: "local_images",
-      hooks: {
-        validateInput: async ({ resolvedData, addValidationError }) => {
-          const file = resolvedData.fotoProfil;
-          // PERBAIKAN: Gunakan .extension dan pastikan file benar-benar sedang diupload
-          if (
-            file &&
-            file.extension &&
-            !["jpg", "jpeg"].includes(file.extension)
-          ) {
-            addValidationError("Hanya file JPEG yang diperbolehkan.");
-          }
-        },
-      },
-    }),
+    fotoProfil: text(),
     user: relationship({ ref: "User.profile" }),
   },
 });
