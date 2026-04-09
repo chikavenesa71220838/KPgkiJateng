@@ -11,6 +11,7 @@ import {
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { API_URL } from "../../utils/api";
+import { fetchAyatHarianAPI, fetchJadwalIbadahUpcomingAPI, fetchJadwalRutinAPI } from "../../services/profileAPI";
 import { useNavigation } from "@react-navigation/native";
 import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
@@ -80,114 +81,30 @@ export default function HomeScreen() {
     return () => unsubscribe();
   }, []);
 
-  const fetchAyatHarian = async () => {
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            query {
-              ayatHarians(orderBy: { tanggal: desc }, take: 1) {
-                book
-                chapter
-                verse
-                text
-              }
-            }
-          `,
-        }),
-      });
-      const result = await res.json();
-      if (result.errors) throw new Error(result.errors[0].message);
-      setAyat(result.data?.ayatHarians?.[0] || null);
-    } catch (err: any) {
-      console.error("Fetch Ayat Harian error:", err);
-    }
-  };
-
-  const fetchJadwal = async () => {
-    try {
-      const now = new Date().toISOString().split("T")[0];
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            query {
-              jadwalIbadahs(
-                where: { tanggal: { gte: "${now}" } }
-                orderBy: { tanggal: asc }
-                take: 5
-              ) {
-                id
-                tanggal
-                detailIbadah {
-                  id
-                  jam
-                  banner {
-                    url
-                  }
-                }
-              }
-            }
-          `,
-        }),
-      });
-
-      const result = await res.json();
-      if (result.errors)
-        throw new Error(result.errors[0]?.message || "GraphQL Error");
-      const data: Jadwal[] = result.data?.jadwalIbadahs || [];
-      
-      // 🔹 PROTEKSI: Memastikan item.detailIbadah ada sebelum di-map
-      const flattenedDetails = data.flatMap((item) => {
-        if (!item?.detailIbadah) return [];
-        return item.detailIbadah.map(detail => ({ jadwal: item, detail }));
-      });
-      setJadwalIbadah(flattenedDetails);
-
-    } catch (err: any) {
-      console.error("Fetch Jadwal error:", err);
-      setError(err.message);
-    }
-  };
-
-  const fetchJadwalRutin = async () => {
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            query {
-              jadwalRutins(orderBy: { namaIbadah: asc }) {
-                id
-                namaIbadah
-                nama
-                waktu {
-                  id
-                  jam
-                }
-              }
-            }
-          `,
-        }),
-      });
-
-      const result = await res.json();
-      if (result.errors)
-        throw new Error(result.errors[0]?.message || "GraphQL Error");
-      setJadwalRutin(result.data?.jadwalRutins || []);
-    } catch (err: any) {
-      console.error("Fetch Jadwal Rutin error:", err);
-    }
-  };
-
   useEffect(() => {
     const loadAll = async () => {
       setLoading(true);
-      await Promise.all([fetchAyatHarian(), fetchJadwal(), fetchJadwalRutin()]);
+      try {
+        const now = new Date().toISOString().split("T")[0];
+        const [ayatData, jadwalData, rutinData] = await Promise.all([
+          fetchAyatHarianAPI(),
+          fetchJadwalIbadahUpcomingAPI(now, 5),
+          fetchJadwalRutinAPI(),
+        ]);
+
+        setAyat(ayatData);
+
+        const flattenedDetails = (jadwalData as Jadwal[]).flatMap((item) => {
+          if (!item?.detailIbadah) return [];
+          return item.detailIbadah.map(detail => ({ jadwal: item, detail }));
+        });
+        setJadwalIbadah(flattenedDetails);
+
+        setJadwalRutin(rutinData);
+      } catch (err: any) {
+        console.error("Load home error:", err);
+        setError(err.message);
+      }
       setLoading(false);
     };
     loadAll();

@@ -14,6 +14,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { API_URL } from "../../utils/api";
+import { fetchWartaAPI } from "../../services/profileAPI";
 import { Ionicons } from "@expo/vector-icons";
 import RenderHTML from "react-native-render-html";
 import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
@@ -106,31 +107,7 @@ export default function Warta(): React.ReactElement {
   const fetchWarta = async () => {
     try {
       setLoading(true);
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            query {
-              wartas(orderBy: { masaBerlaku: desc }) {
-                id
-                judul
-                isiWarta { document }
-                masaBerlaku
-                tanggalPelaksanaan
-                kategori { nama }
-                gambar { url }
-              }
-            }
-          `,
-        }),
-      });
-
-      const result = await res.json();
-      if (result.errors)
-        throw new Error(result.errors[0]?.message || "GraphQL Error");
-
-      const data = result.data?.wartas || [];
+      const data = await fetchWartaAPI();
       setWarta(data);
       setFilteredData(data);
       setError(null);

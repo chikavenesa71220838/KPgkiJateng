@@ -218359,6 +218359,7 @@ function startAyatScheduler(context) {
 }
 
 // keystone.ts
+var import_cookie_parser = __toESM(require("cookie-parser"));
 var serviceAccountPath = import_path.default.resolve(
   process.cwd(),
   "serviceAccountKey.json"
@@ -218389,8 +218390,8 @@ if (!sessionSecret) throw new Error("SESSION_SECRET harus diset di .env!");
 var session = (0, import_session.statelessSessions)({
   secret: sessionSecret,
   maxAge: 60 * 60 * 8,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict"
+  secure: false,
+  sameSite: "lax"
 });
 var keystone_default = withAuth(
   (0, import_core14.config)({
@@ -218410,9 +218411,14 @@ var keystone_default = withAuth(
       port: 3e3,
       options: { host: "0.0.0.0" },
       extendExpressApp: (app, context) => {
+        app.use((0, import_cookie_parser.default)());
         app.use(import_express.default.json());
         app.use("/api/graphql", async (req, res, next) => {
           if (req.body?.operationName === "IntrospectionQuery") return next();
+          if (req.cookies?.["keystonejs-session"]) return next();
+          const referer = req.headers.referer || "";
+          if (referer.includes("/init") || referer.includes("/signin"))
+            return next();
           const authHeader = req.headers.authorization;
           if (authHeader && authHeader.startsWith("Bearer ")) {
             const token = authHeader.split("Bearer ")[1];
@@ -218426,14 +218432,7 @@ var keystone_default = withAuth(
               });
             }
           }
-          if (process.env.NODE_ENV === "development" && !authHeader) {
-            return next();
-          }
-          return res.status(401).json({
-            errors: [
-              { message: "Akses ditolak. Token autentikasi diperlukan." }
-            ]
-          });
+          return next();
         });
         const sudoContext = context.sudo();
         ayatHarianRoute(app, sudoContext);
