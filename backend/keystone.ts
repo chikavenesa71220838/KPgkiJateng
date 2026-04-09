@@ -72,11 +72,15 @@ export default withAuth(
         app.use(express.json());
 
         app.use("/api/graphql", async (req, res, next) => {
-          // Izinkan IntrospectionQuery
           if (req.body?.operationName === "IntrospectionQuery") return next();
 
-          // ← Izinkan request dari Admin UI (pakai session cookie Keystone)
+          // ← Izinkan request dari Admin UI (cookie session)
           if (req.cookies?.["keystonejs-session"]) return next();
+
+          // ← Izinkan halaman init (buat admin pertama)
+          const referer = req.headers.referer || "";
+          if (referer.includes("/init") || referer.includes("/signin"))
+            return next();
 
           const authHeader = req.headers.authorization;
           if (authHeader && authHeader.startsWith("Bearer ")) {
