@@ -90,7 +90,7 @@ export default function ProfilScreen() {
         setIsLoadingData(false);
         // // Jika tidak ada user (belum login), kembalikan ke home/login
         // Alert.alert("Akses Ditolak", "Anda harus login untuk melihat profil.");
-        router.replace("/login");
+        router.replace("/home");
       }
     });
 
@@ -223,7 +223,7 @@ export default function ProfilScreen() {
       }
       
       if (Platform.OS === "android") ToastAndroid.show("Akun dihapus.", ToastAndroid.SHORT);
-      router.replace("/login");
+      router.replace("/home");
 
     } catch (error: any) {
       console.error("Error Delete:", error);
@@ -241,7 +241,7 @@ export default function ProfilScreen() {
               text: "Logout Sekarang",
               onPress: async () => {
                 await forceSignOut();
-                router.replace("/login");
+                router.replace("/home");
               },
             },
           ]

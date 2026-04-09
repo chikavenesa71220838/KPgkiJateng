@@ -28,13 +28,13 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>mobilegereja</string>
-          <string>com.dwiyanbagus.mobilegereja</string>
+          <string>com.gerejaku.mobilegereja</string>
         </array>
       </dict>
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>com.googleusercontent.apps.848782878807-er3vdm9cq8v7gk5s8mf74hfgpfr79num</string>
+          <string>com.googleusercontent.apps.848782878807-lgel4074nitghv5bqob745nm90lf5ks5</string>
         </array>
       </dict>
       <dict>
@@ -77,6 +77,8 @@
     <array>
       <string>UIInterfaceOrientationPortrait</string>
       <string>UIInterfaceOrientationPortraitUpsideDown</string>
+      <string>UIInterfaceOrientationLandscapeLeft</string>
+      <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
     <key>UISupportedInterfaceOrientations~ipad</key>
     <array>

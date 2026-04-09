@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>848782878807-er3vdm9cq8v7gk5s8mf74hfgpfr79num.apps.googleusercontent.com</string>
+	<string>848782878807-lgel4074nitghv5bqob745nm90lf5ks5.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.848782878807-er3vdm9cq8v7gk5s8mf74hfgpfr79num</string>
+	<string>com.googleusercontent.apps.848782878807-lgel4074nitghv5bqob745nm90lf5ks5</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>848782878807-s17ph2o8p1n9jvrdtudtp3dnsamr0t04.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.dwiyanbagus.mobilegereja</string>
+	<string>com.gerejaku.mobilegereja</string>
 	<key>PROJECT_ID</key>
 	<string>mobile-gereja</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:848782878807:ios:ec9c0c35994e39c0529b12</string>
+	<string>1:848782878807:ios:a58b06344619c9e8529b12</string>
 </dict>
 </plist>
