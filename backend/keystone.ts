@@ -45,8 +45,8 @@ if (!sessionSecret) throw new Error("SESSION_SECRET harus diset di .env!");
 const session = statelessSessions({
   secret: sessionSecret,
   maxAge: 60 * 60 * 8,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
+  secure: false,
+  sameSite: "lax",
 });
 
 // ← Wrap config dengan withAuth
