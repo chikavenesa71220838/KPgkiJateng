@@ -21,6 +21,7 @@ export const fetchUserProfileAPI = async (email: string, token: string) => {
             tanggalLahir
             statusPernikahan
             statusKeanggotaan
+            fotoProfil
           }
         }
       }
@@ -52,17 +53,18 @@ export const saveUserProfileAPI = async (
   const mutation = {
     query: `
       mutation UpdateUserAndProfile(
-        $userId: ID!, 
-        $nama: String!, 
-        $alamat: String, 
-        $domisili: String, 
-        $noWa: String, 
-        $jk: String, 
-        $pendidikan: String, 
-        $pekerjaan: String, 
-        $statusKawin: String, 
-        $statusKeanggotaan: String, 
-        $tglLahir: String
+        $userId: ID!,
+        $nama: String!,
+        $alamat: String,
+        $domisili: String,
+        $noWa: String,
+        $jk: String,
+        $pendidikan: String,
+        $pekerjaan: String,
+        $statusKawin: String,
+        $statusKeanggotaan: String,
+        $tglLahir: String,
+        $fotoProfil: String
       ) {
         updateUser(
           where: { id: $userId }
@@ -79,6 +81,7 @@ export const saveUserProfileAPI = async (
                 statusPernikahan: $statusKawin
                 statusKeanggotaan: $statusKeanggotaan
                 tanggalLahir: $tglLahir
+                fotoProfil: $fotoProfil
               }
             }
           }

@@ -21,24 +21,20 @@ model User {
 }
 
 model Profile {
-  id                   String  @id @default(cuid())
-  nama                 String  @default("")
-  alamat               String  @default("")
-  nomorWa              String  @default("")
-  jenisKelamin         String?
-  pendidikan           String  @default("")
-  pekerjaan            String  @default("")
-  tanggalLahir         String  @default("")
-  statusPernikahan     String?
-  domisili             String  @default("")
-  statusKeanggotaan    String?
-  fotoProfil_id        String?
-  fotoProfil_filesize  Int?
-  fotoProfil_width     Int?
-  fotoProfil_height    Int?
-  fotoProfil_extension String?
-  user                 User?   @relation("Profile_user", fields: [userId], references: [id])
-  userId               String? @unique @map("user")
+  id                String  @id @default(cuid())
+  nama              String  @default("")
+  alamat            String  @default("")
+  nomorWa           String  @default("")
+  jenisKelamin      String?
+  pendidikan        String  @default("")
+  pekerjaan         String  @default("")
+  tanggalLahir      String  @default("")
+  statusPernikahan  String?
+  domisili          String  @default("")
+  statusKeanggotaan String?
+  fotoProfil        String  @default("")
+  user              User?   @relation("Profile_user", fields: [userId], references: [id])
+  userId            String? @unique @map("user")
 }
 
 model KategoriWarta {

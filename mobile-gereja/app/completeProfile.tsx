@@ -71,6 +71,7 @@ export default function CompleteProfile() {
         nama: form.nama,
         jk: form.jenisKelamin === "Laki-laki" ? "L" : "P",
         statusKeanggotaan: form.statusKeanggotaan.toLowerCase(),
+        fotoProfil: form.fotoUrl || null,
       };
 
       // 3. kirim dan simpan ke backend

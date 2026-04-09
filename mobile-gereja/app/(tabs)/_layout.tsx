@@ -22,6 +22,7 @@ import { API_URL } from "../../utils/api";
 
 // 🔹 Import Firebase Auth dari Service Custom kita (Aman untuk Web & Mobile)
 import { listenToAuth, forceSignOut } from "../../services/authGoogle";
+import { fetchUserProfileAPI } from "../../services/profileAPI";
 
 const { Navigator } = createBottomTabNavigator();
 const Tabs = withLayoutContext(Navigator);
@@ -41,6 +42,7 @@ export default function TabLayout() {
 
   // 🔹 State untuk menyimpan data user login (Ubah tipe menjadi any agar tidak bergantung pada native module)
   const [user, setUser] = useState<any>(null);
+  const [fotoProfil, setFotoProfil] = useState<string | null>(null);
 
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -52,8 +54,19 @@ export default function TabLayout() {
 
   // 🔹 1. Observer untuk memantau status login (Berlaku untuk Web & Mobile)
   useEffect(() => {
-    const unsubscribe = listenToAuth((currentUser) => {
+    const unsubscribe = listenToAuth(async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        try {
+          const token = await currentUser.getIdToken();
+          const userData = await fetchUserProfileAPI(currentUser.email, token);
+          setFotoProfil(userData?.profile?.fotoProfil || null);
+        } catch {
+          setFotoProfil(null);
+        }
+      } else {
+        setFotoProfil(null);
+      }
     });
     return () => unsubscribe(); // unsubscribe saat unmount
   }, []);
@@ -191,7 +204,11 @@ const SidebarItem = ({ name, icon, route, isActive, isProfile }: { name: string,
 
           <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)} style={styles.iconButton}>
             <View style={styles.profileCircleHeader}>
-              <Ionicons name="person" size={20} color={Colors.primary} />
+              {fotoProfil ? (
+                <Image source={{ uri: fotoProfil }} style={styles.profileCircleAvatar} />
+              ) : (
+                <Ionicons name="person" size={20} color={Colors.primary} />
+              )}
             </View>
           </TouchableOpacity>
         </View>
@@ -363,13 +380,19 @@ const styles = StyleSheet.create({
   },
 
   profileCircleHeader: {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  backgroundColor: Colors.muda,
-  justifyContent: "center",
-  alignItems: "center",
-},
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.muda,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  profileCircleAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
 
 overlay: {
     ...StyleSheet.absoluteFillObject, 
