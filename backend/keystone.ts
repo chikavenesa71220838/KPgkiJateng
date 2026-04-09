@@ -8,6 +8,7 @@ import admin from "firebase-admin";
 import { lists } from "./schema/index.js";
 import ayatHarianRoute from "./routes/ayatHarian.js";
 import startAyatScheduler from "./scheduler/ayatScheduler.js";
+import cookieParser from "cookie-parser";
 
 // Firebase init (sama seperti sebelumnya)
 const serviceAccountPath = path.resolve(
@@ -66,12 +67,16 @@ export default withAuth(
       },
       port: 3000,
       options: { host: "0.0.0.0" },
-
       extendExpressApp: (app, context) => {
+        app.use(cookieParser());
         app.use(express.json());
 
         app.use("/api/graphql", async (req, res, next) => {
+          // Izinkan IntrospectionQuery
           if (req.body?.operationName === "IntrospectionQuery") return next();
+
+          // ← Izinkan request dari Admin UI (pakai session cookie Keystone)
+          if (req.cookies?.["keystonejs-session"]) return next();
 
           const authHeader = req.headers.authorization;
           if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -87,9 +92,8 @@ export default withAuth(
             }
           }
 
-          if (process.env.NODE_ENV === "development" && !authHeader) {
+          if (process.env.NODE_ENV === "development" && !authHeader)
             return next();
-          }
 
           return res.status(401).json({
             errors: [
