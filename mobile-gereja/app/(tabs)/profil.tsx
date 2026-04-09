@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Linking,
   ActivityIndicator,
+  FlatList,
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
@@ -25,6 +26,23 @@ export default function ProfilGereja(): React.ReactElement {
   const [error, setError] = useState<string | null>(null);
 
   const BASE_URL = API_URL.replace("/api/graphql", "");
+
+  const pendetaListRef = useRef<FlatList>(null);
+  const [pendetaScrollX, setPendetaScrollX] = useState(0);
+  const [pendetaContentWidth, setPendetaContentWidth] = useState(0);
+  const [pendetaLayoutWidth, setPendetaLayoutWidth] = useState(0);
+
+  const CARD_STEP = 174; // card width (160) + marginRight (14)
+
+  const isAtStart = pendetaScrollX <= 0;
+  const isAtEnd = pendetaContentWidth > 0 && pendetaScrollX >= pendetaContentWidth - pendetaLayoutWidth - 1;
+
+  const scrollPendeta = (direction: "left" | "right") => {
+    const next = direction === "left"
+      ? Math.max(0, pendetaScrollX - CARD_STEP)
+      : Math.min(pendetaContentWidth - pendetaLayoutWidth, pendetaScrollX + CARD_STEP);
+    pendetaListRef.current?.scrollToOffset({ offset: next, animated: true });
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -266,7 +284,35 @@ export default function ProfilGereja(): React.ReactElement {
           </TouchableOpacity>
 
           {/* Pendeta Gereja */}
-          <Text style={styles.subTitle}>Pendeta Gereja</Text>
+          <View style={styles.pendetaHeader}>
+            <Text style={styles.subTitle}>Pendeta Gereja</Text>
+            {pendeta.length > 1 && (
+              <View style={styles.arrowRow}>
+                <TouchableOpacity
+                  onPress={() => scrollPendeta("left")}
+                  disabled={isAtStart}
+                  style={[styles.arrowBtn, isAtStart && styles.arrowBtnDisabled]}
+                >
+                  <Ionicons
+                    name="chevron-back"
+                    size={18}
+                    color={isAtStart ? Colors.placeholder : Colors.primary}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => scrollPendeta("right")}
+                  disabled={isAtEnd}
+                  style={[styles.arrowBtn, isAtEnd && styles.arrowBtnDisabled]}
+                >
+                  <Ionicons
+                    name="chevron-forward"
+                    size={18}
+                    color={isAtEnd ? Colors.placeholder : Colors.primary}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
 
           {pendeta.length === 0 ? (
             <Text
@@ -279,10 +325,19 @@ export default function ProfilGereja(): React.ReactElement {
               Tidak ada data pendeta.
             </Text>
           ) : (
-            <View style={styles.pendetaList}>
-              {pendeta.map((p) => (
+            <FlatList
+              ref={pendetaListRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={pendeta}
+              keyExtractor={(p) => p.id}
+              contentContainerStyle={{ paddingBottom: 8, paddingLeft: 2, paddingRight: 10 }}
+              onScroll={(e) => setPendetaScrollX(e.nativeEvent.contentOffset.x)}
+              onContentSizeChange={(w) => setPendetaContentWidth(w)}
+              onLayout={(e) => setPendetaLayoutWidth(e.nativeEvent.layout.width)}
+              scrollEventThrottle={16}
+              renderItem={({ item: p }) => (
                 <TouchableOpacity
-                  key={p.id}
                   style={styles.pendetaCard}
                   onPress={() => Linking.openURL(`mailto:${p.email}`)}
                   onLongPress={() => salinTeksEmail(p.email)}
@@ -297,8 +352,8 @@ export default function ProfilGereja(): React.ReactElement {
                     style={styles.pendetaImg}
                   />
                   <View style={styles.pendetaInfo}>
-                    <Text style={styles.pendetaName} numberOfLines={1}>{p.nama}</Text>
-                    <Text style={styles.pendetaEmail} numberOfLines={1}>
+                    <Text style={styles.pendetaName} numberOfLines={2}>{p.nama}</Text>
+                    <Text style={styles.pendetaEmail} numberOfLines={2}>
                       {p.email}
                     </Text>
                     <View style={styles.pendetaSejakContainer}>
@@ -308,8 +363,8 @@ export default function ProfilGereja(): React.ReactElement {
                     </View>
                   </View>
                 </TouchableOpacity>
-              ))}
-            </View>
+              )}
+            />
           )}
         </ScrollView>
       </LinearGradient>
@@ -337,8 +392,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.h2,
     fontWeight: "800",
     color: Colors.primary,
-    marginTop: 15,
-    marginBottom: 12,
   },
   
   infoCard: {
@@ -417,22 +470,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  pendetaList: {
+  pendetaHeader: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between", 
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 15,
+    marginBottom: 12,
+  },
+  arrowRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  arrowBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: Layout.radius,
+    backgroundColor: Colors.muda,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  arrowBtnDisabled: {
+    backgroundColor: Colors.inputBackground,
   },
   pendetaCard: {
     backgroundColor: Colors.white,
     borderRadius: Layout.radiusLarge,
     overflow: "hidden",
-    width: "48%", 
-    marginBottom: 16,
+    width: 160,
+    marginRight: 14,
     ...Shadows.shdows,
   },
   pendetaImg: {
-    width: "100%",
-    height: 140,
+    width: 160,
+    height: 160,
     resizeMode: "cover",
     backgroundColor: Colors.inputBackground,
   },
@@ -440,29 +510,30 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     paddingVertical: 12,
     paddingHorizontal: 12,
-    justifyContent: "center",
   },
   pendetaName: {
     color: Colors.primary,
     fontWeight: "800",
-    fontSize: 14,
-    marginBottom: 2,
+    fontSize: FontSize.body,
+    marginBottom: 4,
+    lineHeight: 20,
   },
   pendetaEmail: {
     color: Colors.textMuted,
-    fontSize: 11,
-    marginBottom: 6,
+    fontSize: FontSize.small,
+    marginBottom: 8,
+    lineHeight: 16,
   },
   pendetaSejakContainer: {
     backgroundColor: Colors.muda,
     paddingHorizontal: 6,
     paddingVertical: 3,
-    borderRadius: 4,
+    borderRadius: Layout.radius,
     alignSelf: "flex-start",
   },
   pendetaSejak: {
     color: Colors.primary,
-    fontSize: 10,
+    fontSize: FontSize.caption,
     fontWeight: "700",
   },
 });

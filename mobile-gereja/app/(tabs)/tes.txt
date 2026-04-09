@@ -3,489 +3,489 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   ScrollView,
-  ActivityIndicator,
   Image,
   TouchableOpacity,
-  LayoutAnimation,
-  Platform,
-  UIManager,
-  useWindowDimensions,
+  Linking,
+  ActivityIndicator,
+  FlatList,
 } from "react-native";
-import { API_URL } from "../../utils/api";
-import { Ionicons } from "@expo/vector-icons";
-import RenderHTML from "react-native-render-html";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
+import Toast from "react-native-toast-message";
+import { useRouter } from "expo-router";
+import { API_URL } from "@/utils/api";
 import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 
-interface WartaItem {
-  id: string;
-  judul: string;
-  isiWarta: string | { document: any };
-  masaBerlaku?: string;
-  tanggalPelaksanaan?: string;
-  kategori?: { nama: string };
-  gambar?: { url: string };
-}
+export default function ProfilGereja(): React.ReactElement {
+  const router = useRouter();
+  const [pendeta, setPendeta] = useState<any[]>([]);
+  const [gereja, setGereja] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const formatDate = (dateString?: string) => {
-  if (!dateString) return "-";
-  const options: Intl.DateTimeFormatOptions = {
-    weekday: "long", // 🔹 Tambah hari biar mirip referensi gambar
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  };
-  return new Date(dateString).toLocaleDateString("id-ID", options);
-};
+  const BASE_URL = API_URL.replace("/api/graphql", "");
 
-if (
-  Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Ambil data gereja
+        const resGereja = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: `
+              query {
+                gerejas {
+                  id
+                  nama
+                  alamat
+                  hari
+                  telepon
+                  linkWhatsapp
+                  linkInstagram
+                  linkYoutube
+                  linkFacebook
+                  linkEmail
+                  gambar { url }
+                  sejarah
+                }
+              }
+            `,
+          }),
+        });
 
-function keystoneDocumentToHtml(document: any[]): string {
-  if (!Array.isArray(document)) return "";
+        const jsonGereja = await resGereja.json();
+        if (jsonGereja.errors) throw new Error(jsonGereja.errors[0].message);
+        const dataGereja = jsonGereja.data.gerejas?.[0];
+        setGereja(dataGereja);
 
-  const serializeNode = (node: any): string => {
-    if (!node) return "";
+        // Ambil data pendeta
+        const resPendeta = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: `
+              query {
+                pendetas {
+                  id
+                  nama
+                  email
+                  sejakKapanAktif
+                  foto { url }
+                }
+              }
+            `,
+          }),
+        });
 
-    if (node.type === "divider") {
-      return "<hr />";
-    }
-
-    if (node.children) {
-      const childrenHtml = node.children.map(serializeNode).join("");
-
-      switch (node.type) {
-        case "paragraph":
-          return `<p>${childrenHtml}</p>`;
-        case "heading":
-          return `<h${node.level || 2}>${childrenHtml}</h${node.level || 2}>`;
-        case "numbered-list":
-        case "ordered-list":
-          return `<ol>${childrenHtml}</ol>`;
-        case "bulleted-list":
-        case "unordered-list":
-          return `<ul>${childrenHtml}</ul>`;
-        case "list-item":
-          return `<li>${childrenHtml}</li>`;
-        case "list-item-content":
-          return childrenHtml;
-        case "link":
-          return `<a href="${node.href}">${childrenHtml}</a>`;
-        default:
-          return childrenHtml;
+        const jsonPendeta = await resPendeta.json();
+        if (jsonPendeta.errors) throw new Error(jsonPendeta.errors[0].message);
+        setPendeta(jsonPendeta.data.pendetas);
+      } catch (err: any) {
+        console.error("Gagal mengambil data:", err);
+        setError(err.message || "Terjadi kesalahan");
+      } finally {
+        setLoading(false);
       }
     }
 
-    let text = node.text || "";
-    if (node.bold) text = `<strong>${text}</strong>`;
-    if (node.italic) text = `<em>${text}</em>`;
-    if (node.underline) text = `<u>${text}</u>`;
-    if (node.strikethrough) text = `<s>${text}</s>`;
-    if (node.code) text = `<code>${text}</code>`;
-    return text;
-  };
-
-  return document.map(serializeNode).join("");
-}
-
-export default function Warta(): React.ReactElement {
-  const { width } = useWindowDimensions();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [warta, setWarta] = useState<WartaItem[]>([]);
-  const [filteredData, setFilteredData] = useState<WartaItem[]>([]);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-
-  const fetchWarta = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            query {
-              wartas(orderBy: { masaBerlaku: desc }) {
-                id
-                judul
-                isiWarta { document }
-                masaBerlaku
-                tanggalPelaksanaan
-                kategori { nama }
-                gambar { url }
-              }
-            }
-          `,
-        }),
-      });
-
-      const result = await res.json();
-      if (result.errors)
-        throw new Error(result.errors[0]?.message || "GraphQL Error");
-
-      const data = result.data?.wartas || [];
-      setWarta(data);
-      setFilteredData(data);
-      setError(null);
-    } catch (err: any) {
-      console.error("Fetch error:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchWarta();
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    const selectedMonth = selectedDate.getMonth();
-    const selectedYear = selectedDate.getFullYear();
-
-    let data = warta.filter((item) => {
-      if (!item.masaBerlaku) return false;
-      const d = new Date(item.masaBerlaku);
-      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+  // Fungsi salin teks (email)
+  const salinTeksEmail = async (teks: string) => {
+    await Clipboard.setStringAsync(teks);
+    Toast.show({
+      type: "success",
+      text1: "Email telah disalin!",
+      position: "bottom",
+      visibilityTime: 1500,
     });
-
-    setFilteredData(data);
-  }, [selectedDate, warta]);
-
-  const handlePrevMonth = () => {
-    const newDate = new Date(selectedDate);
-    newDate.setMonth(selectedDate.getMonth() - 1);
-    setSelectedDate(newDate);
   };
 
-  const handleNextMonth = () => {
-    const newDate = new Date(selectedDate);
-    newDate.setMonth(selectedDate.getMonth() + 1);
-    setSelectedDate(newDate);
+  const salinTeks = async (teks: string) => {
+    await Clipboard.setStringAsync(teks);
+    Toast.show({
+      type: "success",
+      text1: "Nomor telah disalin!",
+      position: "bottom",
+      visibilityTime: 1500,
+    });
   };
 
-  const toggleExpand = (id: string) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedId(expandedId === id ? null : id);
-  };
-
-  if (loading) {
+  if (loading)
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={{ marginTop: 8, color: Colors.textMuted }}>
-          Memuat warta gereja...
+        <Text style={{ color: Colors.primary, marginTop: 8 }}>
+          Memuat data gereja...
         </Text>
       </View>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
       <View style={styles.center}>
-        <Text style={{ color: Colors.danger }}>Gagal memuat data: {error}</Text>
+        <Text style={{ color: Colors.danger, textAlign: "center", marginTop: 20 }}>
+          {error}
+        </Text>
       </View>
     );
-  }
+
+  if (!gereja)
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: Colors.primary, textAlign: "center", marginTop: 20 }}>
+          Tidak ada data gereja.
+        </Text>
+      </View>
+    );
 
   return (
-    <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.container}>
-    <ScrollView
-      contentContainerStyle={{
-        paddingBottom: 50,
-        paddingTop: 10,
-        paddingHorizontal: Layout.paddingSmall,
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      <Text style={styles.title}>Warta</Text>
+    <>
+      <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.container}>
+        <ScrollView
+          contentContainerStyle={{ 
+            paddingBottom: 50, 
+            paddingTop: 10, 
+            paddingHorizontal: Layout.paddingSmall 
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.sectionTitle}>Profil Gereja</Text>
 
-      <View style={styles.datePickerContainer}>
-        <TouchableOpacity onPress={handlePrevMonth} style={styles.navButton}>
-          <Ionicons name="chevron-back" size={20} color={Colors.primary} />
-        </TouchableOpacity>
-
-        <Text style={styles.dateText}>
-          {selectedDate.toLocaleDateString("id-ID", {
-            month: "long",
-            year: "numeric",
-          })}
-        </Text>
-
-        <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
-          <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      {filteredData.length > 0 ? (
-        filteredData.map((item) => {
-          const isExpanded = expandedId === item.id;
-          return (
-            <View key={item.id} style={styles.cardContainer}>
-              <View style={styles.cardRow}>
-                <View style={styles.leftBox}>
-                  {item.gambar?.url ? (
-                    <Image
-                      source={{
-                        uri: `${API_URL.replace("/api/graphql", "")}${
-                          item.gambar.url
-                        }`,
-                      }}
-                      style={styles.image}
-                    />
-                  ) : (
-                    <View style={styles.imagePlaceholder} />
-                  )}
-                </View>
-
-                {/* 🔹 BAGIAN KANAN DIUPDATE SESUAI REFERENSI FOTO */}
-                <View style={styles.rightBox}>
-                  {/* Badge Tag (seperti KABAR BAIK DARI PADANG GURUN) */}
-                  <View style={styles.tagContainer}>
-                    <Text style={styles.tagText} numberOfLines={1}>
-                      {item.kategori?.nama || "Umum"}
-                    </Text>
-                  </View>
-
-                  {/* Judul Utama yang ditebalkan */}
-                  <Text style={styles.judul} numberOfLines={2}>
-                    {item.judul}
-                  </Text>
-                  
-                  {/* Info Pelaksanaan dengan Ikon Jam */}
-                  <View style={styles.infoRow}>
-                    <Ionicons name="time-outline" size={14} color={Colors.textMuted} />
-                    <Text style={styles.isiCard} numberOfLines={1}>
-                      {formatDate(item.tanggalPelaksanaan)}
-                    </Text>
-                  </View>
-
-                  {/* Info Masa Berlaku dengan Ikon Orang/Kalender */}
-                  <View style={styles.infoRow}>
-                    <Ionicons name="calendar-outline" size={14} color={Colors.textMuted} />
-                    <Text style={styles.isiCard} numberOfLines={1}>
-                      S/d {formatDate(item.masaBerlaku)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* 🔹 PEMBATAS SHADOW DI BAWAH KARTU UTAMA (SESUAI GARIS MERAH) */}
-              <View style={styles.dividerWithShadow} />
-
-              {/* Bagian isi warta (expand) */}
-              {isExpanded && item.isiWarta && (
-                <View style={styles.detail}>
-                  <RenderHTML
-                    contentWidth={width}
-                    source={{
-                      html:
-                        typeof item.isiWarta === "object" &&
-                        Array.isArray(item.isiWarta.document)
-                          ? keystoneDocumentToHtml(item.isiWarta.document)
-                          : (item.isiWarta as string),
-                    }}
-                    tagsStyles={{
-                      // ... (tagsStyles tidak diubah)
-                      a: { color: Colors.primary, textDecorationLine: "underline", fontWeight: "bold" },
-                      hr: { backgroundColor: Colors.border, height: 1, marginVertical: 10, width: "100%" },
-                      p: { fontSize: 13, color: Colors.text, marginBottom: 6 },
-                      strong: { fontWeight: "bold" },
-                      em: { fontStyle: "italic" },
-                      u: { textDecorationLine: "underline" },
-                      ol: { paddingLeft: 20, marginBottom: 10 },
-                      ul: { paddingLeft: 20, marginBottom: 10 },
-                      li: { marginBottom: 4, fontSize: 13, color: Colors.text },
-                      h1: { fontSize: 22, fontWeight: "bold", color: Colors.black, marginVertical: 8 },
-                      h2: { fontSize: 20, fontWeight: "bold", color: Colors.black, marginVertical: 6 },
-                      h3: { fontSize: 18, fontWeight: "600", color: Colors.black, marginVertical: 4 },
-                    }}
-                  />
-                </View>
-              )}
-              
-              {/* Tombol Toggle Expansion */}
-              <TouchableOpacity onPress={() => toggleExpand(item.id)}>
-                <Text style={styles.expandToggle}>
-                  {isExpanded ? "▲ Tutup" : "▼ Baca Selengkapnya"}
-                </Text>
-              </TouchableOpacity>
+          {/* Alamat + Foto Gereja */}
+          <View style={styles.infoCardGereja}>
+            <Image
+              source={
+                gereja.gambar?.url
+                  ? { uri: `${BASE_URL}${gereja.gambar.url}` }
+                  : require("../../assets/images/fotogereja.jpeg")
+              }
+              style={styles.gerejaImage}
+            />
+            <View style={styles.gerejaTextContainer}>
+              <Text style={styles.infoTitle}>{gereja.nama}</Text>
+              <Text style={styles.infoText}>{gereja.alamat}</Text>
             </View>
-          );
-        })
-      ) : (
-        <Text style={styles.emptyText}>Tidak ada warta untuk bulan ini.</Text>
-      )}
-    </ScrollView>
-    </LinearGradient>
+          </View>
+
+          {/* Jam Kerja */}
+          <View style={styles.infoCard}>
+            <View style={styles.cardHeaderRow}>
+              <Ionicons name="time-outline" size={20} color={Colors.primary} />
+              <Text style={styles.infoTitleWithIcon}>Jam Kerja Kantor</Text>
+            </View>
+            {gereja.hari?.split("\n").map((h: string, i: number) => (
+              <Text key={i} style={styles.infoText}>
+                {h}
+              </Text>
+            ))}
+          </View>
+
+          {/* Telepon */}
+          {gereja.telepon ? (
+            <TouchableOpacity
+              style={[styles.infoCard, styles.rowBetween]}
+              onPress={() => Linking.openURL(`tel:${gereja.telepon}`)}
+              onLongPress={() => salinTeks(gereja.telepon)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.cardHeaderRow}>
+                <Ionicons name="call-outline" size={20} color={Colors.primary} />
+                <Text style={styles.infoTitleWithIcon}>Telepon</Text>
+              </View>
+              <Text
+                style={[styles.infoText, { textDecorationLine: "underline", color: Colors.primary }]}
+              >
+                {gereja.telepon}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+
+          {/* Sosial Media */}
+          <View style={styles.infoCard}>
+            <View style={styles.socialHeader}>
+              <View style={styles.cardHeaderRow}>
+                <Ionicons name="share-social-outline" size={20} color={Colors.primary} />
+                <Text style={styles.infoTitleWithIcon}>Sosial Media</Text>
+              </View>
+              
+              <View style={styles.socialIcons}>
+                {gereja.linkWhatsapp && (
+                  <TouchableOpacity onPress={() => Linking.openURL(gereja.linkWhatsapp)}>
+                    <View style={[styles.iconCircle, { backgroundColor: '#25D366' }]}>
+                      <FontAwesome name="whatsapp" size={18} color={Colors.white} />
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {gereja.linkInstagram && (
+                  <TouchableOpacity onPress={() => Linking.openURL(gereja.linkInstagram)}>
+                    <View style={[styles.iconCircle, { backgroundColor: '#E1306C' }]}>
+                      <FontAwesome name="instagram" size={18} color={Colors.white} />
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {gereja.linkEmail && (
+                  <TouchableOpacity onPress={() => Linking.openURL(gereja.linkEmail)}>
+                    <View style={[styles.iconCircle, { backgroundColor: '#D44638' }]}>
+                      <Ionicons name="mail" size={18} color={Colors.white} />
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {gereja.linkYoutube && (
+                  <TouchableOpacity onPress={() => Linking.openURL(gereja.linkYoutube)}>
+                    <View style={[styles.iconCircle, { backgroundColor: '#FF0000' }]}>
+                      <FontAwesome name="youtube-play" size={18} color={Colors.white} />
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {gereja.linkFacebook && (
+                  <TouchableOpacity onPress={() => Linking.openURL(gereja.linkFacebook)}>
+                    <View style={[styles.iconCircle, { backgroundColor: '#1877F2' }]}>
+                      <FontAwesome name="facebook" size={18} color={Colors.white} />
+                    </View>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </View>
+
+          {/* Sejarah Gereja */}
+          <TouchableOpacity
+            style={[styles.infoCard, styles.rowBetween]}
+            onPress={() => router.push("/sejarah")}
+            activeOpacity={0.7}
+          >
+            <View style={styles.cardHeaderRow}>
+              <Ionicons name="library-outline" size={20} color={Colors.primary} />
+              <Text style={styles.infoTitleWithIcon}>Sejarah Gereja</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          {/* Pendeta Gereja */}
+          <Text style={styles.subTitle}>Pendeta Gereja</Text>
+
+          {pendeta.length === 0 ? (
+            <Text
+              style={{
+                textAlign: "center",
+                color: Colors.textMuted,
+                marginTop: 10,
+              }}
+            >
+              Tidak ada data pendeta.
+            </Text>
+          ) : (
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={pendeta}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={{ paddingBottom: 16, paddingLeft: 2, paddingRight: 10 }}
+              renderItem={({ item: p }) => (
+                <TouchableOpacity
+                  style={styles.pendetaCard}
+                  onPress={() => Linking.openURL(`mailto:${p.email}`)}
+                  onLongPress={() => salinTeksEmail(p.email)}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.pendetaImageContainer}>
+                    <Image
+                      source={
+                        p.foto?.url
+                          ? { uri: `${BASE_URL}${p.foto.url}` }
+                          : require("../../assets/images/logogereja.png")
+                      }
+                      style={styles.pendetaImg}
+                    />
+                    {/* Badge Tahun Sejak ala Jadwal Ibadah */}
+                    <View style={styles.sejakBadge}>
+                      <Text style={styles.sejakText}>
+                        Sejak {p.sejakKapanAktif || "-"}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.pendetaInfo}>
+                    <Text style={styles.pendetaName} numberOfLines={1}>{p.nama}</Text>
+                    <Text style={styles.pendetaEmail} numberOfLines={1}>{p.email}</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+        </ScrollView>
+      </LinearGradient>
+      <Toast />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: Layout.paddingSmall,
   },
-
-  title: {
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionTitle: {
     fontSize: FontSize.h1,
     fontWeight: "bold",
     color: Colors.primary,
     marginVertical: Layout.gap,
   },
-
-  input: {
-    backgroundColor: Colors.inputBackground,
-    borderRadius: Layout.radius,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: FontSize.custom.titleCard,
+  subTitle: {
+    fontSize: FontSize.h2,
+    fontWeight: "800",
+    color: Colors.primary,
+    marginTop: 15,
     marginBottom: 12,
   },
-
-  datePickerContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  
+  infoCard: {
     backgroundColor: Colors.white,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 50,
-    marginBottom: 20,
+    borderRadius: Layout.radiusLarge,
+    padding: 16,
+    marginBottom: 14,
     ...Shadows.shdows,
   },
-
-  dateText: {
-    fontSize: 15,
-    fontWeight: "bold",
-    color: Colors.text,
-  },
-
-  navButton: {
-    padding: 4,
-  },
-
-  cardContainer: {
+  infoCardGereja: {
     backgroundColor: Colors.white,
     borderRadius: Layout.radiusLarge,
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: "hidden",
-    elevation: 2,
-    // (Batas shadow luar tidak diubah sesuai request)
-  },
-
-  cardRow: {
     flexDirection: "row",
-    height: 90,
+    alignItems: "center",
+    overflow: "hidden",
+    ...Shadows.shdows,
+  },
+  gerejaImage: {
+    width: 110,
+    height: "100%",
+    minHeight: 110,
+    resizeMode: "cover",
+  },
+  gerejaTextContainer: {
+    flex: 1,
+    padding: 14,
+    justifyContent: "center",
+  },
+  
+  cardHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  infoTitle: {
+    color: Colors.primary,
+    fontWeight: "800",
+    marginBottom: 4,
+    fontSize: 16,
+  },
+  infoTitleWithIcon: {
+    color: Colors.primary,
+    fontWeight: "800",
+    fontSize: 16,
+    marginLeft: 8, 
+  },
+  infoText: {
+    color: Colors.text,
+    fontSize: 14,
+    lineHeight: 22,
+  },
+
+  rowBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  
+  // 🔹 SOSIAL MEDIA
+  socialHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  socialIcons: { 
+    flexDirection: "row", 
+    alignItems: "center",
+    gap: 8,
+  },
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  pendetaList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between", 
+  },
+  // 🔹 PENDETA CARD CAROUSEL (KONSISTEN TEMA)
+  pendetaCard: {
+    width: 140, // 🔹 Lebar statis
+    height: 180, // 🔹 Tinggi statis
+    marginRight: 14,
+    backgroundColor: Colors.white,
     borderRadius: Layout.radiusLarge,
+    ...Shadows.shdows,
     overflow: "hidden",
   },
-
-  leftBox: {
-    flex: 1,
-    backgroundColor: Colors.black,
-  },
-
-  rightBox: {
-    flex: 1.3,
-    backgroundColor: Colors.white,
-    padding: Layout.paddingSmall,
-    justifyContent: "center",
+  pendetaImageContainer: {
+    height: "65%", // Proporsi untuk foto
+    width: "100%",
     position: "relative",
   },
-
-  image: {
+  pendetaImg: {
     width: "100%",
     height: "100%",
     resizeMode: "cover",
+    backgroundColor: Colors.inputBackground,
   },
-
-  imagePlaceholder: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: Colors.black,
-  },
-
-  // 🔹 STYLING BARU UNTUK ISI CARD (Disamakan dengan referensi gambar)
-  tagContainer: {
-    backgroundColor: Colors.muda,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  sejakBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    paddingHorizontal: 6,
+    paddingVertical: 3,
     borderRadius: 6,
-    alignSelf: "flex-start",
-    marginBottom: 6,
-  },
-  tagText: {
-    color: Colors.primary,
-    fontWeight: "800", // Tebal kayak di gambar
-    fontSize: 10,
-    textTransform: "uppercase",
-  },
-  judul: {
-    color: Colors.text, // Teks gelap/hitam
-    fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 4,
-    lineHeight: 18,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 2,
-    gap: 4, // Jarak icon dan teks
-  },
-  isiCard: {
-    color: Colors.textMuted,
-    fontSize: 12,
-    flexShrink: 1,
-    fontWeight: "500",
-  },
-
-  // 🔹 PEMBATAS SHADOW DI BAWAH KARTU SEBELUM TOMBOL BACA SELENGKAPNYA
-  dividerWithShadow: {
-    height: 1,
-    backgroundColor: Colors.border, // Garis halus
-    shadowColor: "#000", // Efek shadow biar tegas seperti garis merah
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 1,
-    marginBottom: 4, // Jarak dengan teks expand
+    elevation: 2,
   },
-
-  detail: {
-    padding: 12,
-    backgroundColor: Colors.cardBackground,
+  sejakText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: Colors.primary,
+    textTransform: "uppercase",
   },
-
-  expandToggle: {
-    color: Colors.textMuted, // Warna abu-abu halus sesuai gambar
-    fontStyle: "italic",
-    fontSize: 12,
-    textAlign: "right",
-    padding: 8,
-    paddingRight: 12, // Geser sedikit ke kiri
-  },
-
-  emptyText: {
-    textAlign: "center",
-    color: Colors.textMuted,
-    marginTop: 20,
-  },
-
-  center: {
-    flex: 1,
+  pendetaInfo: {
+    height: "35%", // Sisa proporsi cukup lega buat 2 baris teks
+    backgroundColor: Colors.white,
+    paddingHorizontal: 10,
     justifyContent: "center",
     alignItems: "center",
+  },
+  pendetaName: {
+    color: Colors.primary,
+    fontWeight: "800",
+    fontSize: 13,
+    marginBottom: 2,
+    textAlign: "center",
+  },
+  pendetaEmail: {
+    color: Colors.textMuted,
+    fontSize: 11,
+    textAlign: "center",
   },
 });

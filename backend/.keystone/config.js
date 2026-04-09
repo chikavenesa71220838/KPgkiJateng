@@ -107,17 +107,7 @@ var Profile = (0, import_core2.list)({
         { label: "Simpatisan", value: "simpatisan" }
       ]
     }),
-    fotoProfil: (0, import_fields2.image)({
-      storage: "local_images",
-      hooks: {
-        validateInput: async ({ resolvedData, addValidationError }) => {
-          const file = resolvedData.fotoProfil;
-          if (file && file.extension && !["jpg", "jpeg"].includes(file.extension)) {
-            addValidationError("Hanya file JPEG yang diperbolehkan.");
-          }
-        }
-      }
-    }),
+    fotoProfil: (0, import_fields2.text)(),
     user: (0, import_fields2.relationship)({ ref: "User.profile" })
   }
 });
