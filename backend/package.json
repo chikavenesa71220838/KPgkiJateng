@@ -4,8 +4,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "keystone dev",
+    "prebuild": "mkdir -p public/files public/images",
     "tunnel": "concurrently \"npm run dev\" \"ngrok http 3000\"",
     "build": "keystone build",
+    "start": "keystone start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

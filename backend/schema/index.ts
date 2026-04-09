@@ -11,6 +11,7 @@ import { Pendeta } from "./pendeta";
 import { Gereja } from "./dataGereja";
 import { jadwalRutin } from "./jadwalRutin"
 import { jam } from "./jam";
+import { Admin } from "./admin"
 
 export const lists = {
   User,
@@ -25,4 +26,5 @@ export const lists = {
   Gereja,
   jadwalRutin,
   jam,
+  Admin,
 };

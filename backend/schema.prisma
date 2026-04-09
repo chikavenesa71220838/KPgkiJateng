@@ -175,3 +175,10 @@ model jam {
   jam         String        @default("")
   jadwalRutin jadwalRutin[] @relation("jadwalRutin_waktu")
 }
+
+model Admin {
+  id       String @id @default(cuid())
+  name     String @default("")
+  email    String @unique @default("")
+  password String
+}
