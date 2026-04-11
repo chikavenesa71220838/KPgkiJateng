@@ -16,3 +16,4 @@ CLAUDE.md
 # Database
 *.db
 *.db-journal
+backend/.keystone
