@@ -73,16 +73,15 @@ export default withAuth(
 
         app.use("/api/graphql", async (req, res, next) => {
           if (req.body?.operationName === "IntrospectionQuery") return next();
-
-          // ← Izinkan request dari Admin UI (cookie session)
           if (req.cookies?.["keystonejs-session"]) return next();
 
-          // ← Izinkan halaman init (buat admin pertama)
           const referer = req.headers.referer || "";
           if (referer.includes("/init") || referer.includes("/signin"))
             return next();
 
           const authHeader = req.headers.authorization;
+
+          // ✅ Kalau ada token → verifikasi
           if (authHeader && authHeader.startsWith("Bearer ")) {
             const token = authHeader.split("Bearer ")[1];
             try {
@@ -96,16 +95,9 @@ export default withAuth(
             }
           }
 
-          if (process.env.NODE_ENV === "development" && !authHeader)
-            return next();
-
-          return res.status(401).json({
-            errors: [
-              { message: "Akses ditolak. Token autentikasi diperlukan." },
-            ],
-          });
+          // ✅ Kalau tidak ada token → tetap lanjut (publik)
+          return next();
         });
-
         const sudoContext = context.sudo();
         ayatHarianRoute(app, sudoContext);
         startAyatScheduler(sudoContext);

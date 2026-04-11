@@ -10,6 +10,7 @@ import {
   Linking,
 } from "react-native";
 import { API_URL } from "../../utils/api";
+import { fetchJadwalIbadahRangeAPI } from "../../services/profileAPI";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
@@ -78,37 +79,7 @@ export default function JadwalIbadah(): React.ReactElement {
       const now = formatYMD(startOfWeek);
       const next = formatYMD(endOfNextWeek);
 
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            query {
-              jadwalIbadahs(
-                where: { tanggal: { gte: "${now}", lte: "${next}" } }
-                orderBy: { tanggal: asc }
-              ) {
-                id
-                tanggal
-                topik
-                detailIbadah {
-                  id
-                  jam
-                  url
-                  pengkhotbah { nama }
-                  banner { url }
-                }
-              }
-            }
-          `,
-        }),
-      });
-
-      const result = await res.json();
-      if (result.errors)
-        throw new Error(result.errors[0]?.message || "GraphQL Error");
-
-      const data = result.data?.jadwalIbadahs || [];
+      const data = await fetchJadwalIbadahRangeAPI(now, next);
 
       setJadwal(data);
       setFilteredData(data);

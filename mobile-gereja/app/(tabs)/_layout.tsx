@@ -22,7 +22,7 @@ import { API_URL } from "../../utils/api";
 
 // 🔹 Import Firebase Auth dari Service Custom kita (Aman untuk Web & Mobile)
 import { listenToAuth, forceSignOut } from "../../services/authGoogle";
-import { fetchUserProfileAPI } from "../../services/profileAPI";
+import { fetchUserProfileAPI, fetchGerejaAPI } from "../../services/profileAPI";
 
 const { Navigator } = createBottomTabNavigator();
 const Tabs = withLayoutContext(Navigator);
@@ -73,25 +73,8 @@ export default function TabLayout() {
 
   const fetchGereja = async () => {
     try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            query {
-              gerejas {
-                id
-                nama
-                logo { url }
-              }
-            }
-          `,
-        }),
-      });
-
-      const result = await res.json();
-      const data = result.data?.gerejas?.[0] || null;
-      setGereja(data);
+      const data = await fetchGerejaAPI();
+      setGereja(data ?? null);
     } catch (err) {
       console.error("Gagal memuat data gereja:", err);
     } finally {

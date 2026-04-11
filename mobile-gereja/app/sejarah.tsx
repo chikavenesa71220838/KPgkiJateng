@@ -11,7 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { Stack } from "expo-router";
-import { API_URL } from "@/utils/api";
+import { fetchGerejaAPI } from "@/services/profileAPI";
 import { Colors, FontSize, Layout } from "../constants/theme";
 
 export default function SejarahGereja(): React.ReactElement {
@@ -23,24 +23,7 @@ export default function SejarahGereja(): React.ReactElement {
   useEffect(() => {
     async function fetchSejarah() {
       try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: `
-              query {
-                gerejas {
-                  id
-                  sejarah
-                }
-              }
-            `,
-          }),
-        });
-
-        const json = await res.json();
-        if (json.errors) throw new Error(json.errors[0].message);
-        const data = json.data.gerejas?.[0];
+        const data = await fetchGerejaAPI();
         setSejarah(data?.sejarah || "Sejarah gereja belum tersedia.");
       } catch (err: any) {
         setError(err.message || "Gagal memuat data.");
