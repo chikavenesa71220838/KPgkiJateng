@@ -70,14 +70,11 @@ export default function JadwalIbadah(): React.ReactElement {
   const fetchData = async () => {
     try {
       const today = new Date();
-      const dayOfWeek = today.getDay();
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - dayOfWeek);
-      const endOfNextWeek = new Date(startOfWeek);
-      endOfNextWeek.setDate(startOfWeek.getDate() + 14);
+      const endDate = new Date(today);
+      endDate.setDate(today.getDate() + 14);
 
-      const now = formatYMD(startOfWeek);
-      const next = formatYMD(endOfNextWeek);
+      const now = formatYMD(today);
+      const next = formatYMD(endDate);
 
       const data = await fetchJadwalIbadahRangeAPI(now, next);
 
