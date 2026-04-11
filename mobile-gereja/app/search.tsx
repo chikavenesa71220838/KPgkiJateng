@@ -18,6 +18,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack, useNavigation } from "expo-router";
 import { API_URL } from "../utils/api";
+import { fetchSearchDataAPI } from "../services/profileAPI";
 import { Colors, FontSize, Layout, Shadows } from "../constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import RenderHTML from "react-native-render-html";
@@ -98,41 +99,9 @@ export default function SearchScreen() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            query {
-              jadwalIbadahs(orderBy: { tanggal: desc }) {
-                id
-                tanggal
-                topik
-                detailIbadah {
-                  id
-                  jam
-                  url
-                  pengkhotbah { nama }
-                  banner { url }
-                }
-              }
-              wartas(orderBy: { masaBerlaku: desc }) {
-                id
-                judul
-                isiWarta { document } 
-                masaBerlaku
-                tanggalPelaksanaan
-                kategori { nama }
-                gambar { url }
-              }
-            }
-          `,
-        }),
-      });
-
-      const result = await res.json();
-      setJadwalData(result.data?.jadwalIbadahs || []);
-      setWartaData(result.data?.wartas || []);
+      const { jadwalIbadahs, wartas } = await fetchSearchDataAPI();
+      setJadwalData(jadwalIbadahs);
+      setWartaData(wartas);
     } catch (err) {
       console.error(err);
     } finally {

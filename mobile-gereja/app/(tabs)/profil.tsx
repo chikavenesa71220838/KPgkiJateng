@@ -15,6 +15,7 @@ import * as Clipboard from "expo-clipboard";
 import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
 import { API_URL } from "@/utils/api";
+import { fetchGerejaAPI, fetchPendetaAPI } from "../../services/profileAPI";
 import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -47,59 +48,12 @@ export default function ProfilGereja(): React.ReactElement {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Ambil data gereja
-        const resGereja = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: `
-              query {
-                gerejas {
-                  id
-                  nama
-                  alamat
-                  hari
-                  telepon
-                  linkWhatsapp
-                  linkInstagram
-                  linkYoutube
-                  linkFacebook
-                  linkEmail
-                  gambar { url }
-                  sejarah
-                }
-              }
-            `,
-          }),
-        });
-
-        const jsonGereja = await resGereja.json();
-        if (jsonGereja.errors) throw new Error(jsonGereja.errors[0].message);
-        const dataGereja = jsonGereja.data.gerejas?.[0];
+        const [dataGereja, dataPendeta] = await Promise.all([
+          fetchGerejaAPI(),
+          fetchPendetaAPI(),
+        ]);
         setGereja(dataGereja);
-
-        // Ambil data pendeta
-        const resPendeta = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: `
-              query {
-                pendetas {
-                  id
-                  nama
-                  email
-                  sejakKapanAktif
-                  foto { url }
-                }
-              }
-            `,
-          }),
-        });
-
-        const jsonPendeta = await resPendeta.json();
-        if (jsonPendeta.errors) throw new Error(jsonPendeta.errors[0].message);
-        setPendeta(jsonPendeta.data.pendetas);
+        setPendeta(dataPendeta);
       } catch (err: any) {
         console.error("Gagal mengambil data:", err);
         setError(err.message || "Terjadi kesalahan");

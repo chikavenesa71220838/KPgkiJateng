@@ -11,6 +11,7 @@ import {
   useWindowDimensions
 } from "react-native";
 import { API_URL } from "@/utils/api";
+import { fetchGerejaAPI, checkUserAPI, linkAccountAPI, createUserAPI } from "../services/profileAPI";
 import { useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -30,15 +31,8 @@ const LoginScreen = () => {
   const [gereja, setGereja] = useState<{ nama: string; logo?: { url: string } } | null>(null);
 
   useEffect(() => {
-    fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: `query { gerejas { nama logo { url } } }`,
-      }),
-    })
-      .then((r) => r.json())
-      .then((json) => setGereja(json.data?.gerejas?.[0] ?? null))
+    fetchGerejaAPI()
+      .then((data) => setGereja(data ?? null))
       .catch(() => { });
   }, []);
 
@@ -53,71 +47,12 @@ const LoginScreen = () => {
       );
 
       // 4. Logika SSO: Cek user berdasarkan googleId ATAU emailUser
-      const CHECK_USER_QUERY = {
-        query: `
-          query GetUser($googleId: String!, $email: String!) {
-            users(where: { 
-              statusAktivasi: { equals: "aktif" },
-              OR: [
-                { googleId: { equals: $googleId } },
-                { emailUser: { equals: $email } }
-              ]
-            }) {
-              id
-              googleId
-              namaUser
-            }
-          }
-        `,
-        variables: { googleId: user.uid, email: user.email },
-      };
-
-      const checkRes = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${firebaseToken}`,
-        },
-        body: JSON.stringify(CHECK_USER_QUERY),
-      });
-
-      const checkData = await checkRes.json();
-
-      if (!checkRes.ok || checkData.errors) {
-        const errorMsg =
-          checkData.errors?.[0]?.message ||
-          "Gagal memverifikasi sesi ke server.";
-        throw new Error(errorMsg);
-      }
-
-      const existingUser = checkData.data?.users?.[0];
+      const existingUser = await checkUserAPI(user.uid, user.email!, firebaseToken);
 
       if (existingUser) {
         // SKENARIO A: Hubungkan Akun (Linking Account)
         if (!existingUser.googleId) {
-          const UPDATE_USER_MUTATION = {
-            query: `
-              mutation LinkAccount($id: ID!, $googleId: String!) {
-                updateUser(where: { id: $id }, data: { googleId: $googleId }) {
-                  id
-                }
-              }
-            `,
-            variables: { id: existingUser.id, googleId: user.uid },
-          };
-
-          const updateRes = await fetch(API_URL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${firebaseToken}`,
-            },
-            body: JSON.stringify(UPDATE_USER_MUTATION),
-          });
-
-          const updateData = await updateRes.json();
-          if (!updateRes.ok || updateData.errors)
-            throw new Error("Gagal menghubungkan akun.");
+          await linkAccountAPI(existingUser.id, user.uid, firebaseToken);
           console.log("Akun berhasil dihubungkan.");
         }
 
@@ -126,40 +61,15 @@ const LoginScreen = () => {
         router.replace("/home");
       } else {
         // SKENARIO B: Registrasi Otomatis Jemaat Baru
-        const CREATE_USER_MUTATION = {
-          query: `
-            mutation SyncUser($data: UserCreateInput!) {
-              createUser(data: $data) {
-                id
-              }
-            }
-          `,
-          variables: {
-            data: {
-              namaUser: user.displayName ?? "User GKI",
-              emailUser: user.email,
-              googleId: user.uid,
-            },
+        const newUser = await createUserAPI(
+          {
+            namaUser: user.displayName ?? "User GKI",
+            emailUser: user.email!,
+            googleId: user.uid,
           },
-        };
-
-        const createRes = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${firebaseToken}`,
-          },
-          body: JSON.stringify(CREATE_USER_MUTATION),
-        });
-
-        const createResult = await createRes.json();
-
-        if (createResult.errors)
-          throw new Error(createResult.errors[0].message);
-        console.log(
-          "User baru berhasil dibuat di Keystone:",
-          createResult.data.createUser,
+          firebaseToken,
         );
+        console.log("User baru berhasil dibuat di Keystone:", newUser);
 
         // Pindah Halaman ke Complete Profile
         setIsLoading(false);

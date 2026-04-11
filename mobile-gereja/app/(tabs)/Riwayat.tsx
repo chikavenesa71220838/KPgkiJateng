@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { API_URL } from "../../utils/api";
+import { fetchRiwayatIbadahAPI } from "../../services/profileAPI";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
@@ -49,42 +50,7 @@ export default function Riwayat(): React.ReactElement {
     try {
       setLoading(true);
       const now = new Date().toISOString().split("T")[0];
-
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            query {
-              jadwalIbadahs(
-                where: { tanggal: { lt: "${now}" } }
-                orderBy: { tanggal: desc }
-              ) {
-                id
-                tanggal
-                topik
-                detailIbadah {
-                  id
-                  jam
-                  url
-                  pengkhotbah {
-                    nama
-                  }
-                  banner {
-                    url
-                  }
-                }
-              }
-            }
-          `,
-        }),
-      });
-
-      const result = await res.json();
-      if (result.errors)
-        throw new Error(result.errors[0]?.message || "GraphQL Error");
-
-      const data = result.data?.jadwalIbadahs || [];
+      const data = await fetchRiwayatIbadahAPI(now);
       setRiwayat(data);
       setFilteredData(data);
       setError(null);
