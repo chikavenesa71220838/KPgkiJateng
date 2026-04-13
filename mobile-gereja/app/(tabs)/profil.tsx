@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Linking,
   ActivityIndicator,
   FlatList,
+  RefreshControl,
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
@@ -24,6 +25,7 @@ export default function ProfilGereja(): React.ReactElement {
   const [pendeta, setPendeta] = useState<any[]>([]);
   const [gereja, setGereja] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const BASE_URL = API_URL.replace("/api/graphql", "");
@@ -45,23 +47,29 @@ export default function ProfilGereja(): React.ReactElement {
     pendetaListRef.current?.scrollToOffset({ offset: next, animated: true });
   };
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [dataGereja, dataPendeta] = await Promise.all([
-          fetchGerejaAPI(),
-          fetchPendetaAPI(),
-        ]);
-        setGereja(dataGereja);
-        setPendeta(dataPendeta);
-      } catch (err: any) {
-        console.error("Gagal mengambil data:", err);
-        setError(err.message || "Terjadi kesalahan");
-      } finally {
-        setLoading(false);
-      }
+  const fetchData = useCallback(async () => {
+    try {
+      const [dataGereja, dataPendeta] = await Promise.all([
+        fetchGerejaAPI(),
+        fetchPendetaAPI(),
+      ]);
+      setGereja(dataGereja);
+      setPendeta(dataPendeta);
+    } catch (err: any) {
+      console.error("Gagal mengambil data:", err);
+      setError(err.message || "Terjadi kesalahan");
+    } finally {
+      setLoading(false);
     }
+  }, []);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  }, [fetchData]);
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -118,12 +126,15 @@ export default function ProfilGereja(): React.ReactElement {
     <>
       <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.container}>
         <ScrollView
-          contentContainerStyle={{ 
-            paddingBottom: 50, 
-            paddingTop: 10, 
-            paddingHorizontal: Layout.paddingSmall 
+          contentContainerStyle={{
+            paddingBottom: 50,
+            paddingTop: 10,
+            paddingHorizontal: Layout.paddingSmall
           }}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} tintColor={Colors.primary} />
+          }
         >
           <Text style={styles.sectionTitle}>Profil Gereja</Text>
 

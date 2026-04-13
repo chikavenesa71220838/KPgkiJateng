@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   ImageBackground,
   Linking,
+  RefreshControl,
 } from "react-native";
 import { API_URL } from "../../utils/api";
 import { fetchJadwalIbadahRangeAPI } from "../../services/profileAPI";
@@ -53,6 +54,7 @@ export default function JadwalIbadah(): React.ReactElement {
   const [jadwal, setJadwal] = useState<Jadwal[]>([]);
   const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -108,6 +110,12 @@ export default function JadwalIbadah(): React.ReactElement {
       setLoading(false);
     }
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -205,6 +213,9 @@ export default function JadwalIbadah(): React.ReactElement {
           paddingHorizontal: Layout.paddingSmall,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} tintColor={Colors.primary} />
+        }
       >
         <Text style={styles.title}>Jadwal Ibadah</Text>
 

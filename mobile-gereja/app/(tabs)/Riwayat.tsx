@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Image,
   Linking,
+  RefreshControl,
 } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { API_URL } from "../../utils/api";
@@ -44,11 +45,12 @@ export default function Riwayat(): React.ReactElement {
   const [riwayat, setRiwayat] = useState<Jadwal[]>([]);
   const [filteredData, setFilteredData] = useState<Jadwal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRiwayat = async () => {
+  const fetchRiwayat = async (showFullLoader = true) => {
     try {
-      setLoading(true);
+      if (showFullLoader) setLoading(true);
       const now = new Date().toISOString().split("T")[0];
       const data = await fetchRiwayatIbadahAPI(now);
       setRiwayat(data);
@@ -61,6 +63,12 @@ export default function Riwayat(): React.ReactElement {
       setLoading(false);
     }
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchRiwayat(false);
+    setRefreshing(false);
+  }, []);
 
   useEffect(() => {
     fetchRiwayat();
@@ -92,6 +100,9 @@ export default function Riwayat(): React.ReactElement {
           paddingHorizontal: Layout.paddingSmall,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} tintColor={Colors.primary} />
+        }
       >
         <Text style={styles.title}>Riwayat Ibadah</Text>
 
