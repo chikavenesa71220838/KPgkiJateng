@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Image,
   FlatList,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
@@ -61,6 +62,7 @@ export default function HomeScreen() {
   const [ayat, setAyat] = useState<AyatHarian | null>(null);
   const [jadwalRutin, setJadwalRutin] = useState<JadwalRutin[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // 🔹 STATE BARU: Untuk menyimpan nama user yang sedang login
@@ -81,32 +83,39 @@ export default function HomeScreen() {
     return () => unsubscribe();
   }, []);
 
+  const loadAll = useCallback(async (showFullLoader = true) => {
+    if (showFullLoader) setLoading(true);
+    try {
+      const now = new Date().toISOString().split("T")[0];
+      const [ayatData, jadwalData, rutinData] = await Promise.all([
+        fetchAyatHarianAPI(),
+        fetchJadwalIbadahUpcomingAPI(now, 5),
+        fetchJadwalRutinAPI(),
+      ]);
+
+      setAyat(ayatData);
+
+      const flattenedDetails = (jadwalData as Jadwal[]).flatMap((item) => {
+        if (!item?.detailIbadah) return [];
+        return item.detailIbadah.map(detail => ({ jadwal: item, detail }));
+      });
+      setJadwalIbadah(flattenedDetails);
+
+      setJadwalRutin(rutinData);
+    } catch (err: any) {
+      console.error("Load home error:", err);
+      setError(err.message);
+    }
+    setLoading(false);
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadAll(false);
+    setRefreshing(false);
+  }, [loadAll]);
+
   useEffect(() => {
-    const loadAll = async () => {
-      setLoading(true);
-      try {
-        const now = new Date().toISOString().split("T")[0];
-        const [ayatData, jadwalData, rutinData] = await Promise.all([
-          fetchAyatHarianAPI(),
-          fetchJadwalIbadahUpcomingAPI(now, 5),
-          fetchJadwalRutinAPI(),
-        ]);
-
-        setAyat(ayatData);
-
-        const flattenedDetails = (jadwalData as Jadwal[]).flatMap((item) => {
-          if (!item?.detailIbadah) return [];
-          return item.detailIbadah.map(detail => ({ jadwal: item, detail }));
-        });
-        setJadwalIbadah(flattenedDetails);
-
-        setJadwalRutin(rutinData);
-      } catch (err: any) {
-        console.error("Load home error:", err);
-        setError(err.message);
-      }
-      setLoading(false);
-    };
     loadAll();
   }, []);
 
@@ -136,6 +145,9 @@ export default function HomeScreen() {
           paddingTop: 10,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} tintColor={Colors.primary} />
+        }
       >
         {/* 🔹 HEADER GREETING BARU */}
         <View style={styles.headerContainer}>

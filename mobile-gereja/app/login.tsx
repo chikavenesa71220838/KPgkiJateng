@@ -131,7 +131,7 @@ const LoginScreen = () => {
                 <Ionicons name="people" size={40} color={Colors.primary} />
               </View>
             )}
-            <Text style={styles.title}>{gereja?.nama ?? "GKI Gejayan"}</Text>
+            <Text style={styles.title}>{gereja?.nama ?? "Nama Gereja"}</Text>
             <Text style={styles.subtitle}>Aplikasi Informasi untuk Jemaat</Text>
           </View>
 

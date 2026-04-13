@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Platform,
   UIManager,
   useWindowDimensions,
+  RefreshControl,
 } from "react-native";
 import { API_URL } from "../../utils/api";
 import { fetchWartaAPI } from "../../services/profileAPI";
@@ -101,12 +102,13 @@ export default function Warta(): React.ReactElement {
   const [filteredData, setFilteredData] = useState<WartaItem[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const fetchWarta = async () => {
+  const fetchWarta = async (showFullLoader = true) => {
     try {
-      setLoading(true);
+      if (showFullLoader) setLoading(true);
       const data = await fetchWartaAPI();
       setWarta(data);
       setFilteredData(data);
@@ -118,6 +120,12 @@ export default function Warta(): React.ReactElement {
       setLoading(false);
     }
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchWarta(false);
+    setRefreshing(false);
+  }, []);
 
   useEffect(() => {
     fetchWarta();
@@ -184,6 +192,9 @@ export default function Warta(): React.ReactElement {
           paddingHorizontal: Layout.paddingSmall,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} tintColor={Colors.primary} />
+        }
       >
         <Text style={styles.title}>Warta</Text>
 
