@@ -160,8 +160,7 @@ const SidebarItem = ({ name, icon, route, isActive, isProfile }: { name: string,
       <View style={styles.header}>
         <TouchableOpacity
           style={{ flexDirection: "row", alignItems: "center" }}
-          // Jika login ke Profil, jika tidak ke Login
-          onPress={() => router.push(user ? "/profil" : "/login")}
+          onPress={() => router.push("/profil")}
           activeOpacity={0.7}
         >
           {gereja?.logo?.url ? (
