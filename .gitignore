@@ -17,3 +17,18 @@ CLAUDE.md
 *.db
 *.db-journal
 backend/.keystone
+
+# File Aplikasi Mentah
+*.apk
+*.ipa
+*.app
+
+# Log System Testing
+*.log
+wdio.log
+appium.log
+
+# Report Mochawesomes
+mochawesome-report/
+test-report.html
+test-report.json
