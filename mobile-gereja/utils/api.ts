@@ -1,9 +1,9 @@
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 
-const USE_DEPLOYED_SERVER = true; // 🔧 Ganti true kalau dev mau hit VPS
+const USE_DEPLOYED_SERVER = false; // 🔧 Ganti true kalau dev mau hit VPS
 
-const productionUrl = "http://103.174.115.139:3000/api/graphql"; // ✅ VPS
+const productionUrl = "http://103.174.115.139:3000/api/graphql"; //VPS
 
 function getApiUrl() {
   if (Platform.OS === "web") {

@@ -5,12 +5,12 @@ import path from "path";
 import express from "express";
 import "dotenv/config";
 import admin from "firebase-admin";
+import { parse, OperationDefinitionNode } from "graphql"; // ← tambah ini
 import { lists } from "./schema/index.js";
 import ayatHarianRoute from "./routes/ayatHarian.js";
 import startAyatScheduler from "./scheduler/ayatScheduler.js";
 import cookieParser from "cookie-parser";
 
-// Firebase init (sama seperti sebelumnya)
 const serviceAccountPath = path.resolve(
   process.cwd(),
   "serviceAccountKey.json",
@@ -20,21 +20,19 @@ if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccountPath),
     });
-    console.log("🔥 Firebase Admin Initialized ✅");
+    console.log("Firebase Admin Initialized");
   } catch (error: any) {
-    console.error("🚨 Gagal membaca isi file JSON Firebase:", error.message);
+    console.error("Gagal membaca isi file JSON Firebase:", error.message);
     process.exit(1);
   }
 }
 
-// ← Setup auth Keystone
 const { withAuth } = createAuth({
   listKey: "Admin",
   identityField: "email",
   secretField: "password",
   sessionData: "id email",
   initFirstItem: {
-    // Pertama kali deploy, Keystone akan minta buat akun admin
     fields: ["name", "email", "password"],
   },
 });
@@ -49,7 +47,6 @@ const session = statelessSessions({
   sameSite: "lax",
 });
 
-// ← Wrap config dengan withAuth
 export default withAuth(
   config({
     db: {
@@ -79,9 +76,39 @@ export default withAuth(
           if (referer.includes("/init") || referer.includes("/signin"))
             return next();
 
-          const authHeader = req.headers.authorization;
+          const PROTECTED_FIELDS = ["user", "users", "profile", "profiles"];
 
-          // ✅ Kalau ada token → verifikasi
+          // Cek apakah query menyentuh field yang dilindungi
+          const query = req.body?.query || "";
+          let needsAuth = false;
+
+          try {
+            const parsed = parse(query);
+            const operations = parsed.definitions.filter(
+              (d): d is OperationDefinitionNode =>
+                d.kind === "OperationDefinition",
+            );
+
+            for (const op of operations) {
+              for (const selection of op.selectionSet.selections) {
+                if (
+                  selection.kind === "Field" &&
+                  PROTECTED_FIELDS.includes(selection.name.value)
+                ) {
+                  needsAuth = true;
+                  break;
+                }
+              }
+            }
+          } catch {
+            // Query tidak valid, biarkan GraphQL yang handle
+          }
+
+          // tidak butuh auth hit berhasil tanpa token
+          if (!needsAuth) return next();
+
+          // Kalau butuh auth → wajib Bearer token
+          const authHeader = req.headers.authorization;
           if (authHeader && authHeader.startsWith("Bearer ")) {
             const token = authHeader.split("Bearer ")[1];
             try {
@@ -95,9 +122,16 @@ export default withAuth(
             }
           }
 
-          // ✅ Kalau tidak ada token → tetap lanjut (publik)
-          return next();
+          return res.status(401).json({
+            errors: [
+              {
+                message:
+                  "Unauthorized: Token Firebase diperlukan untuk mengakses data ini.",
+              },
+            ],
+          });
         });
+
         const sudoContext = context.sudo();
         ayatHarianRoute(app, sudoContext);
         startAyatScheduler(sudoContext);
