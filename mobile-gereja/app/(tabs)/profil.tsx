@@ -160,11 +160,14 @@ export default function ProfilGereja(): React.ReactElement {
               <Ionicons name="time-outline" size={20} color={Colors.primary} />
               <Text style={styles.infoTitleWithIcon}>Jam Kerja Kantor</Text>
             </View>
-            {gereja.hari?.split("\n").map((h: string, i: number) => (
-              <Text key={i} style={styles.infoText}>
-                {h}
-              </Text>
-            ))}
+            {(gereja.hari ?? "")
+              .split(/\n|(?<=\d{2}\.\d{2})(?=[A-Z])/)
+              .filter((h: string) => h.trim())
+              .map((h: string, i: number) => (
+                <Text key={i} style={styles.infoText}>
+                  {h.trim()}
+                </Text>
+              ))}
           </View>
 
           {/* Telepon */}
