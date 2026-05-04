@@ -1,4 +1,4 @@
-package com.gerejaku.mobilegereja
+package id.ac.ukdw.fti.gerejaku
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

@@ -28,13 +28,13 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>mobilegereja</string>
-          <string>com.gerejaku.mobilegereja</string>
+          <string>id.ac.ukdw.fti.gerejaku</string>
         </array>
       </dict>
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>com.googleusercontent.apps.848782878807-lgel4074nitghv5bqob745nm90lf5ks5</string>
+          <string>com.googleusercontent.apps.848782878807-2dtld3f9np5qai00uu94nr1b8dfbqq5r</string>
         </array>
       </dict>
       <dict>
