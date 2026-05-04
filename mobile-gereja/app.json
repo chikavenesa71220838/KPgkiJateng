@@ -9,14 +9,14 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.gerejaku.mobilegereja",
+      "bundleIdentifier": "id.ac.ukdw.fti.gerejaku",
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "requireFullScreen": false,
       "softwareKeyboardLayoutMode": "pan",
-      "package": "com.gerejaku.mobilegereja",
+      "package": "id.ac.ukdw.fti.gerejaku",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",

@@ -48,11 +48,65 @@ export const saveUserProfileAPI = async (
   data: any, 
   token: string
 ) => {
-  const profileMutationAction = profileId ? `update: {` : `create: {`;
+  if (profileId) {
+    const mutation = {
+      query: `
+        mutation UpdateProfile(
+          $profileId: ID!,
+          $nama: String!,
+          $alamat: String,
+          $domisili: String,
+          $noWa: String,
+          $jk: String,
+          $pendidikan: String,
+          $pekerjaan: String,
+          $statusKawin: String,
+          $statusKeanggotaan: String,
+          $tglLahir: String,
+          $fotoProfil: String
+        ) {
+          updateProfile(
+            where: { id: $profileId }
+            data: {
+              nama: $nama
+              alamat: $alamat
+              domisili: $domisili
+              nomorWa: $noWa
+              jenisKelamin: $jk
+              pendidikan: $pendidikan
+              pekerjaan: $pekerjaan
+              statusPernikahan: $statusKawin
+              statusKeanggotaan: $statusKeanggotaan
+              tanggalLahir: $tglLahir
+              fotoProfil: $fotoProfil
+            }
+          ) {
+            id
+          }
+        }
+      `,
+      variables: { profileId, ...data },
+    };
 
-  const mutation = {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(mutation),
+    });
+
+    const json = await res.json();
+    if (json.errors) throw new Error(json.errors[0].message);
+
+    // Bentuk return disamakan biar profile.tsx tidak perlu diubah
+    return {
+      id: userId,
+      profile: { id: json.data.updateProfile.id },
+    };
+  }
+
+    const mutation = {
     query: `
-      mutation UpdateUserAndProfile(
+      mutation CreateProfile(
         $userId: ID!,
         $nama: String!,
         $alamat: String,
@@ -70,7 +124,7 @@ export const saveUserProfileAPI = async (
           where: { id: $userId }
           data: {
             profile: {
-              ${profileMutationAction}
+              create: {
                 nama: $nama
                 alamat: $alamat
                 domisili: $domisili
@@ -91,7 +145,7 @@ export const saveUserProfileAPI = async (
         }
       }
     `,
-    variables: { userId, ...data }, 
+    variables: { userId, ...data },
   };
 
   const res = await fetch(API_URL, {

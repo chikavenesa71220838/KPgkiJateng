@@ -1,4 +1,4 @@
-package com.gerejaku.mobilegereja
+package id.ac.ukdw.fti.gerejaku
 
 import android.app.Application
 import android.content.res.Configuration
