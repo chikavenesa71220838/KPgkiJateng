@@ -31,22 +31,25 @@ export const fetchUserProfileAPI = async (email: string, token: string) => {
 
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(query),
   });
 
   const json = await res.json();
   if (json.errors) throw new Error(json.errors[0].message);
-  
+
   return json?.data?.users?.[0]; // Mengembalikan data user pertama yang ketemu
 };
 
 // 2. Fungsi Simpan / Update Profil
 export const saveUserProfileAPI = async (
-  userId: string, 
-  profileId: string | null, 
-  data: any, 
-  token: string
+  userId: string,
+  profileId: string | null,
+  data: any,
+  token: string,
 ) => {
   if (profileId) {
     const mutation = {
@@ -90,7 +93,10 @@ export const saveUserProfileAPI = async (
 
     const res = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(mutation),
     });
 
@@ -104,7 +110,7 @@ export const saveUserProfileAPI = async (
     };
   }
 
-    const mutation = {
+  const mutation = {
     query: `
       mutation CreateProfile(
         $userId: ID!,
@@ -150,7 +156,10 @@ export const saveUserProfileAPI = async (
 
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(mutation),
   });
 
@@ -161,10 +170,10 @@ export const saveUserProfileAPI = async (
 
 // 3. Fungsi Hapus Data Backend (Soft Delete User & Hard Delete Profile)
 export const deleteBackendDataAPI = async (
-  userId: string | null, 
-  profileId: string | null, 
-  token: string, 
-  userEmail: string
+  userId: string | null,
+  profileId: string | null,
+  token: string,
+  userEmail: string,
 ) => {
   // Soft Delete User & Samarkan Email
   if (userId && userEmail) {
@@ -174,7 +183,10 @@ export const deleteBackendDataAPI = async (
 
     const res1 = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({
         query: `mutation SoftDeleteUser($id: ID!, $newEmail: String!) { 
           updateUser(
@@ -188,16 +200,20 @@ export const deleteBackendDataAPI = async (
         variables: { id: userId, newEmail: deletedEmail },
       }),
     });
-    
+
     const json1 = await res1.json();
-    if (json1.errors) throw new Error("Gagal nonaktifkan User: " + json1.errors[0].message);
+    if (json1.errors)
+      throw new Error("Gagal nonaktifkan User: " + json1.errors[0].message);
   }
 
   // Hard Delete Profile (Biarin ke-delete selamanya karena nanti buat baru)
   if (profileId) {
     const res2 = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({
         query: `mutation DeleteProfile($id: ID!) { 
           deleteProfile(where: { id: $id }) { id } 
@@ -207,7 +223,8 @@ export const deleteBackendDataAPI = async (
     });
 
     const json2 = await res2.json();
-    if (json2.errors) throw new Error("Gagal hapus Profile: " + json2.errors[0].message);
+    if (json2.errors)
+      throw new Error("Gagal hapus Profile: " + json2.errors[0].message);
   }
 };
 
@@ -226,7 +243,10 @@ export const findUserIdAPI = async (email: string, token: string) => {
 
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(query),
   });
 
@@ -235,7 +255,7 @@ export const findUserIdAPI = async (email: string, token: string) => {
   return json?.data?.users?.[0]?.id;
 };
 
-// ─── GEREJA & PENDETA ────────────────────────────────────────────────────────
+// GEREJA & PENDETA
 
 // 5. Ambil Data Gereja (profil, sejarah, login)
 export const fetchGerejaAPI = async () => {
@@ -293,7 +313,7 @@ export const fetchPendetaAPI = async () => {
   return json?.data?.pendetas ?? [];
 };
 
-// ─── KONTEN PUBLIK ────────────────────────────────────────────────────────────
+// KONTEN PUBLIK
 
 // 7. Ambil Ayat Harian Terbaru
 export const fetchAyatHarianAPI = async () => {
@@ -344,18 +364,21 @@ export const fetchJadwalRutinAPI = async () => {
   return json?.data?.jadwalRutins ?? [];
 };
 
-// 9. Ambil Semua Warta
-export const fetchWartaAPI = async () => {
+// 9. Ambil Semua Warta (list only, tanpa isiWarta yang berat)
+export const fetchWartaAPI = async (take: number = 50, skip: number = 0) => {
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       query: `
-        query {
-          wartas(orderBy: { masaBerlaku: desc }) {
+        query GetWartas($take: Int!, $skip: Int!) {
+          wartas(
+            orderBy: { masaBerlaku: desc }
+            take: $take
+            skip: $skip
+          ) {
             id
             judul
-            isiWarta { document }
             masaBerlaku
             tanggalPelaksanaan
             kategori { nama }
@@ -363,6 +386,7 @@ export const fetchWartaAPI = async () => {
           }
         }
       `,
+      variables: { take, skip },
     }),
   });
   const json = await res.json();
@@ -370,10 +394,34 @@ export const fetchWartaAPI = async () => {
   return json?.data?.wartas ?? [];
 };
 
-// ─── JADWAL IBADAH ────────────────────────────────────────────────────────────
+// 9b. Ambil Isi Warta (lazy load saat user expand)
+export const fetchWartaContentAPI = async (id: string) => {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: `
+        query GetWartaContent($id: ID!) {
+          warta(where: { id: $id }) {
+            isiWarta { document }
+          }
+        }
+      `,
+      variables: { id },
+    }),
+  });
+  const json = await res.json();
+  if (json.errors) throw new Error(json.errors[0].message);
+  return json?.data?.warta?.isiWarta ?? null;
+};
+
+// JADWAL IBADAH
 
 // 10. Jadwal Ibadah Mendatang (untuk Home)
-export const fetchJadwalIbadahUpcomingAPI = async (fromDate: string, take: number) => {
+export const fetchJadwalIbadahUpcomingAPI = async (
+  fromDate: string,
+  take: number,
+) => {
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -434,17 +482,23 @@ export const fetchJadwalIbadahRangeAPI = async (from: string, to: string) => {
   return json?.data?.jadwalIbadahs ?? [];
 };
 
-// 12. Riwayat Ibadah (jadwal sebelum tanggal tertentu)
-export const fetchRiwayatIbadahAPI = async (before: string) => {
+// 12. Riwayat Ibadah (jadwal sebelum tanggal tertentu, paginated)
+export const fetchRiwayatIbadahAPI = async (
+  before: string,
+  take: number = 20,
+  skip: number = 0,
+) => {
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       query: `
-        query {
+        query GetRiwayat($before: CalendarDay!, $take: Int!, $skip: Int!) {
           jadwalIbadahs(
-            where: { tanggal: { lt: "${before}" } }
+            where: { tanggal: { lt: $before } }
             orderBy: { tanggal: desc }
+            take: $take
+            skip: $skip
           ) {
             id
             tanggal
@@ -459,6 +513,7 @@ export const fetchRiwayatIbadahAPI = async (before: string) => {
           }
         }
       `,
+      variables: { before, take, skip },
     }),
   });
   const json = await res.json();
@@ -466,15 +521,18 @@ export const fetchRiwayatIbadahAPI = async (before: string) => {
   return json?.data?.jadwalIbadahs ?? [];
 };
 
-// 13. Fetch Data untuk Pencarian (Jadwal + Warta sekaligus)
-export const fetchSearchDataAPI = async (): Promise<{ jadwalIbadahs: any[]; wartas: any[] }> => {
+// 13. Fetch Data untuk Pencarian (Jadwal + Warta, metadata only — isiWarta di-load lazy)
+export const fetchSearchDataAPI = async (): Promise<{
+  jadwalIbadahs: any[];
+  wartas: any[];
+}> => {
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       query: `
         query {
-          jadwalIbadahs(orderBy: { tanggal: desc }) {
+          jadwalIbadahs(orderBy: { tanggal: desc }, take: 100) {
             id
             tanggal
             topik
@@ -486,10 +544,9 @@ export const fetchSearchDataAPI = async (): Promise<{ jadwalIbadahs: any[]; wart
               banner { url }
             }
           }
-          wartas(orderBy: { masaBerlaku: desc }) {
+          wartas(orderBy: { masaBerlaku: desc }, take: 50) {
             id
             judul
-            isiWarta { document }
             masaBerlaku
             tanggalPelaksanaan
             kategori { nama }
@@ -507,13 +564,20 @@ export const fetchSearchDataAPI = async (): Promise<{ jadwalIbadahs: any[]; wart
   };
 };
 
-// ─── AUTH ─────────────────────────────────────────────────────────────────────
+// AUTH
 
 // 14. Cek User (SSO - cek by googleId atau email)
-export const checkUserAPI = async (googleId: string, email: string, token: string) => {
+export const checkUserAPI = async (
+  googleId: string,
+  email: string,
+  token: string,
+) => {
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({
       query: `
         query GetUser($googleId: String!, $email: String!) {
@@ -534,15 +598,25 @@ export const checkUserAPI = async (googleId: string, email: string, token: strin
     }),
   });
   const json = await res.json();
-  if (!res.ok || json.errors) throw new Error(json.errors?.[0]?.message || "Gagal memverifikasi sesi ke server.");
+  if (!res.ok || json.errors)
+    throw new Error(
+      json.errors?.[0]?.message || "Gagal memverifikasi sesi ke server.",
+    );
   return json?.data?.users?.[0];
 };
 
 // 15. Hubungkan Akun Google ke User yang ada
-export const linkAccountAPI = async (userId: string, googleId: string, token: string) => {
+export const linkAccountAPI = async (
+  userId: string,
+  googleId: string,
+  token: string,
+) => {
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({
       query: `
         mutation LinkAccount($id: ID!, $googleId: String!) {
@@ -561,11 +635,14 @@ export const linkAccountAPI = async (userId: string, googleId: string, token: st
 // 16. Buat User Baru (Registrasi Otomatis via Google)
 export const createUserAPI = async (
   data: { namaUser: string; emailUser: string; googleId: string },
-  token: string
+  token: string,
 ) => {
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({
       query: `
         mutation SyncUser($data: UserCreateInput!) {

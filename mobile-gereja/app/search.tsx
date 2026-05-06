@@ -18,7 +18,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack, useNavigation } from "expo-router";
 import { API_URL } from "../utils/api";
-import { fetchSearchDataAPI } from "../services/profileAPI";
+import { fetchSearchDataAPI, fetchWartaContentAPI } from "../services/profileAPI";
 import { Colors, FontSize, Layout, Shadows } from "../constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import RenderHTML from "react-native-render-html";
@@ -74,6 +74,9 @@ export default function SearchScreen() {
   const [wartaData, setWartaData] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [wartaContents, setWartaContents] = useState<Record<string, any>>({});
+  const [loadingContent, setLoadingContent] = useState<Record<string, boolean>>({});
+  const hasLoaded = useRef(false);
 
   useEffect(() => {
     navigation.setOptions({ HeaderShown: false });
@@ -91,17 +94,21 @@ export default function SearchScreen() {
     router.back();
   };
 
-  const toggleExpand = (id: string) => {
+  const toggleExpand = (uniqueId: string, wartaId?: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedId(expandedId === id ? null : id);
+    const next = expandedId === uniqueId ? null : uniqueId;
+    setExpandedId(next);
+    if (next && wartaId) loadWartaContent(wartaId);
   };
 
   const fetchData = async () => {
+    if (hasLoaded.current) return;
     try {
       setLoading(true);
       const { jadwalIbadahs, wartas } = await fetchSearchDataAPI();
       setJadwalData(jadwalIbadahs);
       setWartaData(wartas);
+      hasLoaded.current = true;
     } catch (err) {
       console.error(err);
     } finally {
@@ -109,9 +116,18 @@ export default function SearchScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const loadWartaContent = async (wartaId: string) => {
+    if (wartaContents[wartaId] !== undefined || loadingContent[wartaId]) return;
+    try {
+      setLoadingContent((prev) => ({ ...prev, [wartaId]: true }));
+      const content = await fetchWartaContentAPI(wartaId);
+      setWartaContents((prev) => ({ ...prev, [wartaId]: content }));
+    } catch (err) {
+      console.error("Gagal load isi warta:", err);
+    } finally {
+      setLoadingContent((prev) => ({ ...prev, [wartaId]: false }));
+    }
+  };
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -197,7 +213,7 @@ export default function SearchScreen() {
             placeholder="Cari jadwal dan warta..."
             placeholderTextColor={Colors.placeholder}
             value={searchQuery}
-            onChangeText={setSearchQuery}
+            onChangeText={(text) => { setSearchQuery(text); if (text.length > 0) fetchData(); }}
             returnKeyType="search"
           />
           {searchQuery.length > 0 && (
@@ -317,34 +333,38 @@ export default function SearchScreen() {
                         {/* Garis Pembatas Halus */}
                         <View style={styles.dividerWithShadow} />
 
-                        {/* Konten Expandable */}
-                        {isExpanded && item.isiWarta && (
+                        {/* Konten Expandable — lazy load saat dibuka */}
+                        {isExpanded && (
                           <View style={styles.detail}>
-                            <RenderHTML
-                              contentWidth={width}
-                              source={{
-                                html: typeof item.isiWarta === "object" && Array.isArray(item.isiWarta.document)
-                                    ? keystoneDocumentToHtml(item.isiWarta.document)
-                                    : (item.isiWarta as string),
-                              }}
-                              tagsStyles={{
-                                a: { color: Colors.primary, textDecorationLine: "underline", fontWeight: "bold" },
-                                hr: { backgroundColor: Colors.border, height: 1, marginVertical: 10, width: "100%" },
-                                p: { fontSize: 13, color: Colors.text, marginBottom: 6 },
-                                strong: { fontWeight: "bold" },
-                                em: { fontStyle: "italic" },
-                                u: { textDecorationLine: "underline" },
-                                ol: { paddingLeft: 20, marginBottom: 10 },
-                                ul: { paddingLeft: 20, marginBottom: 10 },
-                                li: { marginBottom: 4, fontSize: 13, color: Colors.text },
-                                h1: { fontSize: 22, fontWeight: "bold", color: Colors.black, marginVertical: 8 },
-                                h2: { fontSize: 20, fontWeight: "bold", color: Colors.black, marginVertical: 6 },
-                                h3: { fontSize: 18, fontWeight: "600", color: Colors.black, marginVertical: 4 },
-                              }}
-                            />
+                            {loadingContent[item.id] ? (
+                              <ActivityIndicator size="small" color={Colors.primary} />
+                            ) : wartaContents[item.id] ? (
+                              <RenderHTML
+                                contentWidth={width}
+                                source={{
+                                  html: Array.isArray(wartaContents[item.id]?.document)
+                                    ? keystoneDocumentToHtml(wartaContents[item.id].document)
+                                    : "",
+                                }}
+                                tagsStyles={{
+                                  a: { color: Colors.primary, textDecorationLine: "underline", fontWeight: "bold" },
+                                  hr: { backgroundColor: Colors.border, height: 1, marginVertical: 10, width: "100%" },
+                                  p: { fontSize: 13, color: Colors.text, marginBottom: 6 },
+                                  strong: { fontWeight: "bold" },
+                                  em: { fontStyle: "italic" },
+                                  u: { textDecorationLine: "underline" },
+                                  ol: { paddingLeft: 20, marginBottom: 10 },
+                                  ul: { paddingLeft: 20, marginBottom: 10 },
+                                  li: { marginBottom: 4, fontSize: 13, color: Colors.text },
+                                  h1: { fontSize: 22, fontWeight: "bold", color: Colors.black, marginVertical: 8 },
+                                  h2: { fontSize: 20, fontWeight: "bold", color: Colors.black, marginVertical: 6 },
+                                  h3: { fontSize: 18, fontWeight: "600", color: Colors.black, marginVertical: 4 },
+                                }}
+                              />
+                            ) : null}
                           </View>
                         )}
-                        <TouchableOpacity onPress={() => toggleExpand(uniqueId)}>
+                        <TouchableOpacity onPress={() => toggleExpand(uniqueId, item.id)}>
                           <Text style={styles.expandToggle}>
                             {isExpanded ? "▲ Tutup" : "▼ Baca Selengkapnya"}
                           </Text>
