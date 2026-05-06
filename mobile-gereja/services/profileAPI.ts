@@ -255,7 +255,7 @@ export const findUserIdAPI = async (email: string, token: string) => {
   return json?.data?.users?.[0]?.id;
 };
 
-// ─── GEREJA & PENDETA ────────────────────────────────────────────────────────
+// GEREJA & PENDETA
 
 // 5. Ambil Data Gereja (profil, sejarah, login)
 export const fetchGerejaAPI = async () => {
@@ -313,7 +313,7 @@ export const fetchPendetaAPI = async () => {
   return json?.data?.pendetas ?? [];
 };
 
-// ─── KONTEN PUBLIK ────────────────────────────────────────────────────────────
+// KONTEN PUBLIK
 
 // 7. Ambil Ayat Harian Terbaru
 export const fetchAyatHarianAPI = async () => {
@@ -415,7 +415,7 @@ export const fetchWartaContentAPI = async (id: string) => {
   return json?.data?.warta?.isiWarta ?? null;
 };
 
-// ─── JADWAL IBADAH ────────────────────────────────────────────────────────────
+// JADWAL IBADAH
 
 // 10. Jadwal Ibadah Mendatang (untuk Home)
 export const fetchJadwalIbadahUpcomingAPI = async (
@@ -564,7 +564,7 @@ export const fetchSearchDataAPI = async (): Promise<{
   };
 };
 
-// ─── AUTH ─────────────────────────────────────────────────────────────────────
+// AUTH
 
 // 14. Cek User (SSO - cek by googleId atau email)
 export const checkUserAPI = async (
