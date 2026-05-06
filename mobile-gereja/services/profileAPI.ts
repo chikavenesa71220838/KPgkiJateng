@@ -1,50 +1,79 @@
 import { API_URL } from "../utils/api";
 
-// 1. Fungsi Ambil Data Profil
+const TIMEOUT_MS = 15_000;
+
+async function gqlFetch(body: object, token?: string): Promise<any> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    const json = await res.json();
+    if (!res.ok || json.errors)
+      throw new Error(json.errors?.[0]?.message ?? `HTTP ${res.status}`);
+    return json.data;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// TTL cache untuk data publik yang jarang berubah
+const _cache = new Map<string, { data: any; exp: number }>();
+
+async function cached<T>(
+  key: string,
+  ttlMs: number,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const hit = _cache.get(key);
+  if (hit && Date.now() < hit.exp) return hit.data as T;
+  const data = await fn();
+  _cache.set(key, { data, exp: Date.now() + ttlMs });
+  return data;
+}
+
+// 1. Ambil Data Profil
 export const fetchUserProfileAPI = async (email: string, token: string) => {
-  const query = {
-    query: `
-      query GetUserProfile($email: String!) {
-        users(where: { emailUser: { equals: $email } }) {
-          id
-          namaUser
-          emailUser
-          profile {
+  const data = await gqlFetch(
+    {
+      query: `
+        query GetUserProfile($email: String!) {
+          users(where: { emailUser: { equals: $email } }) {
             id
-            nama
-            alamat
-            domisili
-            nomorWa
-            jenisKelamin
-            pendidikan
-            pekerjaan
-            tanggalLahir
-            statusPernikahan
-            statusKeanggotaan
-            fotoProfil
+            namaUser
+            emailUser
+            profile {
+              id
+              nama
+              alamat
+              domisili
+              nomorWa
+              jenisKelamin
+              pendidikan
+              pekerjaan
+              tanggalLahir
+              statusPernikahan
+              statusKeanggotaan
+              fotoProfil
+            }
           }
         }
-      }
-    `,
-    variables: { email },
-  };
-
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      `,
+      variables: { email },
     },
-    body: JSON.stringify(query),
-  });
-
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-
-  return json?.data?.users?.[0]; // Mengembalikan data user pertama yang ketemu
+    token,
+  );
+  return data?.users?.[0];
 };
 
-// 2. Fungsi Simpan / Update Profil
+// 2. Simpan / Update Profil
 export const saveUserProfileAPI = async (
   userId: string,
   profileId: string | null,
@@ -52,85 +81,26 @@ export const saveUserProfileAPI = async (
   token: string,
 ) => {
   if (profileId) {
-    const mutation = {
-      query: `
-        mutation UpdateProfile(
-          $profileId: ID!,
-          $nama: String!,
-          $alamat: String,
-          $domisili: String,
-          $noWa: String,
-          $jk: String,
-          $pendidikan: String,
-          $pekerjaan: String,
-          $statusKawin: String,
-          $statusKeanggotaan: String,
-          $tglLahir: String,
-          $fotoProfil: String
-        ) {
-          updateProfile(
-            where: { id: $profileId }
-            data: {
-              nama: $nama
-              alamat: $alamat
-              domisili: $domisili
-              nomorWa: $noWa
-              jenisKelamin: $jk
-              pendidikan: $pendidikan
-              pekerjaan: $pekerjaan
-              statusPernikahan: $statusKawin
-              statusKeanggotaan: $statusKeanggotaan
-              tanggalLahir: $tglLahir
-              fotoProfil: $fotoProfil
-            }
+    const result = await gqlFetch(
+      {
+        query: `
+          mutation UpdateProfile(
+            $profileId: ID!
+            $nama: String!
+            $alamat: String
+            $domisili: String
+            $noWa: String
+            $jk: String
+            $pendidikan: String
+            $pekerjaan: String
+            $statusKawin: String
+            $statusKeanggotaan: String
+            $tglLahir: String
+            $fotoProfil: String
           ) {
-            id
-          }
-        }
-      `,
-      variables: { profileId, ...data },
-    };
-
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(mutation),
-    });
-
-    const json = await res.json();
-    if (json.errors) throw new Error(json.errors[0].message);
-
-    // Bentuk return disamakan biar profile.tsx tidak perlu diubah
-    return {
-      id: userId,
-      profile: { id: json.data.updateProfile.id },
-    };
-  }
-
-  const mutation = {
-    query: `
-      mutation CreateProfile(
-        $userId: ID!,
-        $nama: String!,
-        $alamat: String,
-        $domisili: String,
-        $noWa: String,
-        $jk: String,
-        $pendidikan: String,
-        $pekerjaan: String,
-        $statusKawin: String,
-        $statusKeanggotaan: String,
-        $tglLahir: String,
-        $fotoProfil: String
-      ) {
-        updateUser(
-          where: { id: $userId }
-          data: {
-            profile: {
-              create: {
+            updateProfile(
+              where: { id: $profileId }
+              data: {
                 nama: $nama
                 alamat: $alamat
                 domisili: $domisili
@@ -143,126 +113,134 @@ export const saveUserProfileAPI = async (
                 tanggalLahir: $tglLahir
                 fotoProfil: $fotoProfil
               }
-            }
+            ) { id }
           }
+        `,
+        variables: { profileId, ...data },
+      },
+      token,
+    );
+    return { id: userId, profile: { id: result.updateProfile.id } };
+  }
+
+  const result = await gqlFetch(
+    {
+      query: `
+        mutation CreateProfile(
+          $userId: ID!
+          $nama: String!
+          $alamat: String
+          $domisili: String
+          $noWa: String
+          $jk: String
+          $pendidikan: String
+          $pekerjaan: String
+          $statusKawin: String
+          $statusKeanggotaan: String
+          $tglLahir: String
+          $fotoProfil: String
         ) {
-          id
-          profile { id }
+          updateUser(
+            where: { id: $userId }
+            data: {
+              profile: {
+                create: {
+                  nama: $nama
+                  alamat: $alamat
+                  domisili: $domisili
+                  nomorWa: $noWa
+                  jenisKelamin: $jk
+                  pendidikan: $pendidikan
+                  pekerjaan: $pekerjaan
+                  statusPernikahan: $statusKawin
+                  statusKeanggotaan: $statusKeanggotaan
+                  tanggalLahir: $tglLahir
+                  fotoProfil: $fotoProfil
+                }
+              }
+            }
+          ) { id profile { id } }
         }
-      }
-    `,
-    variables: { userId, ...data },
-  };
-
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      `,
+      variables: { userId, ...data },
     },
-    body: JSON.stringify(mutation),
-  });
-
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json.data.updateUser;
+    token,
+  );
+  return result.updateUser;
 };
 
-// 3. Fungsi Hapus Data Backend (Soft Delete User & Hard Delete Profile)
+// 3. Hapus Data Backend — soft delete + hard delete dijalankan paralel
 export const deleteBackendDataAPI = async (
   userId: string | null,
   profileId: string | null,
   token: string,
   userEmail: string,
 ) => {
-  // Soft Delete User & Samarkan Email
+  const tasks: Promise<any>[] = [];
+
   if (userId && userEmail) {
-    // Membuat email unik agar tidak bentrok jika user mendaftar lagi
-    const timestamp = Date.now();
-    const deletedEmail = `deleted_${timestamp}_${userEmail}`;
-
-    const res1 = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        query: `mutation SoftDeleteUser($id: ID!, $newEmail: String!) { 
-          updateUser(
-            where: { id: $id }, 
-            data: { 
-              statusAktivasi: "nonaktif",
-              emailUser: $newEmail 
+    const deletedEmail = `deleted_${Date.now()}_${userEmail}`;
+    tasks.push(
+      gqlFetch(
+        {
+          query: `
+            mutation SoftDeleteUser($id: ID!, $newEmail: String!) {
+              updateUser(
+                where: { id: $id }
+                data: { statusAktivasi: "nonaktif", emailUser: $newEmail }
+              ) { id }
             }
-          ) { id } 
-        }`,
-        variables: { id: userId, newEmail: deletedEmail },
+          `,
+          variables: { id: userId, newEmail: deletedEmail },
+        },
+        token,
+      ).catch((e) => {
+        throw new Error("Gagal nonaktifkan User: " + e.message);
       }),
-    });
-
-    const json1 = await res1.json();
-    if (json1.errors)
-      throw new Error("Gagal nonaktifkan User: " + json1.errors[0].message);
+    );
   }
 
-  // Hard Delete Profile (Biarin ke-delete selamanya karena nanti buat baru)
   if (profileId) {
-    const res2 = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        query: `mutation DeleteProfile($id: ID!) { 
-          deleteProfile(where: { id: $id }) { id } 
-        }`,
-        variables: { id: profileId },
+    tasks.push(
+      gqlFetch(
+        {
+          query: `
+            mutation DeleteProfile($id: ID!) {
+              deleteProfile(where: { id: $id }) { id }
+            }
+          `,
+          variables: { id: profileId },
+        },
+        token,
+      ).catch((e) => {
+        throw new Error("Gagal hapus Profile: " + e.message);
       }),
-    });
-
-    const json2 = await res2.json();
-    if (json2.errors)
-      throw new Error("Gagal hapus Profile: " + json2.errors[0].message);
+    );
   }
+
+  await Promise.all(tasks);
 };
 
-// 4. Fungsi Cari ID User (Khusus untuk halaman CompleteProfile)
+// 4. Cari ID User
 export const findUserIdAPI = async (email: string, token: string) => {
-  const query = {
-    query: `
-      query FindUser($email: String!) {
-        users(where: { emailUser: { equals: $email } }) {
-          id
+  const data = await gqlFetch(
+    {
+      query: `
+        query FindUser($email: String!) {
+          users(where: { emailUser: { equals: $email } }) { id }
         }
-      }
-    `,
-    variables: { email },
-  };
-
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      `,
+      variables: { email },
     },
-    body: JSON.stringify(query),
-  });
-
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json?.data?.users?.[0]?.id;
+    token,
+  );
+  return data?.users?.[0]?.id;
 };
 
-// GEREJA & PENDETA
-
-// 5. Ambil Data Gereja (profil, sejarah, login)
-export const fetchGerejaAPI = async () => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+// 5. Ambil Data Gereja (cached 1 jam)
+export const fetchGerejaAPI = async () =>
+  cached("gereja", 60 * 60_000, async () => {
+    const data = await gqlFetch({
       query: `
         query {
           gerejas {
@@ -282,19 +260,14 @@ export const fetchGerejaAPI = async () => {
           }
         }
       `,
-    }),
+    });
+    return data?.gerejas?.[0];
   });
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json?.data?.gerejas?.[0];
-};
 
-// 6. Ambil Data Pendeta
-export const fetchPendetaAPI = async () => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+// 6. Ambil Data Pendeta (cached 1 jam)
+export const fetchPendetaAPI = async () =>
+  cached("pendeta", 60 * 60_000, async () => {
+    const data = await gqlFetch({
       query: `
         query {
           pendetas {
@@ -306,21 +279,14 @@ export const fetchPendetaAPI = async () => {
           }
         }
       `,
-    }),
+    });
+    return data?.pendetas ?? [];
   });
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json?.data?.pendetas ?? [];
-};
 
-// KONTEN PUBLIK
-
-// 7. Ambil Ayat Harian Terbaru
-export const fetchAyatHarianAPI = async () => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+// 7. Ambil Ayat Harian Terbaru (cached 1 jam)
+export const fetchAyatHarianAPI = async () =>
+  cached("ayat_harian", 60 * 60_000, async () => {
+    const data = await gqlFetch({
       query: `
         query {
           ayatHarians(orderBy: { tanggal: desc }, take: 1) {
@@ -331,208 +297,161 @@ export const fetchAyatHarianAPI = async () => {
           }
         }
       `,
-    }),
+    });
+    return data?.ayatHarians?.[0] ?? null;
   });
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json?.data?.ayatHarians?.[0] ?? null;
-};
 
-// 8. Ambil Jadwal Rutin
-export const fetchJadwalRutinAPI = async () => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+// 8. Ambil Jadwal Rutin (cached 30 menit)
+export const fetchJadwalRutinAPI = async () =>
+  cached("jadwal_rutin", 30 * 60_000, async () => {
+    const data = await gqlFetch({
       query: `
         query {
           jadwalRutins(orderBy: { namaIbadah: asc }) {
             id
             namaIbadah
             nama
-            waktu {
-              id
-              jam
-            }
+            waktu { id jam }
           }
         }
       `,
-    }),
+    });
+    return data?.jadwalRutins ?? [];
   });
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json?.data?.jadwalRutins ?? [];
-};
 
-// 9. Ambil Semua Warta (list only, tanpa isiWarta yang berat)
-export const fetchWartaAPI = async (take: number = 50, skip: number = 0) => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `
-        query GetWartas($take: Int!, $skip: Int!) {
-          wartas(
-            orderBy: { masaBerlaku: desc }
-            take: $take
-            skip: $skip
-          ) {
-            id
-            judul
-            masaBerlaku
-            tanggalPelaksanaan
-            kategori { nama }
-            gambar { url }
-          }
+// 9. Ambil Warta (take dikurangi ke 20 untuk kurangi beban)
+export const fetchWartaAPI = async (take: number = 20, skip: number = 0) => {
+  const data = await gqlFetch({
+    query: `
+      query GetWartas($take: Int!, $skip: Int!) {
+        wartas(orderBy: { masaBerlaku: desc }, take: $take, skip: $skip) {
+          id
+          judul
+          masaBerlaku
+          tanggalPelaksanaan
+          kategori { nama }
+          gambar { url }
         }
-      `,
-      variables: { take, skip },
-    }),
+      }
+    `,
+    variables: { take, skip },
   });
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json?.data?.wartas ?? [];
+  return data?.wartas ?? [];
 };
 
 // 9b. Ambil Isi Warta (lazy load saat user expand)
 export const fetchWartaContentAPI = async (id: string) => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `
-        query GetWartaContent($id: ID!) {
-          warta(where: { id: $id }) {
-            isiWarta { document }
-          }
+  const data = await gqlFetch({
+    query: `
+      query GetWartaContent($id: ID!) {
+        warta(where: { id: $id }) {
+          isiWarta { document }
         }
-      `,
-      variables: { id },
-    }),
+      }
+    `,
+    variables: { id },
   });
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json?.data?.warta?.isiWarta ?? null;
+  return data?.warta?.isiWarta ?? null;
 };
 
-// JADWAL IBADAH
-
-// 10. Jadwal Ibadah Mendatang (untuk Home)
+// 10. Jadwal Ibadah Mendatang — pakai variables (bukan interpolasi)
 export const fetchJadwalIbadahUpcomingAPI = async (
   fromDate: string,
   take: number,
 ) => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `
-        query {
-          jadwalIbadahs(
-            where: { tanggal: { gte: "${fromDate}" } }
-            orderBy: { tanggal: asc }
-            take: ${take}
-          ) {
+  const data = await gqlFetch({
+    query: `
+      query GetUpcoming($fromDate: CalendarDay!, $take: Int!) {
+        jadwalIbadahs(
+          where: { tanggal: { gte: $fromDate } }
+          orderBy: { tanggal: asc }
+          take: $take
+        ) {
+          id
+          tanggal
+          detailIbadah {
             id
-            tanggal
-            detailIbadah {
-              id
-              jam
-              banner { url }
-            }
+            jam
+            banner { url }
           }
         }
-      `,
-    }),
+      }
+    `,
+    variables: { fromDate, take },
   });
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json?.data?.jadwalIbadahs ?? [];
+  return data?.jadwalIbadahs ?? [];
 };
 
-// 11. Jadwal Ibadah Rentang Tanggal (untuk halaman Jadwal Ibadah)
+// 11. Jadwal Ibadah Rentang Tanggal — pakai variables (bukan interpolasi)
 export const fetchJadwalIbadahRangeAPI = async (from: string, to: string) => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `
-        query {
-          jadwalIbadahs(
-            where: { tanggal: { gte: "${from}", lte: "${to}" } }
-            orderBy: { tanggal: asc }
-          ) {
+  const data = await gqlFetch({
+    query: `
+      query GetRange($from: CalendarDay!, $to: CalendarDay!) {
+        jadwalIbadahs(
+          where: { tanggal: { gte: $from, lte: $to } }
+          orderBy: { tanggal: asc }
+        ) {
+          id
+          tanggal
+          topik
+          detailIbadah {
             id
-            tanggal
-            topik
-            detailIbadah {
-              id
-              jam
-              url
-              pengkhotbah { nama }
-              banner { url }
-            }
+            jam
+            url
+            pengkhotbah { nama }
+            banner { url }
           }
         }
-      `,
-    }),
+      }
+    `,
+    variables: { from, to },
   });
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json?.data?.jadwalIbadahs ?? [];
+  return data?.jadwalIbadahs ?? [];
 };
 
-// 12. Riwayat Ibadah (jadwal sebelum tanggal tertentu, paginated)
+// 12. Riwayat Ibadah
 export const fetchRiwayatIbadahAPI = async (
   before: string,
   take: number = 20,
   skip: number = 0,
 ) => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `
-        query GetRiwayat($before: CalendarDay!, $take: Int!, $skip: Int!) {
-          jadwalIbadahs(
-            where: { tanggal: { lt: $before } }
-            orderBy: { tanggal: desc }
-            take: $take
-            skip: $skip
-          ) {
+  const data = await gqlFetch({
+    query: `
+      query GetRiwayat($before: CalendarDay!, $take: Int!, $skip: Int!) {
+        jadwalIbadahs(
+          where: { tanggal: { lt: $before } }
+          orderBy: { tanggal: desc }
+          take: $take
+          skip: $skip
+        ) {
+          id
+          tanggal
+          topik
+          detailIbadah {
             id
-            tanggal
-            topik
-            detailIbadah {
-              id
-              jam
-              url
-              pengkhotbah { nama }
-              banner { url }
-            }
+            jam
+            url
+            pengkhotbah { nama }
+            banner { url }
           }
         }
-      `,
-      variables: { before, take, skip },
-    }),
+      }
+    `,
+    variables: { before, take, skip },
   });
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json?.data?.jadwalIbadahs ?? [];
+  return data?.jadwalIbadahs ?? [];
 };
 
-// 13. Fetch Data untuk Pencarian (Jadwal + Warta, metadata only — isiWarta di-load lazy)
+// 13. Data Pencarian (cached 5 menit, payload dikurangi)
 export const fetchSearchDataAPI = async (): Promise<{
   jadwalIbadahs: any[];
   wartas: any[];
-}> => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+}> =>
+  cached("search_data", 5 * 60_000, async () => {
+    const data = await gqlFetch({
       query: `
         query {
-          jadwalIbadahs(orderBy: { tanggal: desc }, take: 100) {
+          jadwalIbadahs(orderBy: { tanggal: desc }, take: 50) {
             id
             tanggal
             topik
@@ -544,7 +463,7 @@ export const fetchSearchDataAPI = async (): Promise<{
               banner { url }
             }
           }
-          wartas(orderBy: { masaBerlaku: desc }, take: 50) {
+          wartas(orderBy: { masaBerlaku: desc }, take: 30) {
             id
             judul
             masaBerlaku
@@ -554,37 +473,27 @@ export const fetchSearchDataAPI = async (): Promise<{
           }
         }
       `,
-    }),
+    });
+    return {
+      jadwalIbadahs: data?.jadwalIbadahs ?? [],
+      wartas: data?.wartas ?? [],
+    };
   });
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return {
-    jadwalIbadahs: json?.data?.jadwalIbadahs ?? [],
-    wartas: json?.data?.wartas ?? [],
-  };
-};
 
-// AUTH
-
-// 14. Cek User (SSO - cek by googleId atau email)
+// 14. Cek User (SSO)
 export const checkUserAPI = async (
   googleId: string,
   email: string,
   token: string,
 ) => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
+  const data = await gqlFetch(
+    {
       query: `
         query GetUser($googleId: String!, $email: String!) {
           users(where: {
-            statusAktivasi: { equals: "aktif" },
+            statusAktivasi: { equals: "aktif" }
             OR: [
-              { googleId: { equals: $googleId } },
+              { googleId: { equals: $googleId } }
               { emailUser: { equals: $email } }
             ]
           }) {
@@ -595,66 +504,46 @@ export const checkUserAPI = async (
         }
       `,
       variables: { googleId, email },
-    }),
-  });
-  const json = await res.json();
-  if (!res.ok || json.errors)
-    throw new Error(
-      json.errors?.[0]?.message || "Gagal memverifikasi sesi ke server.",
-    );
-  return json?.data?.users?.[0];
+    },
+    token,
+  );
+  return data?.users?.[0];
 };
 
-// 15. Hubungkan Akun Google ke User yang ada
+// 15. Hubungkan Akun Google
 export const linkAccountAPI = async (
   userId: string,
   googleId: string,
   token: string,
 ) => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
+  await gqlFetch(
+    {
       query: `
         mutation LinkAccount($id: ID!, $googleId: String!) {
-          updateUser(where: { id: $id }, data: { googleId: $googleId }) {
-            id
-          }
+          updateUser(where: { id: $id }, data: { googleId: $googleId }) { id }
         }
       `,
       variables: { id: userId, googleId },
-    }),
-  });
-  const json = await res.json();
-  if (!res.ok || json.errors) throw new Error("Gagal menghubungkan akun.");
+    },
+    token,
+  );
 };
 
-// 16. Buat User Baru (Registrasi Otomatis via Google)
+// 16. Buat User Baru
 export const createUserAPI = async (
   data: { namaUser: string; emailUser: string; googleId: string },
   token: string,
 ) => {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
+  const result = await gqlFetch(
+    {
       query: `
         mutation SyncUser($data: UserCreateInput!) {
-          createUser(data: $data) {
-            id
-          }
+          createUser(data: $data) { id }
         }
       `,
       variables: { data },
-    }),
-  });
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json?.data?.createUser;
+    },
+    token,
+  );
+  return result?.createUser;
 };

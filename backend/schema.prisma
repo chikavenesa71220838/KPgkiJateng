@@ -14,10 +14,12 @@ generator client {
 model User {
   id             String   @id @default(cuid())
   namaUser       String   @default("")
-  emailUser      String   @default("")
+  emailUser      String   @unique @default("")
   googleId       String   @default("")
   statusAktivasi String?  @default("aktif")
   profile        Profile? @relation("Profile_user")
+
+  @@index([googleId])
 }
 
 model Profile {
@@ -61,6 +63,7 @@ model Warta {
   gerejaId           String?        @map("gereja")
 
   @@index([kategoriId])
+  @@index([masaBerlaku])
   @@index([gerejaId])
 }
 
@@ -84,6 +87,7 @@ model JadwalIbadah {
   gereja       Gereja?        @relation("JadwalIbadah_gereja", fields: [gerejaId], references: [id])
   gerejaId     String?        @map("gereja")
 
+  @@index([tanggal])
   @@index([gerejaId])
 }
 
@@ -112,6 +116,8 @@ model AyatHarian {
   verse   String   @default("")
   text    String   @default("")
   tanggal DateTime @default(now())
+
+  @@index([tanggal])
 }
 
 model Pendeta {

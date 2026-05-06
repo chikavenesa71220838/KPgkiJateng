@@ -30,7 +30,7 @@ export const Warta = list({
       validation: { isRequired: true },
     }),
 
-    masaBerlaku: calendarDay(),
+    masaBerlaku: calendarDay({ isIndexed: true }),
 
     tanggalPelaksanaan: timestamp(),
 

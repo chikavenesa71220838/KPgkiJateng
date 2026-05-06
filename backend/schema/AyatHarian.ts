@@ -20,6 +20,7 @@ export const AyatHarian = list({
     tanggal: timestamp({
       validation: { isRequired: true },
       defaultValue: { kind: "now" },
+      isIndexed: true,
     }),
   },
 });

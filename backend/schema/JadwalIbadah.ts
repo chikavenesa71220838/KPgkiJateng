@@ -13,7 +13,7 @@ const allowAll = {
 export const JadwalIbadah = list({
   access: allowAll,
   fields: {
-    tanggal: calendarDay({ validation: { isRequired: true } }),
+    tanggal: calendarDay({ validation: { isRequired: true }, isIndexed: true }),
     topik: text(),
     detailIbadah: relationship({
       ref: "DetailIbadah.jadwal",
