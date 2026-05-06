@@ -162,6 +162,7 @@ const SidebarItem = ({ name, icon, route, isActive, isProfile }: { name: string,
           style={{ flexDirection: "row", alignItems: "center" }}
           onPress={() => router.push("/profil")}
           activeOpacity={0.7}
+          accessibilityLabel="tombol-gereja"
         >
           {gereja?.logo?.url ? (
             <Image
@@ -180,11 +181,11 @@ const SidebarItem = ({ name, icon, route, isActive, isProfile }: { name: string,
         </TouchableOpacity>
 
         <View style={styles.rightButtons}>
-          <TouchableOpacity onPress={() => router.push("../search")} style={styles.iconButton}>
+          <TouchableOpacity onPress={() => router.push("../search")} style={styles.iconButton} accessibilityLabel="tombol-pencarian">
             <Ionicons name="search" size={24} color={Colors.primary} />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)} style={styles.iconButton}>
+          <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)} style={styles.iconButton} accessibilityLabel="tombol-profil">
             <View style={styles.profileCircleHeader}>
               {fotoProfil ? (
                 <Image source={{ uri: fotoProfil }} style={styles.profileCircleAvatar} />
@@ -286,11 +287,11 @@ const SidebarItem = ({ name, icon, route, isActive, isProfile }: { name: string,
                 },
               })}
             >
-              <Tabs.Screen name="home" />
-              <Tabs.Screen name="jadwalIbadah" />
-              <Tabs.Screen name="warta" />
-              <Tabs.Screen name="Riwayat" />
-              <Tabs.Screen name="profil" />
+              <Tabs.Screen name="home" options={{ tabBarAccessibilityLabel: 'tab-home' }} />
+              <Tabs.Screen name="jadwalIbadah" options={{ tabBarAccessibilityLabel: 'tab-jadwal' }} />
+              <Tabs.Screen name="warta" options={{ tabBarAccessibilityLabel: 'tab-warta' }} />
+              <Tabs.Screen name="Riwayat" options={{ tabBarAccessibilityLabel: 'tab-riwayat' }} />
+              <Tabs.Screen name="profil" options={{ tabBarAccessibilityLabel: 'tab-profil' }} />
             </Tabs>
           
         </View>

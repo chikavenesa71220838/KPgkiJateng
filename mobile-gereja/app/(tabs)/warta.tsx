@@ -217,7 +217,7 @@ export default function Warta(): React.ReactElement {
 
         {/* 🔹 BENTUK DATE PICKER DISAMAKAN (PILL MODERN) */}
         <View style={styles.datePickerContainer}>
-          <TouchableOpacity onPress={handlePrevMonth} style={styles.navButton}>
+          <TouchableOpacity onPress={handlePrevMonth} style={styles.navButton} accessibilityLabel="arrow-bulan-sebelumnya">
             <Ionicons name="chevron-back" size={20} color={Colors.primary} />
           </TouchableOpacity>
 
@@ -228,7 +228,7 @@ export default function Warta(): React.ReactElement {
             })}
           </Text>
 
-          <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
+          <TouchableOpacity onPress={handleNextMonth} style={styles.navButton} accessibilityLabel="arrow-bulan-berikutnya">
             <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
           </TouchableOpacity>
         </View>
@@ -344,7 +344,10 @@ export default function Warta(): React.ReactElement {
                     ) : null}
                   </View>
                 )}
-                <TouchableOpacity onPress={() => toggleExpand(item.id)}>
+                <TouchableOpacity
+                  onPress={() => toggleExpand(item.id)}
+                  accessibilityLabel={isExpanded ? "tombol-tutup" : "tombol-baca-selengkapnya"}
+                >
                   <Text style={styles.expandToggle}>
                     {isExpanded ? "▲ Tutup" : "▼ Baca Selengkapnya"}
                   </Text>

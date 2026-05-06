@@ -183,6 +183,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             onPress={() => navigation.navigate("jadwalIbadah" as never)}
             style={{ padding: 4 }}
+            accessibilityLabel="arrow-ke-jadwal"
           >
             <Ionicons name="arrow-forward" size={24} color={Colors.primary} />
           </TouchableOpacity>
