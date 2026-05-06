@@ -14,8 +14,8 @@ export const User = list({
   access: allowAll,
   fields: {
     namaUser: text({ validation: { isRequired: true } }),
-    emailUser: text({ validation: { isRequired: true } }),
-    googleId: text(),
+    emailUser: text({ validation: { isRequired: true }, isIndexed: "unique" }),
+    googleId: text({ isIndexed: true }),
     statusAktivasi: select({
       options: [
         { label: "Aktif", value: "aktif" },

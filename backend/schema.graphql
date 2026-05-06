@@ -12,6 +12,7 @@ type User {
 
 input UserWhereUniqueInput {
   id: ID
+  emailUser: String
   profile: ProfileWhereUniqueInput
 }
 
