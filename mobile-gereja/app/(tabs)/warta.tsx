@@ -15,7 +15,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { API_URL } from "../../utils/api";
-import { fetchWartaAPI } from "../../services/profileAPI";
+import { fetchWartaAPI, fetchWartaContentAPI } from "../../services/profileAPI";
 import { Ionicons } from "@expo/vector-icons";
 import RenderHTML from "react-native-render-html";
 import { Colors, FontSize, Layout, Shadows } from "../../constants/theme";
@@ -105,6 +105,8 @@ export default function Warta(): React.ReactElement {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [wartaContents, setWartaContents] = useState<Record<string, any>>({});
+  const [loadingContent, setLoadingContent] = useState<Record<string, boolean>>({});
 
   const fetchWarta = async (showFullLoader = true) => {
     try {
@@ -156,9 +158,24 @@ export default function Warta(): React.ReactElement {
     setSelectedDate(newDate);
   };
 
+  const loadWartaContent = async (id: string) => {
+    if (wartaContents[id] !== undefined || loadingContent[id]) return;
+    try {
+      setLoadingContent((prev) => ({ ...prev, [id]: true }));
+      const content = await fetchWartaContentAPI(id);
+      setWartaContents((prev) => ({ ...prev, [id]: content }));
+    } catch (err) {
+      console.error("Gagal load isi warta:", err);
+    } finally {
+      setLoadingContent((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
   const toggleExpand = (id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedId(expandedId === id ? null : id);
+    const next = expandedId === id ? null : id;
+    setExpandedId(next);
+    if (next) loadWartaContent(id);
   };
 
   if (loading) {
@@ -257,17 +274,18 @@ export default function Warta(): React.ReactElement {
                 </View>
                 <View style={styles.dividerWithShadow} />
 
-                {/* Bagian isi warta (expand) */}
-                {isExpanded && item.isiWarta && (
+                {/* Bagian isi warta (expand) — lazy load */}
+                {isExpanded && (
                   <View style={styles.detail}>
+                    {loadingContent[item.id] ? (
+                      <ActivityIndicator size="small" color={Colors.primary} style={{ marginVertical: 8 }} />
+                    ) : wartaContents[item.id] ? (
                     <RenderHTML
                       contentWidth={width}
                       source={{
-                        html:
-                          typeof item.isiWarta === "object" &&
-                          Array.isArray(item.isiWarta.document)
-                            ? keystoneDocumentToHtml(item.isiWarta.document)
-                            : (item.isiWarta as string),
+                        html: Array.isArray(wartaContents[item.id]?.document)
+                          ? keystoneDocumentToHtml(wartaContents[item.id].document)
+                          : "",
                       }}
                       tagsStyles={{
                         a: {
@@ -323,6 +341,7 @@ export default function Warta(): React.ReactElement {
                         },
                       }}
                     />
+                    ) : null}
                   </View>
                 )}
                 <TouchableOpacity onPress={() => toggleExpand(item.id)}>
