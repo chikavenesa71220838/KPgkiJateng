@@ -47,6 +47,7 @@ export default function SejarahGereja(): React.ReactElement {
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
+            accessibilityLabel="tombol-kembali"
           >
             <Ionicons name="arrow-back" size={22} color={Colors.primary} />
           </TouchableOpacity>

@@ -243,6 +243,7 @@ export default function ProfilGereja(): React.ReactElement {
             style={[styles.infoCard, styles.rowBetween]}
             onPress={() => router.push("/sejarah")}
             activeOpacity={0.7}
+            accessibilityLabel="tombol-sejarah-gereja"
           >
             <View style={styles.cardHeaderRow}>
               <Ionicons name="library-outline" size={20} color={Colors.primary} />

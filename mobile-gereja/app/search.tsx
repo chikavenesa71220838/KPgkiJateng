@@ -198,7 +198,7 @@ export default function SearchScreen() {
         
         {/* Header Konsisten */}
         <View style={styles.headerContainer}>
-          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton} accessibilityLabel="tombol-kembali-pencarian">
             <Ionicons name="arrow-back" size={24} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerText}>Pencarian</Text>
@@ -217,7 +217,7 @@ export default function SearchScreen() {
             returnKeyType="search"
           />
           {searchQuery.length > 0 && (
-             <TouchableOpacity onPress={() => setSearchQuery("")} style={{ padding: 4 }}>
+             <TouchableOpacity onPress={() => setSearchQuery("")} style={{ padding: 4 }} accessibilityLabel="tombol-hapus-pencarian">
                <Ionicons name="close-circle" size={18} color={Colors.placeholder} />
              </TouchableOpacity>
           )}

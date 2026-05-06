@@ -225,6 +225,7 @@ export default function JadwalIbadah(): React.ReactElement {
             onPress={handlePrevDate}
             disabled={isPrevDisabled}
             style={styles.navButton}
+            accessibilityLabel="arrow-tanggal-sebelumnya"
           >
             {/* UBAH WARNA ICON */}
             <Ionicons
@@ -238,7 +239,7 @@ export default function JadwalIbadah(): React.ReactElement {
             {formatDate(selectedDate.toISOString())}
           </Text>
 
-          <TouchableOpacity onPress={handleNextDate} style={styles.navButton}>
+          <TouchableOpacity onPress={handleNextDate} style={styles.navButton} accessibilityLabel="arrow-tanggal-berikutnya">
             {/* UBAH WARNA ICON */}
             <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
           </TouchableOpacity>
@@ -253,6 +254,7 @@ export default function JadwalIbadah(): React.ReactElement {
                 <TouchableOpacity
                   key={d.id}
                   activeOpacity={0.7}
+                  accessibilityLabel="jadwal-item"
                   onPress={async () => {
                     if (d.url) {
                       const supported = await Linking.canOpenURL(d.url);
