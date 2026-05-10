@@ -51,7 +51,8 @@ export default function Riwayat(): React.ReactElement {
   const fetchRiwayat = async (showFullLoader = true) => {
     try {
       if (showFullLoader) setLoading(true);
-      const now = new Date().toISOString().split("T")[0];
+      const d = new Date();
+      const now = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       const data = await fetchRiwayatIbadahAPI(now);
       setRiwayat(data);
       setFilteredData(data);
