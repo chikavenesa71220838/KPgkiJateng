@@ -159,8 +159,12 @@ export default function JadwalIbadah(): React.ReactElement {
     if (!selectedDate) return true;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return selectedDate.getTime() <= today.getTime();
+    if (selectedDate.getTime() <= today.getTime()) return true;
+    const prevDate = getAdjacentDate(selectedDate, -1);
+    return !prevDate || prevDate.getTime() < today.getTime();
   })();
+
+  const isNextDisabled = !selectedDate || getAdjacentDate(selectedDate, 1) === null;
 
   if (loading) {
     return (
@@ -239,9 +243,9 @@ export default function JadwalIbadah(): React.ReactElement {
             {formatDate(selectedDate.toISOString())}
           </Text>
 
-          <TouchableOpacity onPress={handleNextDate} style={styles.navButton} accessibilityLabel="arrow-tanggal-berikutnya">
+          <TouchableOpacity onPress={handleNextDate} disabled={isNextDisabled} style={styles.navButton} accessibilityLabel="arrow-tanggal-berikutnya">
             {/* UBAH WARNA ICON */}
-            <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
+            <Ionicons name="chevron-forward" size={20} color={isNextDisabled ? Colors.placeholder : Colors.primary} />
           </TouchableOpacity>
         </View>
 

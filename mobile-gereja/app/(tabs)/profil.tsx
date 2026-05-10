@@ -247,7 +247,7 @@ export default function ProfilGereja(): React.ReactElement {
           >
             <View style={styles.cardHeaderRow}>
               <Ionicons name="library-outline" size={20} color={Colors.primary} />
-              <Text style={styles.infoTitleWithIcon}>Sejarah Gereja</Text>
+              <Text style={styles.infoTitleWithIcon} accessibilityLabel="label-sejarah-gereja">Sejarah Gereja</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
           </TouchableOpacity>
@@ -261,6 +261,7 @@ export default function ProfilGereja(): React.ReactElement {
                   onPress={() => scrollPendeta("left")}
                   disabled={isAtStart}
                   style={[styles.arrowBtn, isAtStart && styles.arrowBtnDisabled]}
+                  accessibilityLabel="scroll-pendeta-kiri"
                 >
                   <Ionicons
                     name="chevron-back"
@@ -272,6 +273,7 @@ export default function ProfilGereja(): React.ReactElement {
                   onPress={() => scrollPendeta("right")}
                   disabled={isAtEnd}
                   style={[styles.arrowBtn, isAtEnd && styles.arrowBtnDisabled]}
+                  accessibilityLabel="scroll-pendeta-kanan"
                 >
                   <Ionicons
                     name="chevron-forward"

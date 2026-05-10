@@ -51,7 +51,7 @@ export default function SejarahGereja(): React.ReactElement {
           >
             <Ionicons name="arrow-back" size={22} color={Colors.primary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Sejarah Gereja</Text>
+          <Text style={styles.headerTitle} accessibilityLabel="judul-halaman-sejarah">Sejarah Gereja</Text>
         </View>
 
         <ScrollView style={styles.scrollContainer}>
