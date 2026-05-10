@@ -419,7 +419,7 @@ export const fetchRiwayatIbadahAPI = async (
     query: `
       query GetRiwayat($before: CalendarDay!, $take: Int!, $skip: Int!) {
         jadwalIbadahs(
-          where: { tanggal: { lt: $before } }
+          where: { tanggal: { lte: $before } }
           orderBy: { tanggal: desc }
           take: $take
           skip: $skip
