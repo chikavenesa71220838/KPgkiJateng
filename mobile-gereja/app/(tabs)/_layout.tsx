@@ -133,10 +133,11 @@ export default function TabLayout() {
 
   if (loading) return null;
 
-const SidebarItem = ({ name, icon, route, isActive, isProfile }: { name: string, icon?: keyof typeof Ionicons.glyphMap, route: Href, isActive: boolean, isProfile?: boolean }) => (
+const SidebarItem = ({ name, icon, route, isActive, isProfile, accessibilityLabel }: { name: string, icon?: keyof typeof Ionicons.glyphMap, route: Href, isActive: boolean, isProfile?: boolean, accessibilityLabel?: string }) => (
     <TouchableOpacity
       style={[styles.sidebarItem, isActive && styles.sidebarItemActive]}
       onPress={() => router.navigate(route)}
+      accessibilityLabel={accessibilityLabel}
     >
       {isProfile ? (
         gereja?.logo?.url ? (
@@ -239,12 +240,12 @@ const SidebarItem = ({ name, icon, route, isActive, isProfile }: { name: string,
         {/* SIDEBAR - Hanya muncul jika Landscape */}
         {isLandscape && (
           <View style={styles.sidebarContainer}>
-            <SidebarItem name="Home" icon="home" route="/home" isActive={pathname === "/home" || pathname === "/"} />
-            <SidebarItem name="Jadwal" icon="calendar" route="/jadwalIbadah" isActive={pathname === "/jadwalIbadah"} />
-            <SidebarItem name="Warta" icon="newspaper" route="/warta" isActive={pathname === "/warta"} />
-            <SidebarItem name="Riwayat" icon="time" route="/Riwayat" isActive={pathname === "/Riwayat"} />
+            <SidebarItem name="Home" icon="home" route="/home" isActive={pathname === "/home" || pathname === "/"} accessibilityLabel="sidebar-home" />
+            <SidebarItem name="Jadwal" icon="calendar" route="/jadwalIbadah" isActive={pathname === "/jadwalIbadah"} accessibilityLabel="sidebar-jadwal" />
+            <SidebarItem name="Warta" icon="newspaper" route="/warta" isActive={pathname === "/warta"} accessibilityLabel="sidebar-warta" />
+            <SidebarItem name="Riwayat" icon="time" route="/Riwayat" isActive={pathname === "/Riwayat"} accessibilityLabel="sidebar-riwayat" />
             {/* <SidebarItem name="Profil" icon={user ? "person" : "log-in"} route="/profil" isActive={pathname === "/profil"} /> */}
-<SidebarItem name="Profil Gereja" route="/profil" isActive={pathname === "/profil"} isProfile={true} />
+<SidebarItem name="Profil Gereja" route="/profil" isActive={pathname === "/profil"} isProfile={true} accessibilityLabel="sidebar-profil-gereja" />
           </View>
         )}
 

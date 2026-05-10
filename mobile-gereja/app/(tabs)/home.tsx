@@ -152,8 +152,8 @@ export default function HomeScreen() {
         {/* 🔹 HEADER GREETING BARU */}
         <View style={styles.headerContainer}>
           <View>
-            <Text style={styles.greetingText}>Selamat Datang,</Text>
-            <Text style={styles.userNameText}>{userName}</Text>
+            <Text style={styles.greetingText} accessibilityLabel="sapaan-teks">Selamat Datang,</Text>
+            <Text style={styles.userNameText} accessibilityLabel="nama-pengguna">{userName}</Text>
           </View>
         </View>
 

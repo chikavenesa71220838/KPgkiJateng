@@ -244,7 +244,7 @@ export default function SearchScreen() {
                 const isExpanded = expandedId === uniqueId;
 
                 return (
-                  <View key={uniqueId} style={styles.cardContainer}>
+                  <View key={uniqueId} style={styles.cardContainer} accessibilityLabel={item.type === "jadwal" ? "hasil-pencarian-jadwal" : "hasil-pencarian-warta"}>
                     {item.type === "jadwal" ? (
                       <TouchableOpacity
                         activeOpacity={0.7}
