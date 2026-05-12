@@ -239,7 +239,7 @@ export default function JadwalIbadah(): React.ReactElement {
             />
           </TouchableOpacity>
 
-          <Text style={styles.dateText}>
+          <Text style={styles.dateText} accessibilityLabel="tanggal-terpilih">
             {formatDate(selectedDate.toISOString())}
           </Text>
 
